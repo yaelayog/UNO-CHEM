@@ -298,12 +298,18 @@ class SuaraChat {
     const peers: DiagSuara['peers'] = [];
     for (const [id, p] of this.peers) {
       const ice = p.pc.iceConnectionState;
+      const gather = p.pc.iceGatheringState;
       if (ice === 'connected' || ice === 'completed') n++;
-      // Tak sambung >12 dtk & tak ada TURN → butuh relay.
+      // Butuh relay bila: sudah selesai kumpul kandidat TAPI ICE mentok
+      // (checking/failed) & tak ada kandidat 'relay' & belum ada TURN.
+      const macet =
+        ice === 'checking' || ice === 'disconnected' || ice === 'failed';
       if (
-        (ice === 'checking' || ice === 'disconnected' || ice === 'failed') &&
-        now - p.mulaiMs > 12000 &&
-        !turnDikonfigurasi
+        macet &&
+        !turnDikonfigurasi &&
+        !p.tipeKandidat.has('relay') &&
+        now - p.mulaiMs > 6000 &&
+        (gather === 'complete' || now - p.mulaiMs > 15000)
       ) {
         perluTurn = true;
       }
