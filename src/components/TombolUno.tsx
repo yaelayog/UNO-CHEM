@@ -4,17 +4,18 @@ import { BATAS_UNO_MS, type GameState } from '../game';
 interface Props {
   state: GameState;
   humanId: string;
-  /** true bila kartu Fun Fact / Fakta sedang tampil DI KLIEN INI (bukan sekadar
-   *  terpasang di state — online: ditutup per orang). */
-  kartuFaktaTampil?: boolean;
   onNyatakan: () => void;
   onTangkap: (targetId: string) => void;
 }
 
-function modalTerbuka(s: GameState, kartuFaktaTampil: boolean): boolean {
+/**
+ * Modal yang benar-benar MEMBLOKIR interaksi papan. Kartu Fun Fact / Fakta
+ * TIDAK termasuk — tombol UNO (z-80) tampil di atasnya supaya balapan tetap
+ * bisa (di online kartu itu sticky & ditutup per orang).
+ */
+function modalTerbuka(s: GameState): boolean {
   return Boolean(
     s.peristiwaAktif ||
-      kartuFaktaTampil ||
       s.menungguPembukaan ||
       s.status === 'menungguKuis' ||
       s.status === 'menungguPilihWarna',
@@ -24,16 +25,10 @@ function modalTerbuka(s: GameState, kartuFaktaTampil: boolean): boolean {
 /**
  * Tombol balapan "UNO!". Muncul untuk semua pemain saat kartu seorang pemain
  * tinggal 1 & belum dinyatakan. Pemain bersangkutan → "UNO!" (aman).
- * Pemain lain → "Tangkap {nama}" (+2 kartu buat yang lupa). Hitung mundur
- * dibekukan selama ada modal yang menutupi papan.
+ * Pemain lain → "Tangkap {nama}" (+2 kartu buat yang lupa). Siapa cepat dia
+ * dapat; kalau habis waktu → tertangkap "Lawan".
  */
-export function TombolUno({
-  state,
-  humanId,
-  kartuFaktaTampil = false,
-  onNyatakan,
-  onTangkap,
-}: Props) {
+export function TombolUno({ state, humanId, onNyatakan, onTangkap }: Props) {
   const u = state.uno;
   const [, paksa] = useState(0);
 
@@ -46,9 +41,9 @@ export function TombolUno({
   if (!u || u.dinyatakan || u.padaMs === 0) return null;
   const holder = state.pemain.find((p) => p.id === u.pemainId);
   if (!holder || holder.tangan.length !== 1) return null;
-  // Selama modal menutupi papan hitung mundur dibekukan — sembunyikan tombol,
-  // muncul lagi (dengan waktu segar) begitu modal ditutup.
-  if (modalTerbuka(state, kartuFaktaTampil)) return null;
+  // Selama modal yang MEMBLOKIR papan (peristiwa/kuis/pilih warna/pembukaan) —
+  // sembunyikan tombol, muncul lagi begitu modal ditutup.
+  if (modalTerbuka(state)) return null;
 
   const sisa = Math.max(0, BATAS_UNO_MS - (Date.now() - u.padaMs));
   const persen = (sisa / BATAS_UNO_MS) * 100;

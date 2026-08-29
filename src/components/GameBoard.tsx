@@ -80,15 +80,26 @@ export function GameBoard() {
   // (efek petir) supaya jelas harus menarik kartu.
   const wajibTarik = giliranHuman && legalIds.size === 0;
 
+  // Balapan UNO sedang aktif → kartu Fun Fact / Fakta ditahan dulu supaya papan
+  // & tombol UNO kelihatan (siapa cepat dia dapat).
+  const balapanUno = Boolean(
+    state.uno &&
+      !state.uno.dinyatakan &&
+      state.pemain.find((p) => p.id === state.uno!.pemainId)?.tangan.length ===
+        1,
+  );
+
   // Kartu Fun Fact / Fakta: di mode online tiap orang menutup sendiri
   // (lihat `kartuFaktaDitutup`), di solo cukup cek state.
   const funFactTampil =
     Boolean(state.funFactAktif) &&
     !state.peristiwaAktif &&
+    !balapanUno &&
     kartuFaktaDitutup.funFact !== state.funFactAktif?.id;
   const faktaTampil =
     Boolean(state.faktaReward) &&
     !state.peristiwaAktif &&
+    !balapanUno &&
     !funFactTampil &&
     kartuFaktaDitutup.fakta !== state.faktaReward?.teks;
 
@@ -181,7 +192,6 @@ export function GameBoard() {
         <TombolUno
           state={state}
           humanId={humanId}
-          kartuFaktaTampil={funFactTampil || faktaTampil}
           onNyatakan={nyatakanUno}
           onTangkap={tangkapUno}
         />

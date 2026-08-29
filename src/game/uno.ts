@@ -2,7 +2,7 @@ import { tangkapUno } from './engine';
 import type { GameState } from './types';
 
 /** Batas waktu menyatakan "UNO!" sebelum otomatis tertangkap "Lawan". */
-export const BATAS_UNO_MS = 7000;
+export const BATAS_UNO_MS = 10000;
 
 /**
  * true bila sedang ada modal yang menutupi papan → hitung mundur UNO dibekukan.

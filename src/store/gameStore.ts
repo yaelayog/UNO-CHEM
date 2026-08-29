@@ -225,6 +225,18 @@ export const useGameStore = create<GameStore>((set, get) => {
     });
   }
 
+  /** true bila isi tangan `uid` di `state` beda dari `tanganku` (channel `tangan`). */
+  function tanganTakSama(
+    state: GameState,
+    tanganku: KartuKimia[],
+    uid: string,
+  ): boolean {
+    const p = state.pemain.find((x) => x.id === uid);
+    if (!p) return false;
+    if (p.tangan.length !== tanganku.length) return true;
+    return p.tangan.some((k, i) => k.id !== tanganku[i]?.id);
+  }
+
   /**
    * Terapkan state publik online (dari Realtime ATAU balasan Edge Function).
    * Hanya menang bila versinya lebih baru dari yang sudah diterapkan (kecuali
@@ -242,13 +254,18 @@ export const useGameStore = create<GameStore>((set, get) => {
     // Terapkan bila: dipaksa, belum ada state sama sekali (state awal server
     // ber-versi 0), atau versinya lebih baru dari yang sudah diterapkan.
     if (!paksa && st.state && versi <= st.versiOnline) {
-      // Versi tak lebih baru, tapi soal privat (channel `tangan`) bisa berubah
-      // terpisah dari `game_publik` → tambal hanya bagian soal.
-      if (st.state.soalAktif?.id !== soalPrivat?.id) {
-        set({
-          state: { ...st.state, soalAktif: soalPrivat },
-          soalAktif: soalPrivat,
-        });
+      // Versi `game_publik` tak lebih baru, tapi channel `tangan` (soal privat
+      // & isi tangan sendiri) bisa berubah terpisah → tambal bagian itu saja.
+      const soalBeda = st.state.soalAktif?.id !== soalPrivat?.id;
+      const tanganBeda = tanganTakSama(st.state, tanganku, st.online.uid);
+      if (soalBeda || tanganBeda) {
+        const next = rekonstruksiState(
+          pub,
+          tanganku,
+          st.online.uid,
+          soalPrivat,
+        );
+        set({ state: next, soalAktif: next.soalAktif });
       }
       return;
     }
