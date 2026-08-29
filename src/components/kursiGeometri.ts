@@ -18,9 +18,11 @@ const PUSAT = { x: 50, y: 53 };
 /** Jari-jari busur tempat kursi lawan (persen). RX > RY → mengikuti oval. */
 const RX = 40;
 const RY = 45;
-/** Setengah rentang busur (derajat) tempat lawan boleh duduk, diukur dari
- *  titik atas (utara) oval. 0° = tepat di seberang pemain. */
-const SEBAR_MAKS = 56;
+/** Setengah rentang busur (derajat) tempat lawan boleh duduk, diukur dari titik
+ *  atas (utara) oval. Melebar seiring jumlah lawan supaya tak saling tumpuk. */
+function sebarMaks(jumlah: number): number {
+  return Math.min(78, 48 + jumlah * 5); // 2 lawan→58 · 4→68 · 6→78
+}
 /** Peredam rotasi: 1 = benar-benar menghadap pusat (bisa sangat miring di
  *  sisi), <1 = condong ke pusat tapi label tetap terbaca. */
 const INTENSITAS = 1;
@@ -40,8 +42,9 @@ export interface GayaKursi {
  */
 function sudutKursi(jumlah: number): number[] {
   if (jumlah <= 1) return [0];
-  const langkah = (2 * SEBAR_MAKS) / (jumlah - 1);
-  return Array.from({ length: jumlah }, (_, i) => -SEBAR_MAKS + i * langkah);
+  const s = sebarMaks(jumlah);
+  const langkah = (2 * s) / (jumlah - 1);
+  return Array.from({ length: jumlah }, (_, i) => -s + i * langkah);
 }
 
 export function hitungKursi(jumlah: number): GayaKursi[] {

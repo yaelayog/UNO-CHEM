@@ -23,7 +23,7 @@ create table if not exists public.rooms (
   code            text primary key default public.kode_room(),
   host            uuid not null,
   status          text not null default 'lobby' check (status in ('lobby','bermain','selesai')),
-  target_pemain   int2 not null default 4 check (target_pemain between 2 and 4),
+  target_pemain   int2 not null default 4 check (target_pemain between 2 and 7),
   pakai_peristiwa boolean not null default false,
   seed            int8,
   dibuat          timestamptz not null default now(),

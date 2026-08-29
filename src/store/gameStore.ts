@@ -39,7 +39,14 @@ export type Layar =
 
 export type ModeMain = 'solo' | 'online';
 
-const NAMA_BOT = ['Bohr', 'Curie', 'Mendel', 'Lavoisier'];
+const NAMA_BOT = [
+  'Bohr',
+  'Curie',
+  'Mendel',
+  'Lavoisier',
+  'Dalton',
+  'Pauling',
+];
 
 export interface StatistikKuis {
   benar: number;

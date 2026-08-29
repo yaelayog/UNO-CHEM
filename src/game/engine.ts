@@ -54,7 +54,7 @@ export function buatGame(
   seed: string | number = Date.now(),
   pakaiPeristiwa = false,
 ): GameState {
-  assert(pemain.length >= 2 && pemain.length <= 5, 'Jumlah pemain harus 2–5');
+  assert(pemain.length >= 2 && pemain.length <= 7, 'Jumlah pemain harus 2–7');
 
   let rng = seedDari(seed);
   let deck: KartuKimia[];

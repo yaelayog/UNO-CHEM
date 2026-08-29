@@ -31,7 +31,15 @@ const json = (body: unknown, status = 200) =>
     headers: { ...CORS, 'Content-Type': 'application/json' },
   });
 
-const NAMA_BOT = ['Dalton', 'Bohr', 'Curie', 'Mendel', 'Lavoisier', 'Pauling'];
+const NAMA_BOT = [
+  'Dalton',
+  'Bohr',
+  'Curie',
+  'Mendel',
+  'Lavoisier',
+  'Pauling',
+  'Rutherford',
+];
 const AMBANG_MACET_MS = 30_000;
 
 Deno.serve(async (req) => {
@@ -134,7 +142,7 @@ async function buatRoom(
   uid: string,
   b: Record<string, unknown>,
 ) {
-  const target = Math.min(4, Math.max(2, Number(b.targetPemain ?? 4)));
+  const target = Math.min(7, Math.max(2, Number(b.targetPemain ?? 4)));
   const { data: room, error } = await db
     .from('rooms')
     .insert({

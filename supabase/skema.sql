@@ -23,7 +23,7 @@ create table if not exists public.rooms (
   code            text primary key default public.kode_room(),
   host            uuid not null,
   status          text not null default 'lobby' check (status in ('lobby','bermain','selesai')),
-  target_pemain   int2 not null default 4 check (target_pemain between 2 and 4),
+  target_pemain   int2 not null default 4 check (target_pemain between 2 and 7),
   pakai_peristiwa boolean not null default false,
   seed            int8,
   dibuat          timestamptz not null default now(),
@@ -120,3 +120,7 @@ drop trigger if exists trg_bersihkan_room on public.rooms;
 create trigger trg_bersihkan_room
   after insert on public.rooms
   execute function public.bersihkan_room_lama();
+-- Naikkan batas pemain per room dari 4 → 7 (untuk DB yang sudah ter-deploy).
+alter table public.rooms drop constraint if exists rooms_target_pemain_check;
+alter table public.rooms
+  add constraint rooms_target_pemain_check check (target_pemain between 2 and 7);

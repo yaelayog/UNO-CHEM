@@ -16,17 +16,33 @@ const DUR_TUTUP = 350;
 /** Titik tujuan bagi kartu (persen layar) menurut jumlah pemain. Indeks 0 = kamu. */
 function tujuanPemain(n: number): { x: number; y: number }[] {
   const kamu = { x: 50, y: 88 };
-  if (n <= 2) return [kamu, { x: 50, y: 12 }];
-  if (n === 3) return [kamu, { x: 20, y: 16 }, { x: 80, y: 16 }];
-  if (n === 4)
-    return [kamu, { x: 12, y: 44 }, { x: 50, y: 10 }, { x: 88, y: 44 }];
-  return [
-    kamu,
-    { x: 13, y: 42 },
-    { x: 35, y: 12 },
-    { x: 65, y: 12 },
-    { x: 87, y: 42 },
-  ];
+  const lawan: Record<number, { x: number; y: number }[]> = {
+    1: [{ x: 50, y: 12 }],
+    2: [{ x: 20, y: 16 }, { x: 80, y: 16 }],
+    3: [{ x: 12, y: 44 }, { x: 50, y: 10 }, { x: 88, y: 44 }],
+    4: [
+      { x: 13, y: 42 },
+      { x: 35, y: 12 },
+      { x: 65, y: 12 },
+      { x: 87, y: 42 },
+    ],
+    5: [
+      { x: 11, y: 42 },
+      { x: 28, y: 13 },
+      { x: 50, y: 8 },
+      { x: 72, y: 13 },
+      { x: 89, y: 42 },
+    ],
+    6: [
+      { x: 10, y: 44 },
+      { x: 22, y: 16 },
+      { x: 40, y: 9 },
+      { x: 60, y: 9 },
+      { x: 78, y: 16 },
+      { x: 90, y: 44 },
+    ],
+  };
+  return [kamu, ...(lawan[Math.max(1, Math.min(6, n - 1))] ?? lawan[1])];
 }
 
 function Belakang({ kecil }: { kecil?: boolean }) {

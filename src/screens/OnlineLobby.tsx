@@ -14,6 +14,7 @@ export function OnlineLobby() {
   const [nama, setNama] = useState('');
   const [kode, setKode] = useState('');
   const [target, setTarget] = useState(4);
+  const OPSI_TARGET = [2, 3, 4, 5, 6, 7];
   const [pakaiPeristiwa, setPakaiPeristiwa] = useState(false);
   const [sibuk, setSibuk] = useState(false);
   const [pesan, setPesan] = useState('');
@@ -163,9 +164,11 @@ export function OnlineLobby() {
 
       <div className="rounded-2xl bg-white p-4 shadow-empuk">
         <p className="text-xs font-bold text-tinta/60">Buat room baru</p>
-        <p className="mt-2 text-[11px] font-bold text-tinta/50">Jumlah pemain</p>
-        <div className="mt-1 flex gap-2">
-          {[2, 3, 4].map((n) => (
+        <p className="mt-2 text-[11px] font-bold text-tinta/50">
+          Jumlah pemain <span className="text-tinta/40">(kursi kosong = bot)</span>
+        </p>
+        <div className="mt-1 flex flex-wrap gap-2">
+          {OPSI_TARGET.map((n) => (
             <button
               key={n}
               type="button"

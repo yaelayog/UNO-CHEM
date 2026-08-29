@@ -98,15 +98,15 @@ export function MainMenu() {
 
       <div className="w-full rounded-3xl border border-black/10 bg-white p-4 shadow-empuk">
         <p className="text-xs font-bold text-tinta/60">
-          Jumlah lawan bot <span className="text-tinta/40">(maks. 1 meja = 5 pemain)</span>
+          Jumlah lawan bot <span className="text-tinta/40">(maks. 1 meja = 7 pemain)</span>
         </p>
-        <div className="mt-2 flex justify-center gap-2">
-          {[1, 2, 3, 4].map((n) => (
+        <div className="mt-2 flex flex-wrap justify-center gap-2">
+          {[1, 2, 3, 4, 5, 6].map((n) => (
             <button
               key={n}
               type="button"
               onClick={() => setJumlahBot(n)}
-              className={`h-10 w-10 rounded-xl font-display font-extrabold transition cursor-pointer
+              className={`h-9 w-9 rounded-xl font-display font-extrabold transition cursor-pointer
                 ${jumlahBot === n ? 'bg-lab text-white' : 'bg-kertas text-tinta hover:bg-black/5'}`}
             >
               {n}

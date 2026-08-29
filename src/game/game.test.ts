@@ -93,16 +93,19 @@ describe('buatGame', () => {
     expect(kartuAtas(a).id).not.toBe(kartuAtas(b).id);
   });
 
-  it('menerima 2–5 pemain, menolak di luar itu', () => {
+  it('menerima 2–7 pemain, menolak di luar itu', () => {
     expect(() => buatGame([PEMAIN[0]], 's')).toThrow();
-    const lima = [
+    const tujuh = [
       ...PEMAIN,
       { id: 'p4', nama: 'Bot C', isBot: true },
       { id: 'p5', nama: 'Bot D', isBot: true },
+      { id: 'p6', nama: 'Bot E', isBot: true },
+      { id: 'p7', nama: 'Bot F', isBot: true },
     ];
-    expect(() => buatGame(lima, 's')).not.toThrow();
-    expect(buatGame(lima, 's').pemain).toHaveLength(5);
-    expect(() => buatGame([...lima, { id: 'p6', nama: 'X', isBot: true }], 's')).toThrow();
+    expect(() => buatGame(tujuh, 's')).not.toThrow();
+    expect(buatGame(tujuh, 's').pemain).toHaveLength(7);
+    for (const p of buatGame(tujuh, 's').pemain) expect(p.tangan).toHaveLength(7);
+    expect(() => buatGame([...tujuh, { id: 'p8', nama: 'X', isBot: true }], 's')).toThrow();
   });
 });
 
