@@ -138,10 +138,12 @@ async function tangani(
     case 'nyatakanUno':
       return aksiState(db, uid, code, (s) => nyatakanUno(s, uid), {
         anggotaSaja: true,
+        lewatiBilaSama: true,
       });
     case 'tangkapUno':
       return aksiState(db, uid, code, (s) => tangkapUno(s, uid, String(b.target)), {
         anggotaSaja: true,
+        lewatiBilaSama: true,
       });
     case 'cekUno':
       return aksiState(db, uid, code, (s) => cekUnoKadaluarsa(s), {

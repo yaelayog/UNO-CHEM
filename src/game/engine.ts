@@ -133,9 +133,11 @@ function sinkronUno(s: GameState, pemainBaruSatu?: string): void {
 
 /** Pemain menyatakan "UNO!" — aman dari tangkapan. */
 export function nyatakanUno(state: GameState, pemainId: string): GameState {
+  if (!state.uno || state.uno.pemainId !== pemainId || state.uno.dinyatakan) {
+    return state;
+  }
   const s = clone(state);
-  if (!s.uno || s.uno.pemainId !== pemainId || s.uno.dinyatakan) return s;
-  s.uno.dinyatakan = true;
+  s.uno!.dinyatakan = true;
   const nama = s.pemain.find((p) => p.id === pemainId)?.nama ?? '';
   s.pengumumanUno = { nama, jenis: 'aman' };
   s.log.push(`${nama}: UNO!`);
@@ -149,9 +151,15 @@ export function tangkapUno(
   penangkapId: string | null,
   targetId: string,
 ): GameState {
+  if (
+    !state.uno ||
+    state.uno.pemainId !== targetId ||
+    state.uno.dinyatakan ||
+    penangkapId === targetId
+  ) {
+    return state;
+  }
   const s = clone(state);
-  if (!s.uno || s.uno.pemainId !== targetId || s.uno.dinyatakan) return s;
-  if (penangkapId === targetId) return s; // tak bisa menangkap diri sendiri
   const ti = s.pemain.findIndex((p) => p.id === targetId);
   if (ti < 0 || s.pemain[ti].tangan.length !== 1) {
     s.uno = null;
