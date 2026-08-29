@@ -22,6 +22,8 @@ export {
   pilihWarna,
   selesaikanKuis,
   tarikKartu,
+  nyatakanUno,
+  tangkapUno,
   bisaDimainkan,
   langkahLegal,
   kartuAtas,
@@ -29,9 +31,11 @@ export {
   indeksBerikutnya,
   KARTU_AWAL_PER_PEMAIN,
   AMBANG_STREAK_FAKTA,
+  PENALTI_UNO_KARTU,
   type OpsiPemain,
   type OpsiMain,
 } from './engine';
+export { BATAS_UNO_MS, stampUno, cekUnoKadaluarsa } from './uno';
 export { langkahBot, jawabKuisBot, warnaBotTerbaik } from './bot';
 export {
   SEMUA_PERISTIWA,

@@ -287,6 +287,12 @@ export function picuPeristiwa(state: GameState): GameState {
   asli.efek(s, pemain.id);
   const jml1 = s.pemain.map((p) => p.tangan.length);
 
+  // Peristiwa mengubah jumlah kartu → status UNO bisa jadi tak berlaku lagi.
+  if (s.uno) {
+    const h = s.pemain.find((p) => p.id === s.uno!.pemainId);
+    if (!h || h.tangan.length !== 1) s.uno = null;
+  }
+
   const delta = s.pemain
     .map((p, i) => {
       const d = jml1[i] - jml0[i];

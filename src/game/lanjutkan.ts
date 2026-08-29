@@ -1,6 +1,7 @@
 import { jawabKuisBot, langkahBot, warnaBotTerbaik } from './bot';
 import {
   mainkanBerbarengan,
+  nyatakanUno,
   pilihWarna,
   selesaikanKuis,
   tarikKartu,
@@ -8,6 +9,7 @@ import {
 import { picuFunFactBila } from './funfact';
 import { pilihSoal } from './kuis';
 import { picuPeristiwaBila } from './peristiwa';
+import { rngNext } from './rng';
 import type { GameState } from './types';
 
 const BATAS_ITERASI = 600;
@@ -90,7 +92,7 @@ export function lanjutkanOtomatis(state: GameState): GameState {
       if (!kini.isBot) return s;
       const gk = s.giliranKe;
       const aksi = langkahBot(s);
-      const next =
+      let next =
         aksi.tipe === 'main'
           ? mainkanBerbarengan(
               s,
@@ -99,6 +101,14 @@ export function lanjutkanOtomatis(state: GameState): GameState {
               { warnaWild: aksi.warnaWild },
             )
           : tarikKartu(s, kini.id);
+
+      // Bot bilang "UNO!" ~80% saat sisa 1 kartu (20% lupa → bisa ditangkap).
+      if (next.uno && next.uno.pemainId === kini.id && !next.uno.dinyatakan) {
+        const [roll, rng2] = rngNext(next.rng);
+        next = { ...next, rng: rng2 };
+        if (roll < 0.8) next = nyatakanUno(next, kini.id);
+      }
+
       s = pemicu(next, gk);
       continue;
     }

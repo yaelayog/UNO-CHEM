@@ -4,10 +4,14 @@
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import {
   buatGame,
+  cekUnoKadaluarsa,
   lanjutkanOtomatis,
   mainkanBerbarengan,
+  nyatakanUno,
   pilihWarna,
   selesaikanKuis,
+  stampUno,
+  tangkapUno,
   tarikKartu,
   type GameState,
   type Golongan,
@@ -131,6 +135,19 @@ async function tangani(
         if (s.funFactAktif) return { ...s, funFactAktif: null };
         return s;
       }, { anggotaSaja: true });
+    case 'nyatakanUno':
+      return aksiState(db, uid, code, (s) => nyatakanUno(s, uid), {
+        anggotaSaja: true,
+      });
+    case 'tangkapUno':
+      return aksiState(db, uid, code, (s) => tangkapUno(s, uid, String(b.target)), {
+        anggotaSaja: true,
+      });
+    case 'cekUno':
+      return aksiState(db, uid, code, (s) => cekUnoKadaluarsa(s), {
+        anggotaSaja: true,
+        lewatiBilaSama: true,
+      });
     default:
       throw new Error(`tipe aksi tak dikenal: ${tipe}`);
   }
@@ -329,6 +346,8 @@ async function sync(db: SupabaseClient, uid: string, code: string) {
 interface OpsiAksi {
   hostSaja?: boolean;
   anggotaSaja?: boolean;
+  /** Kembali tanpa menulis kalau `ubah` tak mengubah state (mis. cekUno). */
+  lewatiBilaSama?: boolean;
 }
 
 /** Muat core → jalankan `ubah` → lanjutkanOtomatis → simpan (optimistic lock). */
@@ -358,7 +377,10 @@ async function aksiState(
     .single();
   if (!core) throw new Error('permainan belum dimulai');
 
-  const next = lanjutkanOtomatis(ubah(core.state as GameState));
+  const asal = core.state as GameState;
+  const diubah = ubah(asal);
+  if (opsi.lewatiBilaSama && diubah === asal) return { ok: true, tanpaUbah: true };
+  const next = stampUno(lanjutkanOtomatis(diubah));
   return simpan(db, code, core.versi as number, next);
 }
 
@@ -427,6 +449,13 @@ async function denyut(db: SupabaseClient, uid: string, code: string) {
     .maybeSingle();
   if (!core) return { ok: true };
   const s = core.state as GameState;
+
+  // Backstop: tegakkan batas waktu UNO kalau ada yang kelamaan.
+  const setelahUno = cekUnoKadaluarsa(s);
+  if (setelahUno !== s) {
+    await simpan(db, code, core.versi as number, stampUno(lanjutkanOtomatis(setelahUno)));
+    return { ok: true, unoKadaluarsa: true };
+  }
 
   // Siapa yang ditunggu?
   let ditunggu: string | null = null;

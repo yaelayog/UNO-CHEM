@@ -7,6 +7,8 @@ import {
   pilihWarna,
   selesaikanKuis,
   tarikKartu,
+  nyatakanUno,
+  tangkapUno,
   bisaDimainkan,
   langkahLegal,
   kartuAtas,
@@ -234,6 +236,75 @@ describe('mainkanBerbarengan (tumpuk kartu seperiode)', () => {
     const out = mainkanBerbarengan(s, 'p1', ['M3a', 'M3b']);
     expect(out.status).toBe('selesai');
     expect(out.pemenangId).toBe('p1');
+  });
+});
+
+describe('UNO', () => {
+  /** Beri p1 tepat 2 kartu angka yang cocok, lalu mainkan satu → sisa 1. */
+  function turunSatu(seed: string) {
+    let s = buatGame(PEMAIN, seed);
+    const atas = kartuAtas(s);
+    const a = { ...kartuAngka(atas.golongan, 4), id: 'U4a' };
+    const b = { ...kartuAngka(atas.golongan, 4), id: 'U4b' };
+    s = { ...s, pemain: s.pemain.map((p, i) => (i === 0 ? { ...p, tangan: [a, b] } : p)) };
+    return mainkanKartu(s, 'p1', 'U4a');
+  }
+
+  it('status uno muncul saat kartu tinggal 1', () => {
+    const s = turunSatu('uno-1');
+    expect(s.uno).not.toBeNull();
+    expect(s.uno!.pemainId).toBe('p1');
+    expect(s.uno!.dinyatakan).toBe(false);
+    expect(s.uno!.padaMs).toBe(0); // diisi lapisan store/server
+  });
+
+  it('nyatakanUno menandai aman & mengumumkan', () => {
+    const s = nyatakanUno(turunSatu('uno-2'), 'p1');
+    expect(s.uno!.dinyatakan).toBe(true);
+    expect(s.pengumumanUno).toEqual({ nama: 'Kamu', jenis: 'aman' });
+  });
+
+  it('tangkapUno memberi +2 kartu & menghapus status', () => {
+    const s0 = turunSatu('uno-3');
+    const s = tangkapUno(s0, 'p2', 'p1');
+    expect(s.pemain[0].tangan.length).toBe(3);
+    expect(s.uno).toBeNull();
+    expect(s.pengumumanUno?.jenis).toBe('tertangkap');
+    expect(s.pengumumanUno?.oleh).toBe('Bot A');
+    expect(s.pengumumanUno?.ambil).toBe(2);
+  });
+
+  it('tangkapUno gagal kalau sudah dinyatakan', () => {
+    const s0 = nyatakanUno(turunSatu('uno-4'), 'p1');
+    const s = tangkapUno(s0, 'p2', 'p1');
+    expect(s.pemain[0].tangan.length).toBe(1); // tak kena penalti
+    expect(s.uno!.dinyatakan).toBe(true);
+  });
+
+  it('tak bisa menangkap diri sendiri', () => {
+    const s0 = turunSatu('uno-5');
+    const s = tangkapUno(s0, 'p1', 'p1');
+    expect(s.pemain[0].tangan.length).toBe(1);
+  });
+
+  it('status uno hilang setelah pemain menarik kartu', () => {
+    let s = turunSatu('uno-6');
+    // p1 kena +2 lewat tangkap, lalu... uno sudah null. Uji jalur tarik:
+    s = turunSatu('uno-6b');
+    // paksa giliran ke p1 & tambah kartu lewat tarik sukarela
+    s = { ...s, giliran: 0, status: 'bermain' };
+    s = tarikKartu(s, 'p1');
+    expect(s.uno).toBeNull();
+  });
+
+  it('menang: status uno bersih saat kartu habis', () => {
+    let s = buatGame(PEMAIN, 'uno-7');
+    const atas = kartuAtas(s);
+    const a = { ...kartuAngka(atas.golongan, 4), id: 'W1' };
+    s = { ...s, pemain: s.pemain.map((p, i) => (i === 0 ? { ...p, tangan: [a] } : p)) };
+    s = mainkanKartu(s, 'p1', 'W1');
+    expect(s.status).toBe('selesai');
+    expect(s.uno).toBeNull();
   });
 });
 

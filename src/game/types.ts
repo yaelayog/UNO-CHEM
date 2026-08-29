@@ -24,6 +24,24 @@ export interface KartuPeristiwa {
   efek: (s: GameState, pemainId: string) => GameState;
 }
 
+/** Status "UNO" — muncul saat kartu seorang pemain tinggal 1. Balapan tombol:
+ *  yang bersangkutan pencet dulu = aman; pemain lain pencet dulu / waktu habis
+ *  = yang lupa ambil +2 kartu. */
+export interface StatusUno {
+  pemainId: string;
+  dinyatakan: boolean;
+  /** ms epoch saat status dibuat — diisi lapisan store/server, engine set 0. */
+  padaMs: number;
+}
+
+/** Pengumuman hasil UNO — transient, UI menampilkan lalu clear. */
+export interface PengumumanUno {
+  nama: string;
+  jenis: 'aman' | 'tertangkap';
+  oleh?: string; // nama penangkap atau 'Lawan'
+  ambil?: number; // kartu penalti
+}
+
 /** Peristiwa yang baru terpicu — transient, UI menampilkan lalu clear. */
 export interface PeristiwaAktif {
   id: string;
@@ -115,6 +133,10 @@ export interface GameState {
   soalAktif: SoalKuis | null;
   /** true selama animasi kocok+bagi di awal (mode online dikendalikan host). */
   menungguPembukaan: boolean;
+  /** Status "UNO" aktif (pemain dengan 1 kartu belum menyatakan). */
+  uno: StatusUno | null;
+  /** Pengumuman UNO terbaru — UI menampilkan lalu clear. */
+  pengumumanUno: PengumumanUno | null;
   /** Streak buang kartu segolongan per pemain. */
   streak: Record<string, { golongan: Golongan; count: number }>;
   log: string[];

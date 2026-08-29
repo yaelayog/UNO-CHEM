@@ -12,6 +12,10 @@ import {
   picuPeristiwaBila,
   picuFunFactBila,
   pilihSoal,
+  nyatakanUno as nyatakanUnoEngine,
+  tangkapUno as tangkapUnoEngine,
+  stampUno,
+  cekUnoKadaluarsa,
   type GameState,
   type HasilKuis,
   type OpsiPemain,
@@ -101,6 +105,12 @@ interface GameStore {
   stepBot: () => boolean;
   bersihkanReward: () => void;
   bersihkanPengumuman: () => void;
+
+  /** UNO: nyatakan (diri sendiri) / tangkap (pemain lain) / cek batas waktu. */
+  nyatakanUno: () => void;
+  tangkapUno: (targetId: string) => void;
+  cekUno: () => void;
+  bersihkanPengumumanUno: () => void;
 }
 
 const STAT_AWAL: StatistikKuis = {
@@ -157,6 +167,10 @@ export const useGameStore = create<GameStore>((set, get) => {
     const prevGK = get().state?.giliranKe ?? 0;
     next = picuPeristiwaBila(next, prevGK);
     next = picuFunFactBila(next);
+
+    // Status UNO: cap waktu + tangkap otomatis kalau kelamaan.
+    next = stampUno(next);
+    next = cekUnoKadaluarsa(next);
 
     // Rekam progres saat permainan baru saja usai.
     if (next.status === 'selesai' && get().state?.status !== 'selesai') {
@@ -463,6 +477,47 @@ export const useGameStore = create<GameStore>((set, get) => {
       const { state } = get();
       if (state?.pengumumanKuis)
         set({ state: { ...state, pengumumanKuis: null } });
+    },
+
+    nyatakanUno: () => {
+      const { state, humanId, mode, online } = get();
+      if (!state?.uno || state.uno.pemainId !== humanId || state.uno.dinyatakan)
+        return;
+      sfx.benar();
+      if (mode === 'online' && online) {
+        void kirimAksi('nyatakanUno', { code: online.code });
+        return;
+      }
+      terapkan(nyatakanUnoEngine(state, humanId));
+    },
+
+    tangkapUno: (targetId) => {
+      const { state, humanId, mode, online } = get();
+      if (!state?.uno || state.uno.pemainId !== targetId || state.uno.dinyatakan)
+        return;
+      sfx.ledakan();
+      if (mode === 'online' && online) {
+        void kirimAksi('tangkapUno', { code: online.code, target: targetId });
+        return;
+      }
+      terapkan(tangkapUnoEngine(state, humanId, targetId));
+    },
+
+    cekUno: () => {
+      const { state, mode, online } = get();
+      if (!state?.uno || state.uno.dinyatakan || state.uno.padaMs === 0) return;
+      if (mode === 'online') {
+        if (online) void kirimAksi('cekUno', { code: online.code });
+        return;
+      }
+      const next = cekUnoKadaluarsa(state);
+      if (next !== state) terapkan(next);
+    },
+
+    bersihkanPengumumanUno: () => {
+      const { state } = get();
+      if (state?.pengumumanUno)
+        set({ state: { ...state, pengumumanUno: null } });
     },
   };
 });

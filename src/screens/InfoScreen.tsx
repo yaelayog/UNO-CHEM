@@ -89,6 +89,14 @@ export function RulesScreen() {
           </li>
         </ul>
       </div>
+      <div className="rounded-2xl bg-white p-3 shadow-empuk">
+        <p className="font-extrabold text-tinta">Bilang "UNO!" 🔔</p>
+        <p className="mt-1 text-sm">
+          Saat kartumu <b>tinggal 1</b>, tombol <b>UNO!</b> muncul buat semua
+          pemain. Kamu harus pencet dalam <b>4 detik</b>. Kalau kelamaan atau
+          keburu dipencet lawan (tombol "Tangkap"), kamu <b>ambil 2 kartu</b>.
+        </p>
+      </div>
       <p>
         Buang 3 kartu segolongan berturut-turut → dapat <b>fakta kimia</b> bonus.
       </p>

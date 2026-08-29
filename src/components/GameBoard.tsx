@@ -4,6 +4,7 @@ import { useGameStore } from '../store/gameStore';
 import { useBotRunner } from '../hooks/useBotRunner';
 import { useSoundEffects } from '../hooks/useSoundEffects';
 import { useGuncang } from '../hooks/useGuncang';
+import { useUnoTick } from '../hooks/useUnoTick';
 import { Hand } from './Hand';
 import { MejaPanggung } from './MejaPanggung';
 import { TargetCocok } from './DiscardPile';
@@ -11,6 +12,8 @@ import { QuizModal } from './QuizModal';
 import { ColorPicker } from './ColorPicker';
 import { RewardToast } from './RewardToast';
 import { KuisToast } from './KuisToast';
+import { TombolUno } from './TombolUno';
+import { UnoToast } from './UnoToast';
 import { PeristiwaModal } from './PeristiwaModal';
 import { FunFactModal } from './FunFactModal';
 import { PengaturanSuara } from './PengaturanSuara';
@@ -21,6 +24,7 @@ import { Confetti } from './Confetti';
 export function GameBoard() {
   useBotRunner();
   useSoundEffects();
+  useUnoTick();
   const guncang = useGuncang();
 
   const state = useGameStore((s) => s.state);
@@ -34,6 +38,9 @@ export function GameBoard() {
   const jawabKuis = useGameStore((s) => s.jawabKuis);
   const bersihkanReward = useGameStore((s) => s.bersihkanReward);
   const bersihkanPengumuman = useGameStore((s) => s.bersihkanPengumuman);
+  const nyatakanUno = useGameStore((s) => s.nyatakanUno);
+  const tangkapUno = useGameStore((s) => s.tangkapUno);
+  const bersihkanPengumumanUno = useGameStore((s) => s.bersihkanPengumumanUno);
   const tutupPeristiwa = useGameStore((s) => s.tutupPeristiwa);
   const tutupFunFact = useGameStore((s) => s.tutupFunFact);
   const mainLagi = useGameStore((s) => s.mainLagi);
@@ -145,6 +152,18 @@ export function GameBoard() {
         pengumuman={state.pengumumanKuis}
         onTutup={bersihkanPengumuman}
       />
+      <UnoToast
+        pengumuman={state.pengumumanUno}
+        onTutup={bersihkanPengumumanUno}
+      />
+      {!membuka && state.status !== 'selesai' && (
+        <TombolUno
+          state={state}
+          humanId={humanId}
+          onNyatakan={nyatakanUno}
+          onTangkap={tangkapUno}
+        />
+      )}
 
       {kuisHuman && state.efekTertunda && (
         <QuizModal

@@ -109,8 +109,67 @@ export function buatGame(
     funFactRonde: 0,
     soalAktif: null,
     menungguPembukaan: false,
+    uno: null,
+    pengumumanUno: null,
     log: [`Kartu pembuka: ${pembuka.simbol} (periode ${pembuka.periode})`],
   };
+}
+
+export const PENALTI_UNO_KARTU = 2;
+
+/** Set status UNO saat pemain turun ke 1 kartu; hapus kalau sudah tak 1 kartu. */
+function sinkronUno(s: GameState, pemainBaruSatu?: string): void {
+  if (pemainBaruSatu) {
+    const p = s.pemain.find((x) => x.id === pemainBaruSatu);
+    if (p && p.tangan.length === 1) {
+      s.uno = { pemainId: pemainBaruSatu, dinyatakan: false, padaMs: 0 };
+    }
+  }
+  if (s.uno) {
+    const p = s.pemain.find((x) => x.id === s.uno!.pemainId);
+    if (!p || p.tangan.length !== 1) s.uno = null;
+  }
+}
+
+/** Pemain menyatakan "UNO!" — aman dari tangkapan. */
+export function nyatakanUno(state: GameState, pemainId: string): GameState {
+  const s = clone(state);
+  if (!s.uno || s.uno.pemainId !== pemainId || s.uno.dinyatakan) return s;
+  s.uno.dinyatakan = true;
+  const nama = s.pemain.find((p) => p.id === pemainId)?.nama ?? '';
+  s.pengumumanUno = { nama, jenis: 'aman' };
+  s.log.push(`${nama}: UNO!`);
+  return s;
+}
+
+/** Menangkap pemain yang lupa bilang UNO — target ambil +2 kartu.
+ *  `penangkapId` null = tertangkap waktu habis ("Lawan"). */
+export function tangkapUno(
+  state: GameState,
+  penangkapId: string | null,
+  targetId: string,
+): GameState {
+  const s = clone(state);
+  if (!s.uno || s.uno.pemainId !== targetId || s.uno.dinyatakan) return s;
+  if (penangkapId === targetId) return s; // tak bisa menangkap diri sendiri
+  const ti = s.pemain.findIndex((p) => p.id === targetId);
+  if (ti < 0 || s.pemain[ti].tangan.length !== 1) {
+    s.uno = null;
+    return s;
+  }
+  const ambil = tarikKartuKe(s, ti, PENALTI_UNO_KARTU);
+  const oleh = penangkapId
+    ? (s.pemain.find((p) => p.id === penangkapId)?.nama ?? 'Lawan')
+    : 'Lawan';
+  s.pengumumanUno = {
+    nama: s.pemain[ti].nama,
+    jenis: 'tertangkap',
+    oleh,
+    ambil,
+  };
+  s.log.push(`${s.pemain[ti].nama} lupa bilang UNO — ${oleh} menangkap (+${ambil} kartu)`);
+  s.uno = null;
+  return s;
 }
 
 // ── validasi langkah ────────────────────────────────────────────────
@@ -221,11 +280,13 @@ export function mainkanKartu(
   if (p.tangan.length === 0) {
     s.status = 'selesai';
     s.pemenangId = pemainId;
+    s.uno = null;
     s.log.push(`🏆 ${p.nama} memenangkan permainan!`);
     return s;
   }
 
   s.giliranKe += 1;
+  sinkronUno(s, p.tangan.length === 1 ? pemainId : undefined);
 
   switch (kartu.jenis) {
     case 'angka':
@@ -374,11 +435,13 @@ export function mainkanBerbarengan(
   if (p.tangan.length === 0) {
     s.status = 'selesai';
     s.pemenangId = pemainId;
+    s.uno = null;
     s.log.push(`🏆 ${p.nama} memenangkan permainan!`);
     return s;
   }
 
   s.giliranKe += 1;
+  sinkronUno(s, p.tangan.length === 1 ? pemainId : undefined);
   const terakhir = kartuList[kartuList.length - 1];
   s.warnaAktif = terakhir.golongan;
   s.angkaAktif = terakhir.periode;
@@ -446,6 +509,7 @@ export function selesaikanKuis(state: GameState, hasil: HasilKuis): GameState {
   s.efekTertunda = null;
   s.soalAktif = null;
   s.status = 'bermain';
+  sinkronUno(s);
   return s;
 }
 
@@ -462,6 +526,7 @@ export function tarikKartu(state: GameState, pemainId: string): GameState {
   delete s.streak[pemainId];
   s.log.push(`${s.pemain[pi].nama} menarik ${ditarik} kartu & melewati giliran`);
   s.giliranKe += 1;
+  sinkronUno(s);
   majuGiliran(s, 1);
   return s;
 }
