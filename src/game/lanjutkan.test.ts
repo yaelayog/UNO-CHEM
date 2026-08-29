@@ -20,6 +20,7 @@ function mainkanSampaiSelesai(s: GameState): GameState {
     if (s.status === 'selesai') break;
     if (s.peristiwaAktif) s = { ...s, peristiwaAktif: null };
     else if (s.funFactAktif) s = { ...s, funFactAktif: null };
+    else if (s.faktaReward) s = { ...s, faktaReward: null };
     else if (s.menungguPembukaan) s = { ...s, menungguPembukaan: false };
     else break; // butuh input manusia (tak ada di skenario semua-bot)
   }

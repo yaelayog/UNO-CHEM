@@ -10,7 +10,7 @@ import { MejaPanggung } from './MejaPanggung';
 import { TargetCocok } from './DiscardPile';
 import { QuizModal } from './QuizModal';
 import { ColorPicker } from './ColorPicker';
-import { RewardToast } from './RewardToast';
+import { FaktaModal } from './FaktaModal';
 import { KuisToast } from './KuisToast';
 import { TombolUno } from './TombolUno';
 import { UnoToast } from './UnoToast';
@@ -147,7 +147,6 @@ export function GameBoard() {
       </div>
 
       {/* Overlay */}
-      <RewardToast reward={state.faktaReward} onTutup={bersihkanReward} />
       <KuisToast
         pengumuman={state.pengumumanKuis}
         onTutup={bersihkanPengumuman}
@@ -189,6 +188,10 @@ export function GameBoard() {
 
       {state.funFactAktif && !state.peristiwaAktif && (
         <FunFactModal fakta={state.funFactAktif} onTutup={tutupFunFact} />
+      )}
+
+      {state.faktaReward && !state.peristiwaAktif && !state.funFactAktif && (
+        <FaktaModal reward={state.faktaReward} onLanjut={bersihkanReward} />
       )}
 
       {state.status === 'selesai' && (

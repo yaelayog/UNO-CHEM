@@ -22,6 +22,7 @@ export function useBotRunner() {
     if (sedangMembuka) return; // tunggu animasi kocok + bagi selesai
     if (state.peristiwaAktif) return; // tunggu pemain menutup kartu peristiwa
     if (state.funFactAktif) return; // tunggu pemain menutup kartu Fun Fact
+    if (state.faktaReward) return; // tunggu pemain menutup kartu Fakta
 
     const current = state.pemain[state.giliran];
     const botHarusJalan =

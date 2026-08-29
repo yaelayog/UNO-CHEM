@@ -135,6 +135,7 @@ async function tangani(
         if (s.peristiwaAktif)
           return segarkanUno({ ...s, peristiwaAktif: null });
         if (s.funFactAktif) return segarkanUno({ ...s, funFactAktif: null });
+        if (s.faktaReward) return segarkanUno({ ...s, faktaReward: null });
         return s;
       }, { anggotaSaja: true });
     case 'nyatakanUno':
@@ -486,6 +487,7 @@ async function denyut(db: SupabaseClient, uid: string, code: string) {
   if (s.menungguPembukaan) next = { ...s, menungguPembukaan: false };
   else if (s.peristiwaAktif) next = { ...s, peristiwaAktif: null };
   else if (s.funFactAktif) next = { ...s, funFactAktif: null };
+  else if (s.faktaReward) next = { ...s, faktaReward: null };
   else if (s.status === 'menungguKuis') next = selesaikanKuis(s, 'salah');
   else if (s.status === 'menungguPilihWarna') next = pilihWarna(s, 'alkali');
   else if (s.status === 'bermain') next = tarikKartu(s, ditunggu);

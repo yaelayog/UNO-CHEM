@@ -473,8 +473,14 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
 
     bersihkanReward: () => {
-      const { state } = get();
-      if (state?.faktaReward) set({ state: { ...state, faktaReward: null } });
+      const { state, mode, online } = get();
+      if (mode === 'online') {
+        if (online) void kirimAksi('lanjut', { code: online.code });
+        if (state?.faktaReward) set({ state: { ...state, faktaReward: null } });
+        return;
+      }
+      if (state?.faktaReward)
+        set({ state: stampUno(segarkanUno({ ...state, faktaReward: null })) });
     },
 
     bersihkanPengumuman: () => {

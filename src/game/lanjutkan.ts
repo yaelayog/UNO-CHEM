@@ -43,7 +43,8 @@ export function lanjutkanOtomatis(state: GameState): GameState {
       s.status === 'selesai' ||
       s.menungguPembukaan ||
       s.peristiwaAktif ||
-      s.funFactAktif
+      s.funFactAktif ||
+      s.faktaReward
     ) {
       return s;
     }

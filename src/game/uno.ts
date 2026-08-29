@@ -9,6 +9,7 @@ function terhalangModal(s: GameState): boolean {
   return Boolean(
     s.peristiwaAktif ||
       s.funFactAktif ||
+      s.faktaReward ||
       s.menungguPembukaan ||
       s.status === 'menungguKuis' ||
       s.status === 'menungguPilihWarna',
@@ -27,7 +28,7 @@ export function stampUno(state: GameState): GameState {
   return state;
 }
 
-/** Reset hitung mundur UNO — dipakai saat modal (Peristiwa/Fun Fact) ditutup. */
+/** Reset hitung mundur UNO — dipakai saat modal (Peristiwa/Fun Fact/Fakta) ditutup. */
 export function segarkanUno(state: GameState): GameState {
   if (state.uno && !state.uno.dinyatakan) {
     return { ...state, uno: { ...state.uno, padaMs: 0 } };

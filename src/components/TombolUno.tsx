@@ -12,6 +12,7 @@ function modalTerbuka(s: GameState): boolean {
   return Boolean(
     s.peristiwaAktif ||
       s.funFactAktif ||
+      s.faktaReward ||
       s.menungguPembukaan ||
       s.status === 'menungguKuis' ||
       s.status === 'menungguPilihWarna',
