@@ -46,7 +46,9 @@ export function KontrolSuara() {
   const suaraStatus = useGameStore((s) => s.suaraStatus);
   const suaraPeers = useGameStore((s) => s.suaraPeers);
   const suaraBisu = useGameStore((s) => s.suaraBisu);
+  const suaraDiag = useGameStore((s) => s.suaraDiag);
   const setSuaraMode = useGameStore((s) => s.setSuaraMode);
+  const [diagTersalin, setDiagTersalin] = useState(false);
 
   const [buka, setBuka] = useState(false);
   const [bicara, setBicara] = useState(false);
@@ -147,7 +149,12 @@ export function KontrolSuara() {
                 )}
               </button>
             ))}
-            {suaraBisu && nyala ? (
+            {suaraDiag?.perluTurn ? (
+              <p className="px-2 pb-1 pt-2 text-[11px] font-bold text-halogen-700">
+                ⚠️ Jaringan tak bisa sambung P2P langsung. Perlu server TURN
+                (lihat pengaturan).
+              </p>
+            ) : suaraBisu && nyala ? (
               <p className="px-2 pb-1 pt-2 text-[11px] font-bold text-halogen-700">
                 🔇 Ketuk layar sekali untuk mulai mendengar.
               </p>
@@ -163,6 +170,25 @@ export function KontrolSuara() {
                   {info}
                 </p>
               )
+            )}
+
+            {nyala && suaraDiag && (
+              <button
+                type="button"
+                onClick={() => {
+                  void navigator.clipboard
+                    ?.writeText(JSON.stringify(suaraDiag, null, 2))
+                    .then(() => {
+                      setDiagTersalin(true);
+                      setTimeout(() => setDiagTersalin(false), 1500);
+                    });
+                }}
+                className="mt-1 w-full rounded-lg px-2 py-1 text-left text-[10px] font-bold text-tinta/40 hover:bg-black/5"
+              >
+                {diagTersalin
+                  ? '✓ diagnosa tersalin'
+                  : `Salin diagnosa · ${suaraDiag.peers.map((p) => p.ice).join('/') || 'belum ada peer'}`}
+              </button>
             )}
           </div>
         )}

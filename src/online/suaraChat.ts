@@ -10,6 +10,21 @@ export type StatusSuara =
   | 'ditolak'
   | 'gagal';
 
+export interface DiagSuara {
+  channel: string;
+  presence: number;
+  turn: boolean;
+  mic: string;
+  perluTurn: boolean;
+  peers: {
+    id: string;
+    sig: string;
+    ice: string;
+    gather: string;
+    kandidat: string[];
+  }[];
+}
+
 const TURN_URL = import.meta.env.VITE_TURN_URL as string | undefined;
 const TURN_USER = import.meta.env.VITE_TURN_USERNAME as string | undefined;
 const TURN_CRED = import.meta.env.VITE_TURN_CREDENTIAL as string | undefined;
@@ -53,6 +68,9 @@ interface Peer {
   /** Kandidat ICE yang datang sebelum remoteDescription siap. */
   iceMenunggu: RTCIceCandidateInit[];
   siapRemote: boolean;
+  /** Tipe kandidat lokal yang sudah dikumpulkan (host/srflx/relay). */
+  tipeKandidat: Set<string>;
+  mulaiMs: number;
 }
 
 /**
@@ -76,11 +94,13 @@ class SuaraChat {
   private channel: RealtimeChannel | null = null;
   private peers = new Map<string, Peer>();
   private lepasGestur: (() => void) | null = null;
+  private diagTimer: ReturnType<typeof setInterval> | null = null;
 
   onStatus?: (s: StatusSuara) => void;
   onPeers?: (n: number) => void;
-  /** true bila ada audio peer yang tertahan kebijakan autoplay (perlu ketukan). */
+  /** true bila audio peer tertahan kebijakan autoplay (perlu ketukan). */
   onBisu?: (bisu: boolean) => void;
+  onDiag?: (d: DiagSuara) => void;
 
   /** Coba putar semua audio peer (kebijakan autoplay butuh gesture / retry). */
   private desakPutar = (): void => {
@@ -141,7 +161,6 @@ class SuaraChat {
     this.terapkanMic();
     log('mic siap', stream.getAudioTracks());
 
-    // Setiap ketukan di mana pun → coba (re)putar audio peer yang ke-block.
     if (!this.lepasGestur) {
       const h = () => this.desakPutar();
       document.addEventListener('pointerdown', h, true);
@@ -178,6 +197,7 @@ class SuaraChat {
     ch.on('presence', { event: 'sync' }, () => {
       log('presence sync', Object.keys(ch.presenceState()));
       this.selarasPresence();
+      this.lapor();
     });
     ch.on('presence', { event: 'leave' }, ({ leftPresences }) => {
       for (const p of leftPresences as { key?: string }[]) {
@@ -194,7 +214,10 @@ class SuaraChat {
       } else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') {
         this.onStatus?.('gagal');
       }
+      this.lapor();
     });
+
+    this.diagTimer = setInterval(() => this.lapor(), 2000);
   }
 
   setMode(mode: ModeSuara): void {
@@ -204,7 +227,7 @@ class SuaraChat {
       return;
     }
     this.terapkanMic();
-    this.desakPutar(); // dipanggil dari gesture tombol → buka blokir autoplay
+    this.desakPutar();
   }
 
   setPtt(aktif: boolean): void {
@@ -220,11 +243,16 @@ class SuaraChat {
     this.uid = null;
     this.onStatus?.('mati');
     this.onPeers?.(0);
+    this.onBisu?.(false);
   }
 
   // ── internal ──────────────────────────────────────────────────────
 
   private bersihkan(): void {
+    if (this.diagTimer) {
+      clearInterval(this.diagTimer);
+      this.diagTimer = null;
+    }
     for (const { pc } of this.peers.values()) pc.close();
     this.peers.clear();
     document
@@ -263,20 +291,57 @@ class SuaraChat {
     }
   }
 
-  private laporPeers(): void {
+  private lapor(): void {
     let n = 0;
-    for (const { pc } of this.peers.values()) {
-      const s = pc.iceConnectionState;
-      if (s === 'connected' || s === 'completed') n++;
+    let perluTurn = false;
+    const now = Date.now();
+    const peers: DiagSuara['peers'] = [];
+    for (const [id, p] of this.peers) {
+      const ice = p.pc.iceConnectionState;
+      if (ice === 'connected' || ice === 'completed') n++;
+      // Tak sambung >12 dtk & tak ada TURN → butuh relay.
+      if (
+        (ice === 'checking' || ice === 'disconnected' || ice === 'failed') &&
+        now - p.mulaiMs > 12000 &&
+        !turnDikonfigurasi
+      ) {
+        perluTurn = true;
+      }
+      peers.push({
+        id: id.slice(0, 6),
+        sig: p.pc.signalingState,
+        ice,
+        gather: p.pc.iceGatheringState,
+        kandidat: [...p.tipeKandidat],
+      });
     }
     this.onPeers?.(n);
+    const trk = this.local?.getAudioTracks()[0];
+    this.onDiag?.({
+      channel: this.channel ? 'ada' : 'tidak',
+      presence: this.channel
+        ? Object.keys(this.channel.presenceState()).length
+        : 0,
+      turn: turnDikonfigurasi,
+      mic: trk
+        ? `${trk.readyState}${trk.muted ? ' (muted OS)' : ''}${trk.enabled ? ' kirim' : ' diam'}`
+        : 'tidak',
+      perluTurn,
+      peers,
+    });
   }
 
   private buatPeer(peerId: string, sebagaiPenawar: boolean): void {
     if (this.peers.has(peerId) || !this.local) return;
     log('buatPeer', peerId, sebagaiPenawar ? '(penawar)' : '(penerima)');
     const pc = new RTCPeerConnection({ iceServers: iceServers() });
-    const peer: Peer = { pc, iceMenunggu: [], siapRemote: false };
+    const peer: Peer = {
+      pc,
+      iceMenunggu: [],
+      siapRemote: false,
+      tipeKandidat: new Set(),
+      mulaiMs: Date.now(),
+    };
     this.peers.set(peerId, peer);
 
     for (const track of this.local.getTracks()) {
@@ -285,6 +350,7 @@ class SuaraChat {
 
     pc.onicecandidate = (ev) => {
       if (ev.candidate && this.uid) {
+        if (ev.candidate.type) peer.tipeKandidat.add(ev.candidate.type);
         this.kirimSinyal({
           t: 'ice',
           dari: this.uid,
@@ -308,15 +374,13 @@ class SuaraChat {
         document.body.appendChild(el);
       }
       el.srcObject = stream;
-      // Beberapa kali coba — kebijakan autoplay kadang baru mengizinkan
-      // setelah media-engagement naik / ada gesture.
       this.desakPutar();
       [400, 1200, 3000].forEach((ms) => setTimeout(this.desakPutar, ms));
     };
 
     pc.oniceconnectionstatechange = () => {
       log(peerId, 'ice', pc.iceConnectionState);
-      this.laporPeers();
+      this.lapor();
       if (pc.iceConnectionState === 'failed') pc.restartIce?.();
     };
     pc.onconnectionstatechange = () => {
@@ -350,10 +414,8 @@ class SuaraChat {
     log('tutupPeer', peerId);
     peer.pc.close();
     this.peers.delete(peerId);
-    document
-      .querySelector(`audio[data-suara-peer="${peerId}"]`)
-      ?.remove();
-    this.laporPeers();
+    document.querySelector(`audio[data-suara-peer="${peerId}"]`)?.remove();
+    this.lapor();
   }
 
   private kirimSinyal(s: Sinyal): void {

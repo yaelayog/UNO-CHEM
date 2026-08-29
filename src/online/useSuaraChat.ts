@@ -14,17 +14,20 @@ export function useSuaraChat() {
   const setStatus = useGameStore((s) => s._setSuaraStatus);
   const setPeers = useGameStore((s) => s._setSuaraPeers);
   const setBisu = useGameStore((s) => s._setSuaraBisu);
+  const setDiag = useGameStore((s) => s._setSuaraDiag);
 
   useEffect(() => {
     suaraChat.onStatus = setStatus;
     suaraChat.onPeers = setPeers;
     suaraChat.onBisu = setBisu;
+    suaraChat.onDiag = setDiag;
     return () => {
       suaraChat.onStatus = undefined;
       suaraChat.onPeers = undefined;
       suaraChat.onBisu = undefined;
+      suaraChat.onDiag = undefined;
     };
-  }, [setStatus, setPeers, setBisu]);
+  }, [setStatus, setPeers, setBisu, setDiag]);
 
   useEffect(() => {
     const aktif = modeMain === 'online' && !!code && !!uid && suaraMode !== 'off';

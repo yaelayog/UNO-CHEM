@@ -24,7 +24,12 @@ import {
 } from '../game';
 import { kirimAksi, type HasilAksi } from '../online/klienOnline';
 import { rekonstruksiState } from '../online/rekonstruksi';
-import { suaraChat, type ModeSuara, type StatusSuara } from '../online/suaraChat';
+import {
+  suaraChat,
+  type DiagSuara,
+  type ModeSuara,
+  type StatusSuara,
+} from '../online/suaraChat';
 import type { StatePublik } from '../online/tipe';
 import type { DataRoom } from '../online/useRoomOnline';
 import { sfx } from '../lib/audio';
@@ -96,11 +101,13 @@ interface GameStore {
   suaraPeers: number;
   /** true bila audio peer tertahan kebijakan autoplay — perlu ketuk layar. */
   suaraBisu: boolean;
+  suaraDiag: DiagSuara | null;
   setSuaraMode: (m: ModeSuara) => void;
   /** dipakai internal oleh useSuaraChat. */
   _setSuaraStatus: (s: StatusSuara) => void;
   _setSuaraPeers: (n: number) => void;
   _setSuaraBisu: (b: boolean) => void;
+  _setSuaraDiag: (d: DiagSuara | null) => void;
 
   progres: Progres;
   /** Ringkasan XP/level/badge dari game yang baru selesai — utk layar GameOver. */
@@ -360,11 +367,14 @@ export const useGameStore = create<GameStore>((set, get) => {
     suaraStatus: 'mati',
     suaraPeers: 0,
     suaraBisu: false,
+    suaraDiag: null,
     setSuaraMode: (m) => {
       set({
         suaraMode: m,
         suaraStatus: m === 'off' ? 'mati' : 'menghubungkan',
-        ...(m === 'off' ? { suaraPeers: 0, suaraBisu: false } : {}),
+        ...(m === 'off'
+          ? { suaraPeers: 0, suaraBisu: false, suaraDiag: null }
+          : {}),
       });
       suaraChat.setMode(m);
     },
@@ -380,6 +390,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
     _setSuaraPeers: (n) => set({ suaraPeers: n }),
     _setSuaraBisu: (b) => set({ suaraBisu: b }),
+    _setSuaraDiag: (d) => set({ suaraDiag: d }),
 
     progres: bacaProgres(),
     rekamTerakhir: null,
@@ -465,6 +476,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         suaraStatus: 'mati',
         suaraPeers: 0,
         suaraBisu: false,
+        suaraDiag: null,
         layar: 'menu',
       });
     },
