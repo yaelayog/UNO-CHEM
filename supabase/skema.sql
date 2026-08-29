@@ -53,8 +53,12 @@ create table if not exists public.tangan (
   room_code text not null references public.rooms(code) on delete cascade,
   pemain    uuid not null,
   kartu     jsonb not null default '[]'::jsonb,
+  -- Soal kuis aktif untuk pemain ini (kalau sedang jadi target kuis). Privat
+  -- lewat RLS — TIDAK disiarkan di game_publik supaya lawan tak ikut melihat.
+  soal      jsonb,
   primary key (room_code, pemain)
 );
+alter table public.tangan add column if not exists soal jsonb;
 
 -- FULL GameState (semua kartu) — HANYA service role. Tak ada policy → deny-all klien.
 create table if not exists public.game_core (

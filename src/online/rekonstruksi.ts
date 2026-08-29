@@ -1,4 +1,4 @@
-import type { GameState, KartuKimia } from '../game';
+import type { GameState, KartuKimia, SoalKuis } from '../game';
 import type { StatePublik } from './tipe';
 
 const KARTU_KOSONG: Omit<KartuKimia, 'id'> = {
@@ -15,11 +15,15 @@ const KARTU_KOSONG: Omit<KartuKimia, 'id'> = {
  * Susun ulang bentuk `GameState` untuk UI dari state publik + tangan sendiri.
  * Tangan lawan & tumpukan tarik cukup diisi kartu placeholder (UI hanya butuh
  * jumlahnya). Cukup untuk render meja, `langkahLegal` pemain sendiri, dsb.
+ *
+ * `soalPrivat` = soal kuis dari baris `tangan` milik pemain ini (server tak
+ * menyiarkannya di `pub` supaya lawan tak ikut melihat).
  */
 export function rekonstruksiState(
   pub: StatePublik,
   tanganku: KartuKimia[],
   uid: string,
+  soalPrivat: SoalKuis | null = null,
 ): GameState {
   const isi = (n: number, prefix: string): KartuKimia[] =>
     Array.from({ length: Math.max(0, n) }, (_, i) => ({
@@ -29,6 +33,7 @@ export function rekonstruksiState(
 
   return {
     ...pub,
+    soalAktif: soalPrivat,
     pemain: pub.pemain.map((p) => ({
       id: p.id,
       nama: p.nama,

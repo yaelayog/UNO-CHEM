@@ -38,4 +38,5 @@ export interface HasilSync {
   versi: number;
   statePublik: StatePublik | null;
   tanganku: import('../game').KartuKimia[];
+  soalPrivat: import('../game').SoalKuis | null;
 }

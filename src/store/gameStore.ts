@@ -233,6 +233,7 @@ export const useGameStore = create<GameStore>((set, get) => {
   function terapkanStatePublik(
     pub: StatePublik,
     tanganku: KartuKimia[],
+    soalPrivat: SoalKuis | null,
     versi: number,
     paksa = false,
   ) {
@@ -240,9 +241,19 @@ export const useGameStore = create<GameStore>((set, get) => {
     if (!st.online) return;
     // Terapkan bila: dipaksa, belum ada state sama sekali (state awal server
     // ber-versi 0), atau versinya lebih baru dari yang sudah diterapkan.
-    if (!paksa && st.state && versi <= st.versiOnline) return;
+    if (!paksa && st.state && versi <= st.versiOnline) {
+      // Versi tak lebih baru, tapi soal privat (channel `tangan`) bisa berubah
+      // terpisah dari `game_publik` → tambal hanya bagian soal.
+      if (st.state.soalAktif?.id !== soalPrivat?.id) {
+        set({
+          state: { ...st.state, soalAktif: soalPrivat },
+          soalAktif: soalPrivat,
+        });
+      }
+      return;
+    }
 
-    const next = rekonstruksiState(pub, tanganku, st.online.uid);
+    const next = rekonstruksiState(pub, tanganku, st.online.uid, soalPrivat);
     const sebelum = st.state;
 
     if (st.layar === 'online') {
@@ -286,7 +297,12 @@ export const useGameStore = create<GameStore>((set, get) => {
       return;
     }
     if (r.statePublik && typeof r.versi === 'number') {
-      terapkanStatePublik(r.statePublik, r.tanganku ?? [], r.versi);
+      terapkanStatePublik(
+        r.statePublik,
+        r.tanganku ?? [],
+        r.soalPrivat ?? null,
+        r.versi,
+      );
       return;
     }
     set({ aksiPending: false });
@@ -354,7 +370,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       if (!st.online || !d.statePublik) return;
       // Gate versi: push Realtime yang tak lebih baru diabaikan (mis. hasil
       // fetch roster) supaya state optimistik tak ke-timpa mundur.
-      terapkanStatePublik(d.statePublik, d.tanganku, d.versi);
+      terapkanStatePublik(d.statePublik, d.tanganku, d.soalku, d.versi);
     },
 
     resyncOnline: () => {
@@ -365,6 +381,7 @@ export const useGameStore = create<GameStore>((set, get) => {
           terapkanStatePublik(
             r.statePublik,
             (r.tanganku as KartuKimia[]) ?? [],
+            r.soalPrivat ?? null,
             r.versi,
             true,
           );

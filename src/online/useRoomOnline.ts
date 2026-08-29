@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { RealtimeChannel } from '@supabase/supabase-js';
-import type { KartuKimia } from '../game';
+import type { KartuKimia, SoalKuis } from '../game';
 import { getSupabase } from '../lib/supabase';
 import { kirimAksi } from './klienOnline';
 import type { RoomRow, RosterRow, StatePublik } from './tipe';
@@ -11,6 +11,8 @@ export interface DataRoom {
   versi: number;
   statePublik: StatePublik | null;
   tanganku: KartuKimia[];
+  /** Soal kuis privat pemain ini — dari baris `tangan` (tak disiarkan publik). */
+  soalku: SoalKuis | null;
   error: string | null;
 }
 
@@ -20,6 +22,7 @@ const AWAL: DataRoom = {
   versi: 0,
   statePublik: null,
   tanganku: [],
+  soalku: null,
   error: null,
 };
 
@@ -55,6 +58,7 @@ export function useRoomOnline(
         versi: versiRef.current,
         statePublik: (r.statePublik as StatePublik | null) ?? null,
         tanganku: (r.tanganku as KartuKimia[]) ?? [],
+        soalku: (r.soalPrivat as SoalKuis | null) ?? null,
         error: null,
       });
     }
@@ -90,8 +94,13 @@ export function useRoomOnline(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'tangan', filter: `room_code=eq.${code}` },
           (p) => {
-            const row = p.new as { pemain: string; kartu: KartuKimia[] };
-            if (row?.pemain === uid) gabung({ tanganku: row.kartu ?? [] });
+            const row = p.new as {
+              pemain: string;
+              kartu: KartuKimia[];
+              soal?: SoalKuis | null;
+            };
+            if (row?.pemain === uid)
+              gabung({ tanganku: row.kartu ?? [], soalku: row.soal ?? null });
           },
         )
         .subscribe();

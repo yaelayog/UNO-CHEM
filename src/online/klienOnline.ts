@@ -1,4 +1,4 @@
-import type { KartuKimia } from '../game';
+import type { KartuKimia, SoalKuis } from '../game';
 import { getSupabase, sesiSiap } from '../lib/supabase';
 import type { StatePublik } from './tipe';
 
@@ -12,6 +12,8 @@ export interface HasilAksi {
   /** State ter-redaksi + tangan pemanggil — dibalas langsung agar tak menunggu Realtime. */
   statePublik?: StatePublik;
   tanganku?: KartuKimia[];
+  /** Soal kuis privat pemanggil (kalau ia sedang jadi target kuis). */
+  soalPrivat?: SoalKuis | null;
   [k: string]: unknown;
 }
 

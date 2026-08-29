@@ -309,7 +309,12 @@ async function mulai(db: SupabaseClient, uid: string, code: string) {
 
   const barisTangan = pisahTangan(state)
     .filter((t) => !t.pemain.startsWith('bot-'))
-    .map((t) => ({ room_code: code, pemain: t.pemain, kartu: t.kartu }));
+    .map((t) => ({
+      room_code: code,
+      pemain: t.pemain,
+      kartu: t.kartu,
+      soal: t.soal ?? null,
+    }));
 
   if (barisBot.length) await db.from('room_pemain').insert(barisBot);
   await Promise.all([
@@ -335,7 +340,7 @@ async function sync(db: SupabaseClient, uid: string, code: string) {
     db.from('game_publik').select('versi, state').eq('room_code', code).maybeSingle(),
     db
       .from('tangan')
-      .select('kartu')
+      .select('kartu, soal')
       .eq('room_code', code)
       .eq('pemain', uid)
       .maybeSingle(),
@@ -346,6 +351,7 @@ async function sync(db: SupabaseClient, uid: string, code: string) {
     versi: pub?.versi ?? 0,
     statePublik: pub?.state ?? null,
     tanganku: tangan?.kartu ?? [],
+    soalPrivat: tangan?.soal ?? null,
   };
 }
 
@@ -392,11 +398,16 @@ async function aksiState(
     lanjutkanOtomatis(diubah, { berhentiKartuFakta: false }),
   );
   const hasil = await simpan(db, code, core.versi as number, next);
-  // Balikan state langsung ke pemanggil (tangan miliknya) supaya klien tak
-  // perlu menunggu push Realtime — mengurangi delay giliran sendiri.
+  // Balikan state langsung ke pemanggil (tangan + soal privat miliknya) supaya
+  // klien tak perlu menunggu push Realtime — mengurangi delay giliran sendiri.
   if ('ok' in hasil && hasil.ok) {
     const tanganku = next.pemain.find((p) => p.id === uid)?.tangan ?? [];
-    return { ...hasil, tanganku };
+    const soalPrivat =
+      next.status === 'menungguKuis' &&
+      next.efekTertunda?.targetPemainId === uid
+        ? next.soalAktif
+        : null;
+    return { ...hasil, tanganku, soalPrivat };
   }
   return hasil;
 }
@@ -426,7 +437,12 @@ async function simpan(
 
   const barisTangan = pisahTangan(next)
     .filter((t) => !t.pemain.startsWith('bot-'))
-    .map((t) => ({ room_code: code, pemain: t.pemain, kartu: t.kartu }));
+    .map((t) => ({
+      room_code: code,
+      pemain: t.pemain,
+      kartu: t.kartu,
+      soal: t.soal ?? null,
+    }));
   await Promise.all([
     db
       .from('game_publik')
