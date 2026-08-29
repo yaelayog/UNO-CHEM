@@ -94,10 +94,13 @@ interface GameStore {
   suaraMode: ModeSuara;
   suaraStatus: StatusSuara;
   suaraPeers: number;
+  /** true bila audio peer tertahan kebijakan autoplay — perlu ketuk layar. */
+  suaraBisu: boolean;
   setSuaraMode: (m: ModeSuara) => void;
   /** dipakai internal oleh useSuaraChat. */
   _setSuaraStatus: (s: StatusSuara) => void;
   _setSuaraPeers: (n: number) => void;
+  _setSuaraBisu: (b: boolean) => void;
 
   progres: Progres;
   /** Ringkasan XP/level/badge dari game yang baru selesai — utk layar GameOver. */
@@ -356,11 +359,12 @@ export const useGameStore = create<GameStore>((set, get) => {
     suaraMode: 'off',
     suaraStatus: 'mati',
     suaraPeers: 0,
+    suaraBisu: false,
     setSuaraMode: (m) => {
       set({
         suaraMode: m,
         suaraStatus: m === 'off' ? 'mati' : 'menghubungkan',
-        ...(m === 'off' ? { suaraPeers: 0 } : {}),
+        ...(m === 'off' ? { suaraPeers: 0, suaraBisu: false } : {}),
       });
       suaraChat.setMode(m);
     },
@@ -375,6 +379,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       set({ suaraStatus: s });
     },
     _setSuaraPeers: (n) => set({ suaraPeers: n }),
+    _setSuaraBisu: (b) => set({ suaraBisu: b }),
 
     progres: bacaProgres(),
     rekamTerakhir: null,
@@ -459,6 +464,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         suaraMode: 'off',
         suaraStatus: 'mati',
         suaraPeers: 0,
+        suaraBisu: false,
         layar: 'menu',
       });
     },

@@ -16,9 +16,22 @@ const TURN_CRED = import.meta.env.VITE_TURN_CREDENTIAL as string | undefined;
 
 export const turnDikonfigurasi = Boolean(TURN_URL && TURN_USER && TURN_CRED);
 
+const DEBUG =
+  typeof localStorage !== 'undefined' &&
+  localStorage.getItem('chemuno:suara-debug') === '1';
+function log(...a: unknown[]): void {
+  if (DEBUG) console.log('[suara]', ...a);
+}
+
 function iceServers(): RTCIceServer[] {
   const list: RTCIceServer[] = [
-    { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
+    {
+      urls: [
+        'stun:stun.l.google.com:19302',
+        'stun:stun1.l.google.com:19302',
+        'stun:stun2.l.google.com:19302',
+      ],
+    },
   ];
   if (TURN_URL && TURN_USER && TURN_CRED) {
     list.push({
@@ -35,14 +48,21 @@ type Sinyal =
   | { t: 'answer'; dari: string; ke: string; sdp: string }
   | { t: 'ice'; dari: string; ke: string; cand: RTCIceCandidateInit };
 
+interface Peer {
+  pc: RTCPeerConnection;
+  /** Kandidat ICE yang datang sebelum remoteDescription siap. */
+  iceMenunggu: RTCIceCandidateInit[];
+  siapRemote: boolean;
+}
+
 /**
  * Voice chat mesh (P2P WebRTC) untuk room online. Signaling lewat Supabase
- * Realtime channel `suara:<kode>` (broadcast + presence). Bot diabaikan.
+ * Realtime channel `suara:<kode>` (presence + broadcast SDP/ICE). Bot diabaikan.
  *
- * Mode:
- *  - `off` → putus total (tak bicara, tak dengar).
- *  - `on`  → mic selalu kirim.
- *  - `ptt` → mic kirim hanya saat `setPtt(true)`.
+ * Mode: `off` = putus total · `on` = mic selalu kirim · `ptt` = kirim saat
+ * `setPtt(true)`.
+ *
+ * Debug: `localStorage.setItem('chemuno:suara-debug','1')` lalu reload.
  */
 class SuaraChat {
   private code: string | null = null;
@@ -54,13 +74,32 @@ class SuaraChat {
 
   private local: MediaStream | null = null;
   private channel: RealtimeChannel | null = null;
-  private pcs = new Map<string, RTCPeerConnection>();
-  private audio = new Map<string, HTMLAudioElement>();
+  private peers = new Map<string, Peer>();
+  private lepasGestur: (() => void) | null = null;
 
   onStatus?: (s: StatusSuara) => void;
   onPeers?: (n: number) => void;
+  /** true bila ada audio peer yang tertahan kebijakan autoplay (perlu ketukan). */
+  onBisu?: (bisu: boolean) => void;
 
-  /** Sambung ke voice room. Idempoten — aman dipanggil ulang. */
+  /** Coba putar semua audio peer (kebijakan autoplay butuh gesture / retry). */
+  private desakPutar = (): void => {
+    document
+      .querySelectorAll<HTMLAudioElement>('audio[data-suara-peer]')
+      .forEach((el) => {
+        if (el.paused && el.srcObject) void el.play().catch(() => {});
+      });
+    setTimeout(() => {
+      let bisu = false;
+      document
+        .querySelectorAll<HTMLAudioElement>('audio[data-suara-peer]')
+        .forEach((el) => {
+          if (el.paused && el.srcObject) bisu = true;
+        });
+      this.onBisu?.(bisu);
+    }, 350);
+  };
+
   async sambung(code: string, uid: string): Promise<void> {
     if (this.code === code && this.uid === uid && this.channel) return;
 
@@ -69,6 +108,7 @@ class SuaraChat {
     this.code = code;
     this.uid = uid;
     this.onStatus?.('minta-izin');
+    log('sambung', code, uid);
 
     let stream: MediaStream;
     try {
@@ -83,6 +123,7 @@ class SuaraChat {
     } catch (e) {
       if (gen !== this.epoch) return;
       const nama = e instanceof DOMException ? e.name : '';
+      log('getUserMedia gagal', nama, e);
       this.onStatus?.(
         nama === 'NotAllowedError' || nama === 'SecurityError'
           ? 'ditolak'
@@ -98,6 +139,18 @@ class SuaraChat {
     }
     this.local = stream;
     this.terapkanMic();
+    log('mic siap', stream.getAudioTracks());
+
+    // Setiap ketukan di mana pun → coba (re)putar audio peer yang ke-block.
+    if (!this.lepasGestur) {
+      const h = () => this.desakPutar();
+      document.addEventListener('pointerdown', h, true);
+      document.addEventListener('keydown', h, true);
+      this.lepasGestur = () => {
+        document.removeEventListener('pointerdown', h, true);
+        document.removeEventListener('keydown', h, true);
+      };
+    }
 
     const sb = await getSupabase();
     if (gen !== this.epoch) return;
@@ -117,18 +170,24 @@ class SuaraChat {
 
     ch.on('broadcast', { event: 'sinyal' }, ({ payload }) => {
       const s = payload as Sinyal;
-      if (s.ke === uid && s.dari !== uid) void this.terimaSinyal(s);
+      if (s.ke === uid && s.dari !== uid) {
+        log('terima', s.t, 'dari', s.dari);
+        void this.terimaSinyal(s);
+      }
     });
-    ch.on('presence', { event: 'sync' }, () => this.selarasPresence());
+    ch.on('presence', { event: 'sync' }, () => {
+      log('presence sync', Object.keys(ch.presenceState()));
+      this.selarasPresence();
+    });
     ch.on('presence', { event: 'leave' }, ({ leftPresences }) => {
       for (const p of leftPresences as { key?: string }[]) {
         if (p.key) this.tutupPeer(p.key);
       }
-      this.laporPeers();
     });
 
     ch.subscribe((st) => {
       if (gen !== this.epoch) return;
+      log('channel status', st);
       if (st === 'SUBSCRIBED') {
         void ch.track({ uid, pada: Date.now() });
         this.onStatus?.('tersambung');
@@ -138,7 +197,6 @@ class SuaraChat {
     });
   }
 
-  /** Ganti mode tanpa memutus koneksi (kecuali `off`). */
   setMode(mode: ModeSuara): void {
     this.mode = mode;
     if (mode === 'off') {
@@ -146,14 +204,15 @@ class SuaraChat {
       return;
     }
     this.terapkanMic();
+    this.desakPutar(); // dipanggil dari gesture tombol → buka blokir autoplay
   }
 
   setPtt(aktif: boolean): void {
     this.ptt = aktif;
     this.terapkanMic();
+    this.desakPutar();
   }
 
-  /** Tutup semua koneksi & lepas mic. */
   putus(): void {
     this.epoch++;
     this.bersihkan();
@@ -166,18 +225,22 @@ class SuaraChat {
   // ── internal ──────────────────────────────────────────────────────
 
   private bersihkan(): void {
-    for (const pc of this.pcs.values()) pc.close();
-    this.pcs.clear();
-    for (const el of this.audio.values()) {
-      el.srcObject = null;
-      el.remove();
-    }
-    this.audio.clear();
+    for (const { pc } of this.peers.values()) pc.close();
+    this.peers.clear();
+    document
+      .querySelectorAll('audio[data-suara-peer]')
+      .forEach((el) => el.remove());
+    this.lepasGestur?.();
+    this.lepasGestur = null;
     this.local?.getTracks().forEach((t) => t.stop());
     this.local = null;
     if (this.channel) {
-      void this.channel.unsubscribe();
+      const ch = this.channel;
       this.channel = null;
+      void (async () => {
+        const sb = await getSupabase();
+        void sb?.removeChannel(ch);
+      })();
     }
   }
 
@@ -190,32 +253,31 @@ class SuaraChat {
     const ch = this.channel;
     const uid = this.uid;
     if (!ch || !uid) return;
-    const state = ch.presenceState() as Record<string, unknown[]>;
-    const hadir = new Set(Object.keys(state));
+    const hadir = new Set(Object.keys(ch.presenceState()));
     for (const peer of hadir) {
       if (peer === uid) continue;
-      // Penawar = uid lebih kecil (deterministik, hindari glare).
-      if (!this.pcs.has(peer)) this.buatPeer(peer, uid < peer);
+      if (!this.peers.has(peer)) this.buatPeer(peer, uid < peer);
     }
-    for (const peer of [...this.pcs.keys()]) {
+    for (const peer of [...this.peers.keys()]) {
       if (!hadir.has(peer)) this.tutupPeer(peer);
     }
-    this.laporPeers();
   }
 
   private laporPeers(): void {
     let n = 0;
-    for (const pc of this.pcs.values()) {
+    for (const { pc } of this.peers.values()) {
       const s = pc.iceConnectionState;
       if (s === 'connected' || s === 'completed') n++;
     }
     this.onPeers?.(n);
   }
 
-  private buatPeer(peer: string, sebagaiPenawar: boolean): void {
-    if (this.pcs.has(peer) || !this.local) return;
+  private buatPeer(peerId: string, sebagaiPenawar: boolean): void {
+    if (this.peers.has(peerId) || !this.local) return;
+    log('buatPeer', peerId, sebagaiPenawar ? '(penawar)' : '(penerima)');
     const pc = new RTCPeerConnection({ iceServers: iceServers() });
-    this.pcs.set(peer, pc);
+    const peer: Peer = { pc, iceMenunggu: [], siapRemote: false };
+    this.peers.set(peerId, peer);
 
     for (const track of this.local.getTracks()) {
       pc.addTrack(track, this.local);
@@ -226,7 +288,7 @@ class SuaraChat {
         this.kirimSinyal({
           t: 'ice',
           dari: this.uid,
-          ke: peer,
+          ke: peerId,
           cand: ev.candidate.toJSON(),
         });
       }
@@ -235,55 +297,62 @@ class SuaraChat {
     pc.ontrack = (ev) => {
       const stream = ev.streams[0];
       if (!stream) return;
-      let el = this.audio.get(peer);
+      log('ontrack dari', peerId);
+      let el = document.querySelector<HTMLAudioElement>(
+        `audio[data-suara-peer="${peerId}"]`,
+      );
       if (!el) {
         el = document.createElement('audio');
         el.autoplay = true;
-        el.dataset.suaraPeer = peer;
+        el.dataset.suaraPeer = peerId;
         document.body.appendChild(el);
-        this.audio.set(peer, el);
       }
       el.srcObject = stream;
-      void el.play().catch(() => {});
+      // Beberapa kali coba — kebijakan autoplay kadang baru mengizinkan
+      // setelah media-engagement naik / ada gesture.
+      this.desakPutar();
+      [400, 1200, 3000].forEach((ms) => setTimeout(this.desakPutar, ms));
     };
 
     pc.oniceconnectionstatechange = () => {
+      log(peerId, 'ice', pc.iceConnectionState);
       this.laporPeers();
-      const s = pc.iceConnectionState;
-      if (s === 'failed') pc.restartIce?.();
+      if (pc.iceConnectionState === 'failed') pc.restartIce?.();
     };
     pc.onconnectionstatechange = () => {
-      if (pc.connectionState === 'closed') this.tutupPeer(peer);
+      log(peerId, 'conn', pc.connectionState);
+      if (pc.connectionState === 'closed') this.tutupPeer(peerId);
     };
 
     if (sebagaiPenawar) {
       void (async () => {
         try {
           await pc.setLocalDescription(await pc.createOffer());
-          if (this.uid) {
+          if (this.uid && this.peers.get(peerId) === peer) {
             this.kirimSinyal({
               t: 'offer',
               dari: this.uid,
-              ke: peer,
+              ke: peerId,
               sdp: pc.localDescription?.sdp ?? '',
             });
           }
-        } catch {
-          this.tutupPeer(peer);
+        } catch (err) {
+          log('createOffer gagal', err);
+          this.tutupPeer(peerId);
         }
       })();
     }
   }
 
-  private tutupPeer(peer: string): void {
-    this.pcs.get(peer)?.close();
-    this.pcs.delete(peer);
-    const el = this.audio.get(peer);
-    if (el) {
-      el.srcObject = null;
-      el.remove();
-      this.audio.delete(peer);
-    }
+  private tutupPeer(peerId: string): void {
+    const peer = this.peers.get(peerId);
+    if (!peer) return;
+    log('tutupPeer', peerId);
+    peer.pc.close();
+    this.peers.delete(peerId);
+    document
+      .querySelector(`audio[data-suara-peer="${peerId}"]`)
+      ?.remove();
     this.laporPeers();
   }
 
@@ -291,48 +360,67 @@ class SuaraChat {
     void this.channel?.send({ type: 'broadcast', event: 'sinyal', payload: s });
   }
 
+  private async kurasIce(peer: Peer): Promise<void> {
+    peer.siapRemote = true;
+    const antre = peer.iceMenunggu.splice(0);
+    for (const c of antre) {
+      try {
+        await peer.pc.addIceCandidate(c);
+      } catch (err) {
+        log('addIceCandidate (antre) gagal', err);
+      }
+    }
+  }
+
   private async terimaSinyal(s: Sinyal): Promise<void> {
     const uid = this.uid;
     if (!uid) return;
-    const peer = s.dari;
+    const peerId = s.dari;
 
     if (s.t === 'offer') {
-      if (!this.pcs.has(peer)) this.buatPeer(peer, false);
-      const pc = this.pcs.get(peer);
-      if (!pc) return;
+      if (!this.peers.has(peerId)) this.buatPeer(peerId, false);
+      const peer = this.peers.get(peerId);
+      if (!peer) return;
       try {
-        await pc.setRemoteDescription({ type: 'offer', sdp: s.sdp });
-        await pc.setLocalDescription(await pc.createAnswer());
+        await peer.pc.setRemoteDescription({ type: 'offer', sdp: s.sdp });
+        await this.kurasIce(peer);
+        await peer.pc.setLocalDescription(await peer.pc.createAnswer());
         this.kirimSinyal({
           t: 'answer',
           dari: uid,
-          ke: peer,
-          sdp: pc.localDescription?.sdp ?? '',
+          ke: peerId,
+          sdp: peer.pc.localDescription?.sdp ?? '',
         });
-      } catch {
-        this.tutupPeer(peer);
+      } catch (err) {
+        log('proses offer gagal', err);
+        this.tutupPeer(peerId);
       }
       return;
     }
 
     if (s.t === 'answer') {
-      const pc = this.pcs.get(peer);
-      if (!pc || pc.signalingState !== 'have-local-offer') return;
+      const peer = this.peers.get(peerId);
+      if (!peer) return;
       try {
-        await pc.setRemoteDescription({ type: 'answer', sdp: s.sdp });
-      } catch {
-        /* abaikan */
+        await peer.pc.setRemoteDescription({ type: 'answer', sdp: s.sdp });
+        await this.kurasIce(peer);
+      } catch (err) {
+        log('proses answer gagal', err);
       }
       return;
     }
 
     // ice
-    const pc = this.pcs.get(peer);
-    if (!pc) return;
+    const peer = this.peers.get(peerId);
+    if (!peer) return;
+    if (!peer.siapRemote || !peer.pc.remoteDescription) {
+      peer.iceMenunggu.push(s.cand);
+      return;
+    }
     try {
-      await pc.addIceCandidate(s.cand);
-    } catch {
-      /* kandidat sebelum remote description — abaikan */
+      await peer.pc.addIceCandidate(s.cand);
+    } catch (err) {
+      log('addIceCandidate gagal', err);
     }
   }
 }

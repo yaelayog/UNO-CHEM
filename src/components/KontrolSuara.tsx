@@ -45,6 +45,7 @@ export function KontrolSuara() {
   const suaraMode = useGameStore((s) => s.suaraMode);
   const suaraStatus = useGameStore((s) => s.suaraStatus);
   const suaraPeers = useGameStore((s) => s.suaraPeers);
+  const suaraBisu = useGameStore((s) => s.suaraBisu);
   const setSuaraMode = useGameStore((s) => s.setSuaraMode);
 
   const [buka, setBuka] = useState(false);
@@ -104,8 +105,12 @@ export function KontrolSuara() {
             }`}
         >
           {ikonAktif}
-          {suaraMode === 'on' && suaraStatus === 'tersambung' && (
-            <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-alkali" />
+          {nyala && suaraStatus === 'tersambung' && (
+            <span
+              className={`absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white ${
+                suaraBisu ? 'bg-halogen animate-pulse' : 'bg-alkali'
+              }`}
+            />
           )}
         </button>
 
@@ -142,16 +147,22 @@ export function KontrolSuara() {
                 )}
               </button>
             ))}
-            {info && (
-              <p
-                className={`px-2 pb-1 pt-2 text-[11px] font-bold ${
-                  suaraStatus === 'ditolak' || suaraStatus === 'gagal'
-                    ? 'text-halogen-700'
-                    : 'text-tinta/50'
-                }`}
-              >
-                {info}
+            {suaraBisu && nyala ? (
+              <p className="px-2 pb-1 pt-2 text-[11px] font-bold text-halogen-700">
+                🔇 Ketuk layar sekali untuk mulai mendengar.
               </p>
+            ) : (
+              info && (
+                <p
+                  className={`px-2 pb-1 pt-2 text-[11px] font-bold ${
+                    suaraStatus === 'ditolak' || suaraStatus === 'gagal'
+                      ? 'text-halogen-700'
+                      : 'text-tinta/50'
+                  }`}
+                >
+                  {info}
+                </p>
+              )
             )}
           </div>
         )}
