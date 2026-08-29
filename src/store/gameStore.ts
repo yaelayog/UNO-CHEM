@@ -19,10 +19,12 @@ import {
   cekUnoKadaluarsa,
   type GameState,
   type HasilKuis,
+  type KartuKimia,
   type OpsiPemain,
 } from '../game';
-import { kirimAksi } from '../online/klienOnline';
+import { kirimAksi, type HasilAksi } from '../online/klienOnline';
 import { rekonstruksiState } from '../online/rekonstruksi';
+import type { StatePublik } from '../online/tipe';
 import type { DataRoom } from '../online/useRoomOnline';
 import { sfx } from '../lib/audio';
 import {
@@ -77,9 +79,15 @@ interface GameStore {
   online: { code: string; uid: string } | null;
   dataOnline: DataRoom | null;
   rekamOnlineDicatat: boolean;
+  /** Versi state online tertinggi yang sudah diterapkan (server/Realtime). */
+  versiOnline: number;
+  /** true selama aksi online sendiri menunggu balasan server (state optimistik terpasang). */
+  aksiPending: boolean;
   masukLobbyOnline: (code: string, uid: string) => void;
   pasangDataOnline: (d: DataRoom) => void;
   keluarOnline: () => void;
+  /** Ambil ulang state otoritatif dari server (dipakai saat aksi optimistik gagal / stale). */
+  resyncOnline: () => void;
 
   progres: Progres;
   /** Ringkasan XP/level/badge dari game yang baru selesai — utk layar GameOver. */
@@ -217,6 +225,73 @@ export const useGameStore = create<GameStore>((set, get) => {
     });
   }
 
+  /**
+   * Terapkan state publik online (dari Realtime ATAU balasan Edge Function).
+   * Hanya menang bila versinya lebih baru dari yang sudah diterapkan (kecuali
+   * `paksa`). Menangani transisi lobby→papan & pencatatan hasil saat game usai.
+   */
+  function terapkanStatePublik(
+    pub: StatePublik,
+    tanganku: KartuKimia[],
+    versi: number,
+    paksa = false,
+  ) {
+    const st = get();
+    if (!st.online) return;
+    // Terapkan bila: dipaksa, belum ada state sama sekali (state awal server
+    // ber-versi 0), atau versinya lebih baru dari yang sudah diterapkan.
+    if (!paksa && st.state && versi <= st.versiOnline) return;
+
+    const next = rekonstruksiState(pub, tanganku, st.online.uid);
+    const sebelum = st.state;
+
+    if (st.layar === 'online') {
+      set({ layar: 'main', sedangMembuka: Boolean(next.menungguPembukaan) });
+    }
+
+    if (
+      next.status === 'selesai' &&
+      sebelum?.status !== 'selesai' &&
+      !st.rekamOnlineDicatat
+    ) {
+      const stat = st.statistik;
+      const rekam = tambahHasilGame(bacaProgres(), {
+        menang: next.pemenangId === st.online.uid,
+        kuisBenar: stat.benar,
+        kuisTotal: stat.total,
+        streakTerbaik: stat.streakTerbaik,
+        benarPerGolongan: stat.benarPerGolongan,
+      });
+      simpanProgres(rekam.progres);
+      set({
+        progres: rekam.progres,
+        rekamTerakhir: rekam,
+        rekamOnlineDicatat: true,
+      });
+    }
+
+    set({
+      state: next,
+      soalAktif: next.soalAktif,
+      versiOnline: paksa ? versi : Math.max(versi, get().versiOnline),
+      aksiPending: false,
+    });
+  }
+
+  /** Tangani balasan Edge Function untuk aksi online sendiri. */
+  function selesaikanAksiOnline(r: HasilAksi) {
+    if (r.error || r.stale) {
+      set({ aksiPending: false });
+      get().resyncOnline(); // optimistik mungkin salah → tarik kebenaran server
+      return;
+    }
+    if (r.statePublik && typeof r.versi === 'number') {
+      terapkanStatePublik(r.statePublik, r.tanganku ?? [], r.versi);
+      return;
+    }
+    set({ aksiPending: false });
+  }
+
   return {
     layar: 'menu',
     keLayar: (l) => set({ layar: l }),
@@ -232,6 +307,8 @@ export const useGameStore = create<GameStore>((set, get) => {
     online: null,
     dataOnline: null,
     rekamOnlineDicatat: false,
+    versiOnline: 0,
+    aksiPending: false,
 
     progres: bacaProgres(),
     rekamTerakhir: null,
@@ -246,7 +323,9 @@ export const useGameStore = create<GameStore>((set, get) => {
         st.online &&
         st.dataOnline?.room?.host === st.online.uid
       ) {
-        void kirimAksi('selesaiPembukaan', { code: st.online.code });
+        void kirimAksi('selesaiPembukaan', { code: st.online.code }).then(
+          selesaikanAksiOnline,
+        );
       }
     },
 
@@ -262,50 +341,37 @@ export const useGameStore = create<GameStore>((set, get) => {
         statistik: STAT_AWAL,
         rekamTerakhir: null,
         rekamOnlineDicatat: false,
+        versiOnline: 0,
+        aksiPending: false,
         sedangMembuka: false,
         kartuFaktaDitutup: { funFact: null, fakta: null },
         layar: 'online',
       }),
 
     pasangDataOnline: (d) => {
-      const st = get();
       set({ dataOnline: d });
+      const st = get();
       if (!st.online || !d.statePublik) return;
+      // Gate versi: push Realtime yang tak lebih baru diabaikan (mis. hasil
+      // fetch roster) supaya state optimistik tak ke-timpa mundur.
+      terapkanStatePublik(d.statePublik, d.tanganku, d.versi);
+    },
 
-      const next = rekonstruksiState(d.statePublik, d.tanganku, st.online.uid);
-      const sebelum = st.state;
-
-      // Lobby → papan saat host menekan "Mulai".
-      if (st.layar === 'online') {
-        set({
-          layar: 'main',
-          sedangMembuka: Boolean(next.menungguPembukaan),
-        });
-      }
-
-      // Rekam progres sekali saat permainan online usai.
-      if (
-        next.status === 'selesai' &&
-        sebelum?.status !== 'selesai' &&
-        !st.rekamOnlineDicatat
-      ) {
-        const stat = st.statistik;
-        const rekam = tambahHasilGame(bacaProgres(), {
-          menang: next.pemenangId === st.online.uid,
-          kuisBenar: stat.benar,
-          kuisTotal: stat.total,
-          streakTerbaik: stat.streakTerbaik,
-          benarPerGolongan: stat.benarPerGolongan,
-        });
-        simpanProgres(rekam.progres);
-        set({
-          progres: rekam.progres,
-          rekamTerakhir: rekam,
-          rekamOnlineDicatat: true,
-        });
-      }
-
-      set({ state: next, soalAktif: next.soalAktif });
+    resyncOnline: () => {
+      const { online } = get();
+      if (!online) return;
+      void kirimAksi('sync', { code: online.code }).then((r) => {
+        if (r.statePublik && typeof r.versi === 'number') {
+          terapkanStatePublik(
+            r.statePublik,
+            (r.tanganku as KartuKimia[]) ?? [],
+            r.versi,
+            true,
+          );
+        } else {
+          set({ aksiPending: false });
+        }
+      });
     },
 
     keluarOnline: () => {
@@ -320,13 +386,22 @@ export const useGameStore = create<GameStore>((set, get) => {
         humanId: 'human',
         sedangMembuka: false,
         rekamOnlineDicatat: false,
+        versiOnline: 0,
+        aksiPending: false,
         layar: 'menu',
       });
     },
 
     mulaiGame: (jumlahBot, nama = 'Kamu', pakaiPeristiwa = false) => {
       konfigTerakhir = { jumlahBot, nama, pakaiPeristiwa };
-      set({ mode: 'solo', online: null, dataOnline: null, humanId: 'human' });
+      set({
+        mode: 'solo',
+        online: null,
+        dataOnline: null,
+        humanId: 'human',
+        versiOnline: 0,
+        aksiPending: false,
+      });
       const pemain: OpsiPemain[] = [
         { id: 'human', nama, isBot: false },
         ...Array.from({ length: jumlahBot }, (_, i) => ({
@@ -368,7 +443,10 @@ export const useGameStore = create<GameStore>((set, get) => {
     tutupPeristiwa: () => {
       const { state, mode, online } = get();
       if (mode === 'online') {
-        if (online) void kirimAksi('lanjut', { code: online.code });
+        if (online)
+          void kirimAksi('lanjut', { code: online.code }).then(
+            selesaikanAksiOnline,
+          );
         if (state?.peristiwaAktif) set({ state: { ...state, peristiwaAktif: null } });
         return;
       }
@@ -403,7 +481,21 @@ export const useGameStore = create<GameStore>((set, get) => {
       if (ids.length === 0) return;
       sfx.kartu();
       if (mode === 'online' && online) {
-        void kirimAksi('main', { code: online.code, kartuIds: ids, warnaWild });
+        // Optimistik: terapkan langsung dengan engine (tangan sendiri sudah
+        // pasti); server mengoreksi lewat balasannya ~1 dtk kemudian.
+        try {
+          const opt = stampUno(
+            mainkanBerbarengan(state, humanId, ids, { warnaWild }),
+          );
+          set({ state: opt, soalAktif: opt.soalAktif, aksiPending: true });
+        } catch {
+          /* biar server yang menilai */
+        }
+        void kirimAksi('main', {
+          code: online.code,
+          kartuIds: ids,
+          warnaWild,
+        }).then(selesaikanAksiOnline);
         return;
       }
       terapkan(mainkanBerbarengan(state, humanId, ids, { warnaWild }));
@@ -413,9 +505,13 @@ export const useGameStore = create<GameStore>((set, get) => {
       const { state, humanId, mode, online } = get();
       if (!state || state.status !== 'bermain') return;
       if (state.pemain[state.giliran]?.id !== humanId) return;
+      if (get().aksiPending) return;
       sfx.tarik();
       if (mode === 'online' && online) {
-        void kirimAksi('tarik', { code: online.code });
+        // Kartu yang ditarik hanya diketahui server → tak dioptimis, tapi
+        // kunci input sampai balasan datang.
+        set({ aksiPending: true });
+        void kirimAksi('tarik', { code: online.code }).then(selesaikanAksiOnline);
         return;
       }
       terapkan(tarikKartu(state, humanId));
@@ -426,7 +522,11 @@ export const useGameStore = create<GameStore>((set, get) => {
       if (!state || state.status !== 'menungguPilihWarna') return;
       if (state.pemain[state.giliran]?.id !== humanId) return;
       if (mode === 'online' && online) {
-        void kirimAksi('pilihWarna', { code: online.code, golongan: g });
+        set({ state: stampUno(pilihWarnaEngine(state, g)), aksiPending: true });
+        void kirimAksi('pilihWarna', {
+          code: online.code,
+          golongan: g,
+        }).then(selesaikanAksiOnline);
         return;
       }
       terapkan(pilihWarnaEngine(state, g));
@@ -439,7 +539,11 @@ export const useGameStore = create<GameStore>((set, get) => {
       catatJawabanHuman(hasil, soalAktif?.golonganTerkait);
       set({ soalAktif: null });
       if (mode === 'online' && online) {
-        void kirimAksi('jawabKuis', { code: online.code, hasil });
+        set({ aksiPending: true });
+        void kirimAksi('jawabKuis', {
+          code: online.code,
+          hasil,
+        }).then(selesaikanAksiOnline);
         return;
       }
       terapkan(selesaikanKuis(state, hasil));
@@ -515,7 +619,10 @@ export const useGameStore = create<GameStore>((set, get) => {
         return;
       sfx.benar();
       if (mode === 'online' && online) {
-        void kirimAksi('nyatakanUno', { code: online.code });
+        set({ state: nyatakanUnoEngine(state, humanId) });
+        void kirimAksi('nyatakanUno', { code: online.code }).then(
+          selesaikanAksiOnline,
+        );
         return;
       }
       terapkan(nyatakanUnoEngine(state, humanId));
@@ -527,7 +634,11 @@ export const useGameStore = create<GameStore>((set, get) => {
         return;
       sfx.ledakan();
       if (mode === 'online' && online) {
-        void kirimAksi('tangkapUno', { code: online.code, target: targetId });
+        set({ state: tangkapUnoEngine(state, humanId, targetId) });
+        void kirimAksi('tangkapUno', {
+          code: online.code,
+          target: targetId,
+        }).then(selesaikanAksiOnline);
         return;
       }
       terapkan(tangkapUnoEngine(state, humanId, targetId));
@@ -537,7 +648,10 @@ export const useGameStore = create<GameStore>((set, get) => {
       const { state, mode, online } = get();
       if (!state?.uno || state.uno.dinyatakan || state.uno.padaMs === 0) return;
       if (mode === 'online') {
-        if (online) void kirimAksi('cekUno', { code: online.code });
+        if (online)
+          void kirimAksi('cekUno', { code: online.code }).then(
+            selesaikanAksiOnline,
+          );
         return;
       }
       const next = cekUnoKadaluarsa(state);

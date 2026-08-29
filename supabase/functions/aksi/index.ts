@@ -391,7 +391,14 @@ async function aksiState(
   const next = stampUno(
     lanjutkanOtomatis(diubah, { berhentiKartuFakta: false }),
   );
-  return simpan(db, code, core.versi as number, next);
+  const hasil = await simpan(db, code, core.versi as number, next);
+  // Balikan state langsung ke pemanggil (tangan miliknya) supaya klien tak
+  // perlu menunggu push Realtime — mengurangi delay giliran sendiri.
+  if ('ok' in hasil && hasil.ok) {
+    const tanganku = next.pemain.find((p) => p.id === uid)?.tangan ?? [];
+    return { ...hasil, tanganku };
+  }
+  return hasil;
 }
 
 async function simpan(
@@ -401,6 +408,7 @@ async function simpan(
   next: GameState,
 ) {
   const versiBaru = versiLama + 1;
+  const publik = redaksiState(next);
   const { data: terkunci } = await db
     .from('game_core')
     .update({ versi: versiBaru, state: next })
@@ -424,7 +432,7 @@ async function simpan(
       .from('game_publik')
       .update({
         versi: versiBaru,
-        state: redaksiState(next),
+        state: publik,
         diperbarui: new Date().toISOString(),
       })
       .eq('room_code', code),
@@ -438,7 +446,7 @@ async function simpan(
       .update({ status: 'selesai', diperbarui: new Date().toISOString() })
       .eq('code', code);
   }
-  return { ok: true, versi: versiBaru };
+  return { ok: true, versi: versiBaru, statePublik: publik };
 }
 
 /** Heartbeat + auto-resolve giliran yang macet (>30 dtk tak ada respons). */

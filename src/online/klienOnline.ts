@@ -1,11 +1,17 @@
+import type { KartuKimia } from '../game';
 import { getSupabase, sesiSiap } from '../lib/supabase';
+import type { StatePublik } from './tipe';
 
 export interface HasilAksi {
   ok?: boolean;
   error?: string;
   stale?: boolean;
+  tanpaUbah?: boolean;
   code?: string;
   versi?: number;
+  /** State ter-redaksi + tangan pemanggil — dibalas langsung agar tak menunggu Realtime. */
+  statePublik?: StatePublik;
+  tanganku?: KartuKimia[];
   [k: string]: unknown;
 }
 

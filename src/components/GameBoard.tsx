@@ -29,6 +29,7 @@ export function GameBoard() {
 
   const state = useGameStore((s) => s.state);
   const humanId = useGameStore((s) => s.humanId);
+  const aksiPending = useGameStore((s) => s.aksiPending);
   const soalAktif = useGameStore((s) => s.soalAktif);
   const statistik = useGameStore((s) => s.statistik);
   const rekamTerakhir = useGameStore((s) => s.rekamTerakhir);
@@ -62,7 +63,10 @@ export function GameBoard() {
   const current = state.pemain[state.giliran];
   const membuka = sedangMembuka || Boolean(state.menungguPembukaan);
   const giliranHuman =
-    !membuka && state.status === 'bermain' && current.id === humanId;
+    !membuka &&
+    state.status === 'bermain' &&
+    current.id === humanId &&
+    !aksiPending; // aksi online sedang menunggu konfirmasi server
   const atas = kartuAtas(state);
 
   const kuisHuman =
