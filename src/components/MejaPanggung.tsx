@@ -10,10 +10,18 @@ interface Props {
   humanId: string;
   atas: KartuKimia;
   bisaTarik: boolean;
+  wajibTarik?: boolean;
   onTarik: () => void;
 }
 
-export function MejaPanggung({ state, humanId, atas, bisaTarik, onTarik }: Props) {
+export function MejaPanggung({
+  state,
+  humanId,
+  atas,
+  bisaTarik,
+  wajibTarik = false,
+  onTarik,
+}: Props) {
   const lawan = state.pemain.filter((p) => p.id !== humanId);
   const current = state.pemain[state.giliran];
   // Posisi + rotasi tiap kursi dihitung dari sudutnya di busur oval —
@@ -43,6 +51,7 @@ export function MejaPanggung({ state, humanId, atas, bisaTarik, onTarik }: Props
         <DrawPile
           jumlah={state.drawPile.length}
           bisaTarik={bisaTarik}
+          wajibTarik={wajibTarik}
           onTarik={onTarik}
         />
       </div>

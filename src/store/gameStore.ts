@@ -96,6 +96,13 @@ interface GameStore {
   tutupPeristiwa: () => void;
   tutupFunFact: () => void;
 
+  /**
+   * Kartu Fun Fact / Fakta yang sudah "Lanjut" ditekan di KLIEN INI. Dipakai
+   * mode online supaya tiap orang menutup kartunya sendiri (bukan bersama).
+   * `funFact` = id fun fact · `fakta` = teks fakta streak.
+   */
+  kartuFaktaDitutup: { funFact: string | null; fakta: string | null };
+
   /** Mainkan 1 kartu, atau tumpuk beberapa kartu angka seperiode sekaligus. */
   mainkan: (kartuIds: string | string[], warnaWild?: Golongan) => void;
   tarik: () => void;
@@ -219,6 +226,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     soalAktif: null,
     statistik: STAT_AWAL,
     jeda: false,
+    kartuFaktaDitutup: { funFact: null, fakta: null },
 
     mode: 'solo',
     online: null,
@@ -255,6 +263,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         rekamTerakhir: null,
         rekamOnlineDicatat: false,
         sedangMembuka: false,
+        kartuFaktaDitutup: { funFact: null, fakta: null },
         layar: 'online',
       }),
 
@@ -327,11 +336,12 @@ export const useGameStore = create<GameStore>((set, get) => {
         })),
       ];
       set({
-        state: buatGame(pemain, Date.now(), pakaiPeristiwa),
+        state: buatGame(pemain, Date.now(), pakaiPeristiwa, true),
         soalAktif: null,
         statistik: STAT_AWAL,
         rekamTerakhir: null,
         sedangMembuka: true,
+        kartuFaktaDitutup: { funFact: null, fakta: null },
         layar: 'main',
         jeda: false,
       });
@@ -369,14 +379,20 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
 
     tutupFunFact: () => {
-      const { state, mode, online } = get();
+      const { state, mode } = get();
+      if (!state?.funFactAktif) return;
       if (mode === 'online') {
-        if (online) void kirimAksi('lanjut', { code: online.code });
-        if (state?.funFactAktif) set({ state: { ...state, funFactAktif: null } });
+        // Per orang: cukup tandai ditutup di klien ini — server tidak diberi
+        // tahu, pemain lain tetap bisa membaca sampai menekan "Lanjut" sendiri.
+        set((s) => ({
+          kartuFaktaDitutup: {
+            ...s.kartuFaktaDitutup,
+            funFact: state.funFactAktif!.id,
+          },
+        }));
         return;
       }
-      if (state?.funFactAktif)
-        set({ state: stampUno(segarkanUno({ ...state, funFactAktif: null })) });
+      set({ state: stampUno(segarkanUno({ ...state, funFactAktif: null })) });
     },
 
     mainkan: (kartuIds, warnaWild) => {
@@ -473,14 +489,18 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
 
     bersihkanReward: () => {
-      const { state, mode, online } = get();
+      const { state, mode } = get();
+      if (!state?.faktaReward) return;
       if (mode === 'online') {
-        if (online) void kirimAksi('lanjut', { code: online.code });
-        if (state?.faktaReward) set({ state: { ...state, faktaReward: null } });
+        set((s) => ({
+          kartuFaktaDitutup: {
+            ...s.kartuFaktaDitutup,
+            fakta: state.faktaReward!.teks,
+          },
+        }));
         return;
       }
-      if (state?.faktaReward)
-        set({ state: stampUno(segarkanUno({ ...state, faktaReward: null })) });
+      set({ state: stampUno(segarkanUno({ ...state, faktaReward: null })) });
     },
 
     bersihkanPengumuman: () => {

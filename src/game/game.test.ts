@@ -95,6 +95,32 @@ describe('buatGame', () => {
     expect(kartuAtas(a).id).not.toBe(kartuAtas(b).id);
   });
 
+  it('giliran pertama = pemain 0 (host) bila tanpa acak', () => {
+    expect(buatGame(PEMAIN, 'g').giliran).toBe(0);
+  });
+
+  it('mulaiAcak → giliran pertama diacak & tak pernah host (indeks 0)', () => {
+    const tujuh = [
+      ...PEMAIN,
+      { id: 'p4', nama: 'Bot C', isBot: true },
+      { id: 'p5', nama: 'Bot D', isBot: true },
+      { id: 'p6', nama: 'Bot E', isBot: true },
+      { id: 'p7', nama: 'Bot F', isBot: true },
+    ];
+    const terlihat = new Set<number>();
+    for (let i = 0; i < 60; i++) {
+      const g = buatGame(tujuh, `acak-${i}`, false, true).giliran;
+      expect(g).toBeGreaterThanOrEqual(1);
+      expect(g).toBeLessThanOrEqual(6);
+      terlihat.add(g);
+    }
+    expect(terlihat.size).toBeGreaterThan(1); // benar-benar teracak
+    // Deterministik untuk seed yang sama.
+    expect(buatGame(tujuh, 'tetap', false, true).giliran).toBe(
+      buatGame(tujuh, 'tetap', false, true).giliran,
+    );
+  });
+
   it('menerima 2–7 pemain, menolak di luar itu', () => {
     expect(() => buatGame([PEMAIN[0]], 's')).toThrow();
     const tujuh = [

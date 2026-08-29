@@ -97,6 +97,16 @@ describe('lanjutkanOtomatis', () => {
     expect(s.funFactAktif).not.toBeNull();
   });
 
+  it('berhentiKartuFakta:false → Fun Fact tak memblokir permainan semua-bot', () => {
+    const s0 = buatGame(BOT2, 'ff-nb', false);
+    const s = lanjutkanOtomatis(
+      { ...s0, giliranKe: 1, funFactRonde: 0 },
+      { berhentiKartuFakta: false },
+    );
+    // Loop terus jalan meski Fun Fact sempat muncul → game semua-bot selesai.
+    expect(s.status).toBe('selesai');
+  });
+
   it('memicu Kartu Peristiwa saat ambang giliran terlewati', () => {
     const s0 = buatGame(BOT2, 'pk', true);
     const s = lanjutkanOtomatis({

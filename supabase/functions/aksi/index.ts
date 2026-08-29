@@ -131,11 +131,11 @@ async function tangani(
         return selesaikanKuis(s, b.hasil as 'benarCepat' | 'benarLambat' | 'salah');
       });
     case 'lanjut':
+      // Hanya Kartu Peristiwa yang tersinkron (efek permainan). Fun Fact &
+      // Fakta streak ditutup per orang di klien — server tak menyentuhnya.
       return aksiState(db, uid, code, (s) => {
         if (s.peristiwaAktif)
           return segarkanUno({ ...s, peristiwaAktif: null });
-        if (s.funFactAktif) return segarkanUno({ ...s, funFactAktif: null });
-        if (s.faktaReward) return segarkanUno({ ...s, faktaReward: null });
         return s;
       }, { anggotaSaja: true });
     case 'nyatakanUno':
@@ -302,7 +302,8 @@ async function mulai(db: SupabaseClient, uid: string, code: string) {
 
   const seed = Date.now();
   const state: GameState = {
-    ...buatGame(opsi, seed, room.pakai_peristiwa),
+    // `mulaiAcak` → giliran pertama diacak, tak pernah ke host (kursi 0).
+    ...buatGame(opsi, seed, room.pakai_peristiwa, true),
     menungguPembukaan: true,
   };
 
@@ -385,7 +386,11 @@ async function aksiState(
   const asal = core.state as GameState;
   const diubah = ubah(asal);
   if (opsi.lewatiBilaSama && diubah === asal) return { ok: true, tanpaUbah: true };
-  const next = stampUno(lanjutkanOtomatis(diubah));
+  // Online: kartu Fun Fact / Fakta TIDAK memblokir permainan — tiap klien
+  // menutupnya sendiri (per orang).
+  const next = stampUno(
+    lanjutkanOtomatis(diubah, { berhentiKartuFakta: false }),
+  );
   return simpan(db, code, core.versi as number, next);
 }
 
@@ -458,7 +463,12 @@ async function denyut(db: SupabaseClient, uid: string, code: string) {
   // Backstop: tegakkan batas waktu UNO kalau ada yang kelamaan.
   const setelahUno = cekUnoKadaluarsa(s);
   if (setelahUno !== s) {
-    await simpan(db, code, core.versi as number, stampUno(lanjutkanOtomatis(setelahUno)));
+    await simpan(
+      db,
+      code,
+      core.versi as number,
+      stampUno(lanjutkanOtomatis(setelahUno, { berhentiKartuFakta: false })),
+    );
     return { ok: true, unoKadaluarsa: true };
   }
 
@@ -482,17 +492,16 @@ async function denyut(db: SupabaseClient, uid: string, code: string) {
   const diam = Date.now() - new Date(rp.last_seen).getTime();
   if (diam < AMBANG_MACET_MS) return { ok: true };
 
-  // Auto-resolve.
+  // Auto-resolve. Fun Fact / Fakta tidak diperhitungkan — kartu itu tak
+  // memblokir permainan (ditutup per orang di klien).
   let next = s;
   if (s.menungguPembukaan) next = { ...s, menungguPembukaan: false };
   else if (s.peristiwaAktif) next = { ...s, peristiwaAktif: null };
-  else if (s.funFactAktif) next = { ...s, funFactAktif: null };
-  else if (s.faktaReward) next = { ...s, faktaReward: null };
   else if (s.status === 'menungguKuis') next = selesaikanKuis(s, 'salah');
   else if (s.status === 'menungguPilihWarna') next = pilihWarna(s, 'alkali');
   else if (s.status === 'bermain') next = tarikKartu(s, ditunggu);
 
-  next = lanjutkanOtomatis(next);
+  next = lanjutkanOtomatis(next, { berhentiKartuFakta: false });
   await simpan(db, code, core.versi as number, next);
   return { ok: true, autoResolve: true };
 }

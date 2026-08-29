@@ -34,8 +34,16 @@ function pemainSaatIni(state: GameState) {
  * Fungsi murni & deterministik (RNG di dalam state). Dipakai server (Edge
  * Function) sebagai otoritas permainan online. Aman dipanggil berulang / saat
  * sudah giliran manusia (langsung kembali tanpa perubahan).
+ *
+ * `berhentiKartuFakta` (default true, dipakai mode solo): loop berhenti saat
+ * kartu Fun Fact / Fakta muncul. Server online memakai `false` — kartu itu
+ * tidak memblokir permainan; tiap klien menutupnya sendiri (per orang).
  */
-export function lanjutkanOtomatis(state: GameState): GameState {
+export function lanjutkanOtomatis(
+  state: GameState,
+  opsi: { berhentiKartuFakta?: boolean } = {},
+): GameState {
+  const berhentiKartuFakta = opsi.berhentiKartuFakta ?? true;
   let s = state;
 
   for (let i = 0; i < BATAS_ITERASI; i++) {
@@ -43,8 +51,7 @@ export function lanjutkanOtomatis(state: GameState): GameState {
       s.status === 'selesai' ||
       s.menungguPembukaan ||
       s.peristiwaAktif ||
-      s.funFactAktif ||
-      s.faktaReward
+      (berhentiKartuFakta && (s.funFactAktif || s.faktaReward))
     ) {
       return s;
     }

@@ -179,6 +179,53 @@ body {
   animation: denyut 1.8s ease-in-out infinite;
 }
 
+/* Petir putih kelap-kelip — tumpukan tarik saat giliran pemain tapi tak ada
+   kartu yang cocok (harus menarik kartu). */
+@keyframes petir {
+  0%,
+  100% {
+    box-shadow:
+      0 10px 24px -8px rgba(15, 23, 42, 0.35),
+      0 0 0 0 rgba(255, 255, 255, 0);
+    filter: brightness(1);
+  }
+  8% {
+    box-shadow:
+      0 0 22px 6px rgba(255, 255, 255, 0.95),
+      0 0 0 4px rgba(255, 255, 255, 0.9);
+    filter: brightness(1.6);
+  }
+  16% {
+    box-shadow:
+      0 10px 24px -8px rgba(15, 23, 42, 0.35),
+      0 0 0 0 rgba(255, 255, 255, 0);
+    filter: brightness(1);
+  }
+  24% {
+    box-shadow:
+      0 0 26px 8px rgba(255, 255, 255, 1),
+      0 0 0 6px rgba(255, 255, 255, 0.95);
+    filter: brightness(1.9);
+  }
+  34% {
+    box-shadow:
+      0 10px 24px -8px rgba(15, 23, 42, 0.35),
+      0 0 0 0 rgba(255, 255, 255, 0);
+    filter: brightness(1);
+  }
+}
+.animasi-petir {
+  animation: petir 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animasi-petir {
+    animation: none;
+    box-shadow:
+      0 0 18px 4px rgba(255, 255, 255, 0.85),
+      0 0 0 4px rgba(255, 255, 255, 0.8);
+  }
+}
+
 /* Kilau tipis di muka kartu (flat + sedikit depth) */
 .kilau-kartu::after {
   content: '';

@@ -37,6 +37,7 @@ export function GameBoard() {
   const pilihWarna = useGameStore((s) => s.pilihWarna);
   const jawabKuis = useGameStore((s) => s.jawabKuis);
   const bersihkanReward = useGameStore((s) => s.bersihkanReward);
+  const kartuFaktaDitutup = useGameStore((s) => s.kartuFaktaDitutup);
   const bersihkanPengumuman = useGameStore((s) => s.bersihkanPengumuman);
   const nyatakanUno = useGameStore((s) => s.nyatakanUno);
   const tangkapUno = useGameStore((s) => s.tangkapUno);
@@ -70,6 +71,22 @@ export function GameBoard() {
     soalAktif;
   const pilihWarnaHuman =
     state.status === 'menungguPilihWarna' && current.id === humanId;
+
+  // Giliran pemain tetapi tak ada kartu yang cocok → tumpukan tarik berkedip
+  // (efek petir) supaya jelas harus menarik kartu.
+  const wajibTarik = giliranHuman && legalIds.size === 0;
+
+  // Kartu Fun Fact / Fakta: di mode online tiap orang menutup sendiri
+  // (lihat `kartuFaktaDitutup`), di solo cukup cek state.
+  const funFactTampil =
+    Boolean(state.funFactAktif) &&
+    !state.peristiwaAktif &&
+    kartuFaktaDitutup.funFact !== state.funFactAktif?.id;
+  const faktaTampil =
+    Boolean(state.faktaReward) &&
+    !state.peristiwaAktif &&
+    !funFactTampil &&
+    kartuFaktaDitutup.fakta !== state.faktaReward?.teks;
 
   const petunjuk = giliranHuman
     ? legalIds.size > 0
@@ -109,6 +126,7 @@ export function GameBoard() {
         humanId={humanId}
         atas={atas}
         bisaTarik={giliranHuman}
+        wajibTarik={wajibTarik}
         onTarik={tarik}
       />
 
@@ -186,11 +204,11 @@ export function GameBoard() {
         />
       )}
 
-      {state.funFactAktif && !state.peristiwaAktif && (
+      {funFactTampil && state.funFactAktif && (
         <FunFactModal fakta={state.funFactAktif} onTutup={tutupFunFact} />
       )}
 
-      {state.faktaReward && !state.peristiwaAktif && !state.funFactAktif && (
+      {faktaTampil && state.faktaReward && (
         <FaktaModal reward={state.faktaReward} onLanjut={bersihkanReward} />
       )}
 

@@ -3,10 +3,12 @@ import { motion } from 'framer-motion';
 interface Props {
   jumlah: number;
   bisaTarik: boolean;
+  /** Giliran pemain & tak ada kartu cocok → tumpukan berkedip petir putih. */
+  wajibTarik?: boolean;
   onTarik: () => void;
 }
 
-export function DrawPile({ jumlah, bisaTarik, onTarik }: Props) {
+export function DrawPile({ jumlah, bisaTarik, wajibTarik = false, onTarik }: Props) {
   return (
     <div className="flex flex-col items-center gap-2">
       <motion.button
@@ -17,11 +19,12 @@ export function DrawPile({ jumlah, bisaTarik, onTarik }: Props) {
         whileTap={bisaTarik ? { scale: 0.95 } : undefined}
         aria-label="Tarik kartu dari tumpukan"
         className={`relative h-[184px] w-32 rounded-3xl border border-black/10 bg-lab shadow-kartu
-          ${bisaTarik ? 'cursor-pointer ring-4 ring-lab/40' : 'opacity-70'}`}
+          ${bisaTarik ? 'cursor-pointer ring-4 ring-lab/40' : 'opacity-70'}
+          ${wajibTarik ? 'animasi-petir' : ''}`}
       >
         <span className="absolute -left-1.5 top-1.5 h-full w-full -rotate-3 rounded-3xl border border-black/10 bg-lab-tinta" />
         <span className="relative flex h-full flex-col items-center justify-center gap-1 font-display text-white">
-          <span className="text-2xl">⚛</span>
+          <span className="text-2xl">{wajibTarik ? '⚡' : '⚛'}</span>
           <span className="text-xs font-extrabold tracking-widest">TARIK</span>
         </span>
       </motion.button>

@@ -47,6 +47,9 @@ export function picuFunFact(state: GameState): GameState {
   } satisfies FunFactAktif;
   // Fakta yang muncul → soal terkait jadi lebih mungkin terpilih di kuis nanti.
   s.funFactTerlihat = [...new Set([...s.funFactTerlihat, ...fakta.bantuSoal])];
+  // Fun Fact putaran baru menggantikan kartu Fakta streak yang mungkin
+  // masih tersisa di state (dismiss kartu bersifat lokal per klien).
+  s.faktaReward = null;
   s.log.push(`Fun Fact: ${fakta.teks}`);
 
   return s;
@@ -58,9 +61,11 @@ export function picuFunFact(state: GameState): GameState {
  * putaran jatuh saat kuis / berbarengan Kartu Peristiwa). Murni.
  */
 export function picuFunFactBila(state: GameState): GameState {
-  if (state.status !== 'bermain' || state.peristiwaAktif || state.funFactAktif) {
+  if (state.status !== 'bermain' || state.peristiwaAktif) {
     return state;
   }
+  // Catatan: `funFactAktif` yang masih terpasang TIDAK menghalangi — putaran
+  // baru menimpanya (dismiss kartu bersifat lokal per klien, bukan state game).
   const ronde = Math.floor(state.giliranKe / giliranPerPutaran(state));
   if (ronde <= state.funFactRonde) return state;
   const next = picuFunFact(state);

@@ -53,10 +53,20 @@ export function buatGame(
   pemain: OpsiPemain[],
   seed: string | number = Date.now(),
   pakaiPeristiwa = false,
+  mulaiAcak = false,
 ): GameState {
   assert(pemain.length >= 2 && pemain.length <= 7, 'Jumlah pemain harus 2–7');
 
   let rng = seedDari(seed);
+
+  // Giliran pertama diacak — TIDAK pernah jatuh ke host (indeks 0) supaya
+  // pembuat room tak selalu diuntungkan. Sisa pemain berpeluang sama.
+  let giliranAwal = 0;
+  if (mulaiAcak && pemain.length > 1) {
+    let undian: number;
+    [undian, rng] = rngInt(rng, pemain.length - 1);
+    giliranAwal = undian + 1;
+  }
   let deck: KartuKimia[];
   [deck, rng] = kocok(buatDeck(), rng);
 
@@ -85,7 +95,7 @@ export function buatGame(
 
   return {
     pemain: pemain.map((p, i) => ({ ...p, tangan: tangan[i] })),
-    giliran: 0,
+    giliran: giliranAwal,
     arah: 1,
     drawPile: deck,
     discardPile: [pembuka],
@@ -265,7 +275,6 @@ export function mainkanKartu(
   opts: OpsiMain = {},
 ): GameState {
   const s = clone(state);
-  s.faktaReward = null;
   s.pengumumanKuis = null;
 
   assert(s.status === 'bermain', 'Bukan fase bermain');
@@ -283,7 +292,10 @@ export function mainkanKartu(
   s.discardPile.push(kartu);
   s.log.push(`${p.nama} memainkan ${kartu.simbol}${kartu.judulEfek ? ` (${kartu.judulEfek})` : ''}`);
 
-  s.faktaReward = perbaruiStreak(s, pemainId, kartu.golongan);
+  {
+    const fr = perbaruiStreak(s, pemainId, kartu.golongan);
+    if (fr) s.faktaReward = fr;
+  }
 
   if (p.tangan.length === 0) {
     s.status = 'selesai';
@@ -397,7 +409,6 @@ export function mainkanBerbarengan(
   }
 
   const s = clone(state);
-  s.faktaReward = null;
   s.pengumumanKuis = null;
 
   assert(s.status === 'bermain', 'Bukan fase bermain');
@@ -435,7 +446,7 @@ export function mainkanBerbarengan(
     const f = perbaruiStreak(s, pemainId, kartu.golongan);
     if (f) fakta = f;
   }
-  s.faktaReward = fakta;
+  if (fakta) s.faktaReward = fakta;
   s.log.push(
     `${p.nama} menumpuk ${kartuList.length} kartu periode ${per} (${kartuList.map((k) => k.simbol).join(', ')})`,
   );
@@ -528,7 +539,6 @@ export function tarikKartu(state: GameState, pemainId: string): GameState {
   const pi = s.pemain.findIndex((p) => p.id === pemainId);
   assert(pi === s.giliran, 'Bukan giliran pemain ini');
 
-  s.faktaReward = null;
   s.pengumumanKuis = null;
   const ditarik = tarikKartuKe(s, pi, 1);
   delete s.streak[pemainId];
