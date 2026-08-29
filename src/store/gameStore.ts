@@ -15,6 +15,7 @@ import {
   nyatakanUno as nyatakanUnoEngine,
   tangkapUno as tangkapUnoEngine,
   stampUno,
+  segarkanUno,
   cekUnoKadaluarsa,
   type GameState,
   type HasilKuis,
@@ -362,7 +363,9 @@ export const useGameStore = create<GameStore>((set, get) => {
         return;
       }
       if (state?.peristiwaAktif)
-        set({ state: { ...state, peristiwaAktif: null } });
+        set({
+          state: stampUno(segarkanUno({ ...state, peristiwaAktif: null })),
+        });
     },
 
     tutupFunFact: () => {
@@ -372,7 +375,8 @@ export const useGameStore = create<GameStore>((set, get) => {
         if (state?.funFactAktif) set({ state: { ...state, funFactAktif: null } });
         return;
       }
-      if (state?.funFactAktif) set({ state: { ...state, funFactAktif: null } });
+      if (state?.funFactAktif)
+        set({ state: stampUno(segarkanUno({ ...state, funFactAktif: null })) });
     },
 
     mainkan: (kartuIds, warnaWild) => {

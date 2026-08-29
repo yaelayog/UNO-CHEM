@@ -9,6 +9,7 @@ import {
   mainkanBerbarengan,
   nyatakanUno,
   pilihWarna,
+  segarkanUno,
   selesaikanKuis,
   stampUno,
   tangkapUno,
@@ -131,8 +132,9 @@ async function tangani(
       });
     case 'lanjut':
       return aksiState(db, uid, code, (s) => {
-        if (s.peristiwaAktif) return { ...s, peristiwaAktif: null };
-        if (s.funFactAktif) return { ...s, funFactAktif: null };
+        if (s.peristiwaAktif)
+          return segarkanUno({ ...s, peristiwaAktif: null });
+        if (s.funFactAktif) return segarkanUno({ ...s, funFactAktif: null });
         return s;
       }, { anggotaSaja: true });
     case 'nyatakanUno':
