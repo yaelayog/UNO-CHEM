@@ -181,6 +181,7 @@ export function GameBoard() {
         <TombolUno
           state={state}
           humanId={humanId}
+          kartuFaktaTampil={funFactTampil || faktaTampil}
           onNyatakan={nyatakanUno}
           onTangkap={tangkapUno}
         />

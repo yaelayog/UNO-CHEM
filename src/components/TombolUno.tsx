@@ -4,15 +4,17 @@ import { BATAS_UNO_MS, type GameState } from '../game';
 interface Props {
   state: GameState;
   humanId: string;
+  /** true bila kartu Fun Fact / Fakta sedang tampil DI KLIEN INI (bukan sekadar
+   *  terpasang di state — online: ditutup per orang). */
+  kartuFaktaTampil?: boolean;
   onNyatakan: () => void;
   onTangkap: (targetId: string) => void;
 }
 
-function modalTerbuka(s: GameState): boolean {
+function modalTerbuka(s: GameState, kartuFaktaTampil: boolean): boolean {
   return Boolean(
     s.peristiwaAktif ||
-      s.funFactAktif ||
-      s.faktaReward ||
+      kartuFaktaTampil ||
       s.menungguPembukaan ||
       s.status === 'menungguKuis' ||
       s.status === 'menungguPilihWarna',
@@ -25,7 +27,13 @@ function modalTerbuka(s: GameState): boolean {
  * Pemain lain → "Tangkap {nama}" (+2 kartu buat yang lupa). Hitung mundur
  * dibekukan selama ada modal yang menutupi papan.
  */
-export function TombolUno({ state, humanId, onNyatakan, onTangkap }: Props) {
+export function TombolUno({
+  state,
+  humanId,
+  kartuFaktaTampil = false,
+  onNyatakan,
+  onTangkap,
+}: Props) {
   const u = state.uno;
   const [, paksa] = useState(0);
 
@@ -40,7 +48,7 @@ export function TombolUno({ state, humanId, onNyatakan, onTangkap }: Props) {
   if (!holder || holder.tangan.length !== 1) return null;
   // Selama modal menutupi papan hitung mundur dibekukan — sembunyikan tombol,
   // muncul lagi (dengan waktu segar) begitu modal ditutup.
-  if (modalTerbuka(state)) return null;
+  if (modalTerbuka(state, kartuFaktaTampil)) return null;
 
   const sisa = Math.max(0, BATAS_UNO_MS - (Date.now() - u.padaMs));
   const persen = (sisa / BATAS_UNO_MS) * 100;

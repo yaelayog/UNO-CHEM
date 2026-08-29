@@ -276,6 +276,7 @@ export function mainkanKartu(
 ): GameState {
   const s = clone(state);
   s.pengumumanKuis = null;
+  s.pengumumanUno = null;
 
   assert(s.status === 'bermain', 'Bukan fase bermain');
   const pi = s.pemain.findIndex((p) => p.id === pemainId);
@@ -410,6 +411,7 @@ export function mainkanBerbarengan(
 
   const s = clone(state);
   s.pengumumanKuis = null;
+  s.pengumumanUno = null;
 
   assert(s.status === 'bermain', 'Bukan fase bermain');
   const pi = s.pemain.findIndex((p) => p.id === pemainId);
@@ -540,6 +542,7 @@ export function tarikKartu(state: GameState, pemainId: string): GameState {
   assert(pi === s.giliran, 'Bukan giliran pemain ini');
 
   s.pengumumanKuis = null;
+  s.pengumumanUno = null;
   const ditarik = tarikKartuKe(s, pi, 1);
   delete s.streak[pemainId];
   s.log.push(`${s.pemain[pi].nama} menarik ${ditarik} kartu & melewati giliran`);

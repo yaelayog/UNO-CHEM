@@ -15,6 +15,7 @@ import {
   indeksBerikutnya,
 } from './engine';
 import { langkahBot, jawabKuisBot } from './bot';
+import { BATAS_UNO_MS, cekUnoKadaluarsa } from './uno';
 import type { GameState, KartuKimia } from './types';
 
 const PEMAIN = [
@@ -311,6 +312,23 @@ describe('UNO', () => {
     const s0 = turunSatu('uno-5');
     const s = tangkapUno(s0, 'p1', 'p1');
     expect(s.pemain[0].tangan.length).toBe(1);
+  });
+
+  it('cekUnoKadaluarsa: kartu Fakta membekukan hitung mundur, kecuali abaikanKartuFakta', () => {
+    let s = turunSatu('uno-kadaluarsa');
+    // waktu sudah lewat batas
+    s = { ...s, uno: { ...s.uno!, padaMs: Date.now() - BATAS_UNO_MS - 1000 } };
+    const dgnFakta = {
+      ...s,
+      faktaReward: { golongan: 'alkali' as const, teks: 'x' },
+    };
+    // solo: kartu Fakta terpasang → beku → tak tertangkap
+    expect(cekUnoKadaluarsa(dgnFakta).uno?.dinyatakan).toBe(false);
+    expect(cekUnoKadaluarsa(dgnFakta)).toBe(dgnFakta);
+    // online: abaikan kartu Fakta → tertangkap "Lawan"
+    const kena = cekUnoKadaluarsa(dgnFakta, { abaikanKartuFakta: true });
+    expect(kena.pengumumanUno?.jenis).toBe('tertangkap');
+    expect(kena.pemain[0].tangan.length).toBe(3);
   });
 
   it('status uno hilang setelah pemain menarik kartu', () => {

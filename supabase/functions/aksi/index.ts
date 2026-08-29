@@ -149,10 +149,13 @@ async function tangani(
         lewatiBilaSama: true,
       });
     case 'cekUno':
-      return aksiState(db, uid, code, (s) => cekUnoKadaluarsa(s), {
-        anggotaSaja: true,
-        lewatiBilaSama: true,
-      });
+      return aksiState(
+        db,
+        uid,
+        code,
+        (s) => cekUnoKadaluarsa(s, { abaikanKartuFakta: true }),
+        { anggotaSaja: true, lewatiBilaSama: true },
+      );
     default:
       throw new Error(`tipe aksi tak dikenal: ${tipe}`);
   }
@@ -485,7 +488,7 @@ async function denyut(db: SupabaseClient, uid: string, code: string) {
   const s = core.state as GameState;
 
   // Backstop: tegakkan batas waktu UNO kalau ada yang kelamaan.
-  const setelahUno = cekUnoKadaluarsa(s);
+  const setelahUno = cekUnoKadaluarsa(s, { abaikanKartuFakta: true });
   if (setelahUno !== s) {
     await simpan(
       db,
