@@ -24,6 +24,7 @@ import {
 } from '../game';
 import { kirimAksi, type HasilAksi } from '../online/klienOnline';
 import { rekonstruksiState } from '../online/rekonstruksi';
+import { suaraChat, type ModeSuara, type StatusSuara } from '../online/suaraChat';
 import type { StatePublik } from '../online/tipe';
 import type { DataRoom } from '../online/useRoomOnline';
 import { sfx } from '../lib/audio';
@@ -88,6 +89,15 @@ interface GameStore {
   keluarOnline: () => void;
   /** Ambil ulang state otoritatif dari server (dipakai saat aksi optimistik gagal / stale). */
   resyncOnline: () => void;
+
+  /** Voice chat (online): mode mic + status koneksi + jumlah peer tersambung. */
+  suaraMode: ModeSuara;
+  suaraStatus: StatusSuara;
+  suaraPeers: number;
+  setSuaraMode: (m: ModeSuara) => void;
+  /** dipakai internal oleh useSuaraChat. */
+  _setSuaraStatus: (s: StatusSuara) => void;
+  _setSuaraPeers: (n: number) => void;
 
   progres: Progres;
   /** Ringkasan XP/level/badge dari game yang baru selesai — utk layar GameOver. */
@@ -343,6 +353,29 @@ export const useGameStore = create<GameStore>((set, get) => {
     versiOnline: 0,
     aksiPending: false,
 
+    suaraMode: 'off',
+    suaraStatus: 'mati',
+    suaraPeers: 0,
+    setSuaraMode: (m) => {
+      set({
+        suaraMode: m,
+        suaraStatus: m === 'off' ? 'mati' : 'menghubungkan',
+        ...(m === 'off' ? { suaraPeers: 0 } : {}),
+      });
+      suaraChat.setMode(m);
+    },
+    _setSuaraStatus: (s) => {
+      const cur = get().suaraStatus;
+      // Pertahankan pesan error saat koneksi ditutup setelahnya.
+      if (s === 'mati' && (cur === 'ditolak' || cur === 'gagal')) return;
+      if (s === 'ditolak' || s === 'gagal') {
+        set({ suaraStatus: s, suaraMode: 'off', suaraPeers: 0 });
+        return;
+      }
+      set({ suaraStatus: s });
+    },
+    _setSuaraPeers: (n) => set({ suaraPeers: n }),
+
     progres: bacaProgres(),
     rekamTerakhir: null,
     segarkanProgres: () => set({ progres: bacaProgres() }),
@@ -411,6 +444,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     keluarOnline: () => {
       const st = get();
       if (st.online) void kirimAksi('keluar', { code: st.online.code });
+      suaraChat.putus();
       set({
         mode: 'solo',
         online: null,
@@ -422,6 +456,9 @@ export const useGameStore = create<GameStore>((set, get) => {
         rekamOnlineDicatat: false,
         versiOnline: 0,
         aksiPending: false,
+        suaraMode: 'off',
+        suaraStatus: 'mati',
+        suaraPeers: 0,
         layar: 'menu',
       });
     },

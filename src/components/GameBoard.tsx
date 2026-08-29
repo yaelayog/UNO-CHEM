@@ -17,6 +17,7 @@ import { UnoToast } from './UnoToast';
 import { PeristiwaModal } from './PeristiwaModal';
 import { FunFactModal } from './FunFactModal';
 import { PengaturanSuara } from './PengaturanSuara';
+import { KontrolSuara } from './KontrolSuara';
 import { PembukaanMeja } from './PembukaanMeja';
 import { GameOver } from './GameOver';
 import { Confetti } from './Confetti';
@@ -29,6 +30,7 @@ export function GameBoard() {
 
   const state = useGameStore((s) => s.state);
   const humanId = useGameStore((s) => s.humanId);
+  const modeMain = useGameStore((s) => s.mode);
   const aksiPending = useGameStore((s) => s.aksiPending);
   const soalAktif = useGameStore((s) => s.soalAktif);
   const statistik = useGameStore((s) => s.statistik);
@@ -131,6 +133,7 @@ export function GameBoard() {
           <span className="flex min-h-9 items-center rounded-full bg-white/70 px-2.5">
             Kuis {statistik.benar}/{statistik.total}
           </span>
+          {modeMain === 'online' && <KontrolSuara />}
           <PengaturanSuara />
         </span>
       </header>

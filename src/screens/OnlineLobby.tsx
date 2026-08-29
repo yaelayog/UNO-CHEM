@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { onlineTersedia, sesiSiap } from '../lib/supabase';
 import { kirimAksi } from '../online/klienOnline';
 import { useGameStore } from '../store/gameStore';
+import { KontrolSuara } from '../components/KontrolSuara';
 
 export function OnlineLobby() {
   const keLayar = useGameStore((s) => s.keLayar);
@@ -128,6 +129,16 @@ export function OnlineLobby() {
               </li>
             ))}
           </ul>
+        </div>
+
+        <div className="flex items-center justify-between rounded-2xl bg-white p-3 shadow-empuk">
+          <div>
+            <p className="text-xs font-extrabold text-tinta/60">Suara / mikrofon</p>
+            <p className="text-[11px] text-tinta/45">
+              Ngobrol langsung dengan pemain lain
+            </p>
+          </div>
+          <KontrolSuara />
         </div>
 
         {sayaHost ? (
