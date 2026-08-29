@@ -1,0 +1,23 @@
+# ChemUno — konfigurasi Supabase CLI. Ganti project_id sesuai `supabase link`.
+project_id = "chemuno"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+
+[db]
+port = 54322
+
+[auth]
+enabled = true
+# WAJIB untuk mode online: tiap browser dapat identitas via anonymous sign-in.
+enable_anonymous_sign_ins = true
+
+[realtime]
+enabled = true
+
+# verify_jwt=false: preflight CORS (OPTIONS tanpa header Authorization) tak
+# ditolak gateway. JWT tetap diverifikasi DI DALAM fungsi (supabase.auth.getUser).
+[functions.aksi]
+verify_jwt = false

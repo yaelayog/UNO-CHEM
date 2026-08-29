@@ -1,0 +1,197 @@
+import { useMemo } from 'react';
+import { langkahLegal, kartuAtas } from '../game';
+import { useGameStore } from '../store/gameStore';
+import { useBotRunner } from '../hooks/useBotRunner';
+import { useSoundEffects } from '../hooks/useSoundEffects';
+import { useGuncang } from '../hooks/useGuncang';
+import { Hand } from './Hand';
+import { MejaPanggung } from './MejaPanggung';
+import { TargetCocok } from './DiscardPile';
+import { QuizModal } from './QuizModal';
+import { ColorPicker } from './ColorPicker';
+import { RewardToast } from './RewardToast';
+import { KuisToast } from './KuisToast';
+import { PeristiwaModal } from './PeristiwaModal';
+import { FunFactModal } from './FunFactModal';
+import { PengaturanSuara } from './PengaturanSuara';
+import { PembukaanMeja } from './PembukaanMeja';
+import { GameOver } from './GameOver';
+import { Confetti } from './Confetti';
+
+export function GameBoard() {
+  useBotRunner();
+  useSoundEffects();
+  const guncang = useGuncang();
+
+  const state = useGameStore((s) => s.state);
+  const humanId = useGameStore((s) => s.humanId);
+  const soalAktif = useGameStore((s) => s.soalAktif);
+  const statistik = useGameStore((s) => s.statistik);
+  const rekamTerakhir = useGameStore((s) => s.rekamTerakhir);
+  const mainkan = useGameStore((s) => s.mainkan);
+  const tarik = useGameStore((s) => s.tarik);
+  const pilihWarna = useGameStore((s) => s.pilihWarna);
+  const jawabKuis = useGameStore((s) => s.jawabKuis);
+  const bersihkanReward = useGameStore((s) => s.bersihkanReward);
+  const bersihkanPengumuman = useGameStore((s) => s.bersihkanPengumuman);
+  const tutupPeristiwa = useGameStore((s) => s.tutupPeristiwa);
+  const tutupFunFact = useGameStore((s) => s.tutupFunFact);
+  const mainLagi = useGameStore((s) => s.mainLagi);
+  const keluarKeMenu = useGameStore((s) => s.keluarKeMenu);
+  const sedangMembuka = useGameStore((s) => s.sedangMembuka);
+  const selesaiMembuka = useGameStore((s) => s.selesaiMembuka);
+
+  const legalIds = useMemo(() => {
+    if (!state) return new Set<string>();
+    const current = state.pemain[state.giliran];
+    if (state.status !== 'bermain' || current.id !== humanId) return new Set<string>();
+    return new Set(langkahLegal(state, humanId));
+  }, [state, humanId]);
+
+  if (!state) return null;
+
+  const human = state.pemain.find((p) => p.id === humanId)!;
+  const current = state.pemain[state.giliran];
+  const membuka = sedangMembuka || Boolean(state.menungguPembukaan);
+  const giliranHuman =
+    !membuka && state.status === 'bermain' && current.id === humanId;
+  const atas = kartuAtas(state);
+
+  const kuisHuman =
+    state.status === 'menungguKuis' &&
+    state.efekTertunda?.targetPemainId === humanId &&
+    soalAktif;
+  const pilihWarnaHuman =
+    state.status === 'menungguPilihWarna' && current.id === humanId;
+
+  const petunjuk = giliranHuman
+    ? legalIds.size > 0
+      ? 'Giliranmu — pilih kartu yang menyala atau tarik kartu'
+      : 'Tidak ada kartu cocok — tarik kartu'
+    : state.status === 'menungguKuis'
+      ? `${current.nama} menunggu hasil kuis…`
+      : `Giliran ${current.nama}…`;
+
+  return (
+    <div
+      className={`mx-auto flex h-full max-h-[100dvh] max-w-2xl flex-col overflow-hidden pt-[env(safe-area-inset-top)] no-select ${guncang ? 'animasi-guncang' : ''}`}
+    >
+      {/* Bilah atas */}
+      <header className="relative flex shrink-0 items-center justify-between px-3 py-2 text-xs font-bold text-tinta/70">
+        <button
+          type="button"
+          onClick={keluarKeMenu}
+          className="flex min-h-9 items-center rounded-full bg-white/70 px-3 shadow-empuk cursor-pointer hover:bg-white"
+        >
+          ← Menu
+        </button>
+        <span className="flex items-center gap-2">
+          <span className="hidden xs:inline">
+            {state.arah === 1 ? '↻ searah' : '↺ berlawanan'}
+          </span>
+          <span className="flex min-h-9 items-center rounded-full bg-white/70 px-2.5">
+            Kuis {statistik.benar}/{statistik.total}
+          </span>
+          <PengaturanSuara />
+        </span>
+      </header>
+
+      {/* Meja 2.5D — lawan duduk mengelilingi */}
+      <MejaPanggung
+        state={state}
+        humanId={humanId}
+        atas={atas}
+        bisaTarik={giliranHuman}
+        onTarik={tarik}
+      />
+
+      {/* Tangan pemain */}
+      <div className="relative z-10 shrink-0 border-t border-black/5 bg-white/60 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm">
+        <div className="flex flex-col items-center gap-1 pt-1.5">
+          <TargetCocok
+            warnaAktif={state.warnaAktif}
+            angkaAktif={state.angkaAktif}
+          />
+          <p className="min-h-[1rem] text-center text-[11px] font-bold text-tinta/55">
+            {petunjuk}
+          </p>
+        </div>
+        <div className="flex items-center justify-between px-4 text-xs font-bold text-tinta/70">
+          <span>{human.nama}</span>
+          <span>
+            {human.tangan.length} kartu
+            {human.tangan.length === 1 && (
+              <span className="ml-1 rounded-full bg-alkali px-1.5 text-[10px] text-white">
+                UNO!
+              </span>
+            )}
+          </span>
+        </div>
+        {membuka ? (
+          <div className="h-[132px]" />
+        ) : (
+          <Hand
+            kartu={human.tangan}
+            legalIds={legalIds}
+            giliranPemain={giliranHuman}
+            onMainkan={(ids) => mainkan(ids)}
+          />
+        )}
+      </div>
+
+      {/* Overlay */}
+      <RewardToast reward={state.faktaReward} onTutup={bersihkanReward} />
+      <KuisToast
+        pengumuman={state.pengumumanKuis}
+        onTutup={bersihkanPengumuman}
+      />
+
+      {kuisHuman && state.efekTertunda && (
+        <QuizModal
+          soal={soalAktif}
+          penaltiDasar={state.efekTertunda.penaltiDasar}
+          jenisEfek={state.efekTertunda.jenis}
+          judulKartu={atas.judulEfek ?? 'Kuis'}
+          namaTarget={human.nama}
+          onSelesai={jawabKuis}
+        />
+      )}
+
+      {pilihWarnaHuman && (
+        <ColorPicker judul={atas.judulEfek ?? 'Katalis'} onPilih={pilihWarna} />
+      )}
+
+      {state.peristiwaAktif && (
+        <PeristiwaModal
+          peristiwa={state.peristiwaAktif}
+          onTutup={tutupPeristiwa}
+        />
+      )}
+
+      {state.funFactAktif && !state.peristiwaAktif && (
+        <FunFactModal fakta={state.funFactAktif} onTutup={tutupFunFact} />
+      )}
+
+      {state.status === 'selesai' && (
+        <>
+          {state.pemenangId === humanId && <Confetti />}
+          <GameOver
+            state={state}
+            humanId={humanId}
+            statistik={statistik}
+            rekam={rekamTerakhir}
+            onMainLagi={mainLagi}
+            onMenu={keluarKeMenu}
+          />
+        </>
+      )}
+
+      {membuka && (
+        <PembukaanMeja
+          jumlahPemain={state.pemain.length}
+          onSelesai={selesaiMembuka}
+        />
+      )}
+    </div>
+  );
+}
