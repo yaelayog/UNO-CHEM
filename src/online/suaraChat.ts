@@ -78,14 +78,18 @@ const BITRATE_MAKS = 24000;
  */
 function sdpHemat(sdp?: string | null): string {
   if (!sdp) return '';
-  return sdp.replace(/^a=fmtp:(\d+) (.*(?:minptime|useinbandfec).*)$/gim, (m, pt, params) => {
-    let p = params as string;
-    if (!/maxaveragebitrate=/.test(p)) p += `;maxaveragebitrate=${BITRATE_MAKS}`;
-    if (!/usedtx=/.test(p)) p += ';usedtx=1';
-    if (!/stereo=/.test(p)) p += ';stereo=0';
-    if (!/cbr=/.test(p)) p += ';cbr=0';
-    return `a=fmtp:${pt} ${p}`;
-  });
+  return sdp.replace(
+    /^a=fmtp:(\d+) (.*(?:minptime|useinbandfec).*)$/gim,
+    (_m: string, pt: string, params: string) => {
+      let p = params;
+      if (!/maxaveragebitrate=/.test(p))
+        p += `;maxaveragebitrate=${BITRATE_MAKS}`;
+      if (!/usedtx=/.test(p)) p += ';usedtx=1';
+      if (!/stereo=/.test(p)) p += ';stereo=0';
+      if (!/cbr=/.test(p)) p += ';cbr=0';
+      return `a=fmtp:${pt} ${p}`;
+    },
+  );
 }
 
 /** Batasi bitrate encoder pengirim (pelengkap SDP munging). */
