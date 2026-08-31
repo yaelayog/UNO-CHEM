@@ -24,6 +24,11 @@ const URL = Deno.env.get('SUPABASE_URL')!;
 const ANON = Deno.env.get('SUPABASE_ANON_KEY')!;
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+// Cloudflare Realtime TURN — kredensial di-mint per pemanggil (short-lived),
+// API token tetap di server. Kosong = klien fallback ke STUN / env TURN.
+const CF_TURN_KEY_ID = Deno.env.get('CF_TURN_KEY_ID');
+const CF_TURN_API_TOKEN = Deno.env.get('CF_TURN_API_TOKEN');
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
@@ -98,6 +103,8 @@ async function tangani(
       return sync(db, uid, code);
     case 'denyut':
       return denyut(db, uid, code);
+    case 'turnKredensial':
+      return turnKredensial();
     case 'selesaiPembukaan':
       return aksiState(db, uid, code, (s) => {
         assert(s.menungguPembukaan, 'bukan fase pembukaan');
@@ -333,6 +340,38 @@ async function mulai(db: SupabaseClient, uid: string, code: string) {
   ]);
 
   return { ok: true };
+}
+
+/**
+ * Mint kredensial TURN Cloudflare (short-lived) untuk voice chat. API token
+ * tetap di server. Kembalikan `{ iceServers: null }` bila belum dikonfigurasi
+ * → klien fallback ke STUN / env TURN.
+ */
+async function turnKredensial() {
+  if (!CF_TURN_KEY_ID || !CF_TURN_API_TOKEN) return { iceServers: null };
+  try {
+    const r = await fetch(
+      `https://rtc.live.cloudflare.com/v1/turn/keys/${CF_TURN_KEY_ID}/credentials/generate`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${CF_TURN_API_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ttl: 86400 }),
+      },
+    );
+    if (!r.ok) {
+      console.error('[turn] cloudflare', r.status, await r.text());
+      return { iceServers: null };
+    }
+    const data = await r.json();
+    // API bisa balas { iceServers: {...} } atau { iceServers: [...] }.
+    return { iceServers: data.iceServers ?? null };
+  } catch (e) {
+    console.error('[turn] gagal', e);
+    return { iceServers: null };
+  }
 }
 
 // ── Sinkronisasi & aksi state ────────────────────────────────────────

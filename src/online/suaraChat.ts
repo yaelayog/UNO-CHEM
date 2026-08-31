@@ -1,5 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { getSupabase } from '../lib/supabase';
+import { kirimAksi } from './klienOnline';
 
 export type ModeSuara = 'off' | 'on' | 'ptt';
 export type StatusSuara =
@@ -29,8 +30,6 @@ const TURN_URL = import.meta.env.VITE_TURN_URL as string | undefined;
 const TURN_USER = import.meta.env.VITE_TURN_USERNAME as string | undefined;
 const TURN_CRED = import.meta.env.VITE_TURN_CREDENTIAL as string | undefined;
 
-export const turnDikonfigurasi = Boolean(TURN_URL && TURN_USER && TURN_CRED);
-
 const DEBUG =
   typeof localStorage !== 'undefined' &&
   localStorage.getItem('chemuno:suara-debug') === '1';
@@ -38,24 +37,31 @@ function log(...a: unknown[]): void {
   if (DEBUG) console.log('[suara]', ...a);
 }
 
-function iceServers(): RTCIceServer[] {
-  const list: RTCIceServer[] = [
-    {
-      urls: [
-        'stun:stun.l.google.com:19302',
-        'stun:stun1.l.google.com:19302',
-        'stun:stun2.l.google.com:19302',
-      ],
-    },
-  ];
-  if (TURN_URL && TURN_USER && TURN_CRED) {
-    list.push({
-      urls: TURN_URL.split(',').map((u) => u.trim()),
-      username: TURN_USER,
-      credential: TURN_CRED,
-    });
-  }
-  return list;
+const STUN: RTCIceServer = {
+  urls: [
+    'stun:stun.l.google.com:19302',
+    'stun:stun1.l.google.com:19302',
+    'stun:stun2.l.google.com:19302',
+  ],
+};
+
+/** TURN dari env (Metered dll.) — fallback bila Cloudflare tak tersedia. */
+function turnEnv(): RTCIceServer | null {
+  if (!TURN_URL || !TURN_USER || !TURN_CRED) return null;
+  return {
+    urls: TURN_URL.split(',').map((u) => u.trim()),
+    username: TURN_USER,
+    credential: TURN_CRED,
+  };
+}
+
+/** true bila daftar iceServers memuat setidaknya satu URL turn(s):. */
+function adaTurn(list: RTCIceServer[]): boolean {
+  return list.some((s) =>
+    (Array.isArray(s.urls) ? s.urls : [s.urls]).some((u) =>
+      u.startsWith('turn'),
+    ),
+  );
 }
 
 type Sinyal =
@@ -129,6 +135,9 @@ class SuaraChat {
   private peers = new Map<string, Peer>();
   private lepasGestur: (() => void) | null = null;
   private diagTimer: ReturnType<typeof setInterval> | null = null;
+  /** iceServers aktif (STUN + TURN Cloudflare / env). Di-cache per TTL. */
+  private iceAktif: RTCIceServer[] = [STUN];
+  private iceSampaiMs = 0;
 
   onStatus?: (s: StatusSuara) => void;
   onPeers?: (n: number) => void;
@@ -153,6 +162,43 @@ class SuaraChat {
       this.onBisu?.(bisu);
     }, 350);
   };
+
+  /**
+   * Muat iceServers: STUN + TURN Cloudflare (di-mint Edge Function, short-lived,
+   * cache 12 jam) → fallback TURN dari env (Metered) → fallback STUN saja.
+   */
+  private async muatIce(): Promise<void> {
+    if (adaTurn(this.iceAktif) && Date.now() < this.iceSampaiMs) return;
+
+    const list: RTCIceServer[] = [STUN];
+    try {
+      const r = await kirimAksi('turnKredensial', {});
+      const cf = r.iceServers as
+        | { urls?: string[]; username?: string; credential?: string }
+        | RTCIceServer[]
+        | null;
+      if (Array.isArray(cf)) {
+        list.push(...cf);
+      } else if (cf?.urls?.length) {
+        list.push({
+          urls: cf.urls,
+          username: cf.username,
+          credential: cf.credential,
+        });
+      }
+    } catch (e) {
+      log('ambil TURN Cloudflare gagal', e);
+    }
+
+    if (!adaTurn(list)) {
+      const env = turnEnv();
+      if (env) list.push(env);
+    }
+
+    this.iceAktif = list;
+    this.iceSampaiMs = Date.now() + 12 * 3600 * 1000;
+    log('iceServers', adaTurn(list) ? 'dgn TURN' : 'STUN saja', list.length);
+  }
 
   async sambung(code: string, uid: string): Promise<void> {
     if (this.code === code && this.uid === uid && this.channel) return;
@@ -194,6 +240,12 @@ class SuaraChat {
     this.local = stream;
     this.terapkanMic();
     log('mic siap', stream.getAudioTracks());
+
+    await this.muatIce();
+    if (gen !== this.epoch) {
+      stream.getTracks().forEach((t) => t.stop());
+      return;
+    }
 
     if (!this.lepasGestur) {
       const h = () => this.desakPutar();
@@ -329,6 +381,7 @@ class SuaraChat {
     let n = 0;
     let perluTurn = false;
     const now = Date.now();
+    const punyaTurn = adaTurn(this.iceAktif);
     const peers: DiagSuara['peers'] = [];
     for (const [id, p] of this.peers) {
       const ice = p.pc.iceConnectionState;
@@ -340,7 +393,7 @@ class SuaraChat {
         ice === 'checking' || ice === 'disconnected' || ice === 'failed';
       if (
         macet &&
-        !turnDikonfigurasi &&
+        !punyaTurn &&
         !p.tipeKandidat.has('relay') &&
         now - p.mulaiMs > 6000 &&
         (gather === 'complete' || now - p.mulaiMs > 15000)
@@ -362,7 +415,7 @@ class SuaraChat {
       presence: this.channel
         ? Object.keys(this.channel.presenceState()).length
         : 0,
-      turn: turnDikonfigurasi,
+      turn: punyaTurn,
       mic: trk
         ? `${trk.readyState}${trk.muted ? ' (muted OS)' : ''}${trk.enabled ? ' kirim' : ' diam'}`
         : 'tidak',
@@ -374,7 +427,7 @@ class SuaraChat {
   private buatPeer(peerId: string, sebagaiPenawar: boolean): void {
     if (this.peers.has(peerId) || !this.local) return;
     log('buatPeer', peerId, sebagaiPenawar ? '(penawar)' : '(penerima)');
-    const pc = new RTCPeerConnection({ iceServers: iceServers() });
+    const pc = new RTCPeerConnection({ iceServers: this.iceAktif });
     const peer: Peer = {
       pc,
       iceMenunggu: [],
