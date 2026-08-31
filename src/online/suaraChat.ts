@@ -63,6 +63,40 @@ type Sinyal =
   | { t: 'answer'; dari: string; ke: string; sdp: string }
   | { t: 'ice'; dari: string; ke: string; cand: RTCIceCandidateInit };
 
+/** Bitrate suara maksimum (bps). ~24 kbps = kualitas suara jernih, hemat. */
+const BITRATE_MAKS = 24000;
+
+/**
+ * Munge SDP Opus: batasi bitrate + aktifkan DTX (tak kirim data saat diam) +
+ * mono. Menghemat trafik TURN drastis (orang tak ngobrol terus-menerus).
+ */
+function sdpHemat(sdp?: string | null): string {
+  if (!sdp) return '';
+  return sdp.replace(/^a=fmtp:(\d+) (.*(?:minptime|useinbandfec).*)$/gim, (m, pt, params) => {
+    let p = params as string;
+    if (!/maxaveragebitrate=/.test(p)) p += `;maxaveragebitrate=${BITRATE_MAKS}`;
+    if (!/usedtx=/.test(p)) p += ';usedtx=1';
+    if (!/stereo=/.test(p)) p += ';stereo=0';
+    if (!/cbr=/.test(p)) p += ';cbr=0';
+    return `a=fmtp:${pt} ${p}`;
+  });
+}
+
+/** Batasi bitrate encoder pengirim (pelengkap SDP munging). */
+async function batasiKirim(pc: RTCPeerConnection): Promise<void> {
+  for (const sender of pc.getSenders()) {
+    if (sender.track?.kind !== 'audio') continue;
+    const p = sender.getParameters();
+    if (!p.encodings || p.encodings.length === 0) p.encodings = [{}];
+    p.encodings[0].maxBitrate = BITRATE_MAKS;
+    try {
+      await sender.setParameters(p);
+    } catch {
+      /* sebagian browser rewel — SDP munging sudah menutupi */
+    }
+  }
+}
+
 interface Peer {
   pc: RTCPeerConnection;
   /** Kandidat ICE yang datang sebelum remoteDescription siap. */
@@ -397,7 +431,10 @@ class SuaraChat {
     if (sebagaiPenawar) {
       void (async () => {
         try {
-          await pc.setLocalDescription(await pc.createOffer());
+          const offer = await pc.createOffer();
+          offer.sdp = sdpHemat(offer.sdp);
+          await pc.setLocalDescription(offer);
+          void batasiKirim(pc);
           if (this.uid && this.peers.get(peerId) === peer) {
             this.kirimSinyal({
               t: 'offer',
@@ -452,7 +489,10 @@ class SuaraChat {
       try {
         await peer.pc.setRemoteDescription({ type: 'offer', sdp: s.sdp });
         await this.kurasIce(peer);
-        await peer.pc.setLocalDescription(await peer.pc.createAnswer());
+        const answer = await peer.pc.createAnswer();
+        answer.sdp = sdpHemat(answer.sdp);
+        await peer.pc.setLocalDescription(answer);
+        void batasiKirim(peer.pc);
         this.kirimSinyal({
           t: 'answer',
           dari: uid,
