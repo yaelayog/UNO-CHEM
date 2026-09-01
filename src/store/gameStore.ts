@@ -22,6 +22,7 @@ import {
   type KartuKimia,
   type OpsiPemain,
 } from '../game';
+import { useAkunStore } from '../akun/akunStore';
 import { kirimAksi, type HasilAksi } from '../online/klienOnline';
 import { rekonstruksiState } from '../online/rekonstruksi';
 import {
@@ -48,7 +49,13 @@ export type Layar =
   | 'tentang'
   | 'belajar'
   | 'profil'
+  | 'akun'
   | 'online';
+
+/** Dorong progres terbaru ke akun murid (no-op bila belum masuk). */
+function sinkronProgresKeAkun(p: Progres) {
+  useAkunStore.getState().sinkronProgres(p);
+}
 
 export type ModeMain = 'solo' | 'online';
 
@@ -219,6 +226,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         benarPerGolongan: stat.benarPerGolongan,
       });
       simpanProgres(rekam.progres);
+      sinkronProgresKeAkun(rekam.progres);
       set({ progres: rekam.progres, rekamTerakhir: rekam });
     }
 
@@ -311,6 +319,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         benarPerGolongan: stat.benarPerGolongan,
       });
       simpanProgres(rekam.progres);
+      sinkronProgresKeAkun(rekam.progres);
       set({
         progres: rekam.progres,
         rekamTerakhir: rekam,

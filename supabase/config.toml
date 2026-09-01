@@ -21,3 +21,6 @@ enabled = true
 # ditolak gateway. JWT tetap diverifikasi DI DALAM fungsi (supabase.auth.getUser).
 [functions.aksi]
 verify_jwt = false
+
+[functions.akun]
+verify_jwt = false

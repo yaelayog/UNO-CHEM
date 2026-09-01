@@ -6,6 +6,8 @@ import { picuPasang } from '../lib/pwa';
 import { onlineTersedia } from '../lib/supabase';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import { useGameStore } from '../store/gameStore';
+import { useAkunStore } from '../akun/akunStore';
+import { namaTampil } from '../akun/tipe';
 
 const WARNA = Object.values(WARNA_GOLONGAN);
 
@@ -13,6 +15,8 @@ export function MainMenu() {
   const mulaiGame = useGameStore((s) => s.mulaiGame);
   const keLayar = useGameStore((s) => s.keLayar);
   const progres = useGameStore((s) => s.progres);
+  const murid = useAkunStore((s) => s.murid);
+  const guruEmail = useAkunStore((s) => s.guruEmail);
   const [jumlahBot, setJumlahBot] = useState(2);
   const [pakaiPeristiwa, setPakaiPeristiwa] = useState(false);
   const bisaPasang = useInstallPrompt();
@@ -65,6 +69,35 @@ export function MainMenu() {
           Cocokkan golongan &amp; periode unsur — belajar kimia sambil bermain
         </p>
       </div>
+
+      <button
+        type="button"
+        onClick={() => keLayar('akun')}
+        className="flex w-full items-center justify-between rounded-2xl border border-black/10 bg-white px-3 py-2.5 text-left text-sm font-extrabold shadow-empuk transition hover:bg-kertas cursor-pointer"
+      >
+        {murid ? (
+          <>
+            <span className="text-lab">{namaTampil(murid)}</span>
+            <span className="text-[11px] font-bold text-tinta/50">
+              {murid.kelasNama ? `Kelas ${murid.kelasNama}` : 'Akun bebas'} →
+            </span>
+          </>
+        ) : guruEmail ? (
+          <>
+            <span className="text-lab">Guru</span>
+            <span className="max-w-[60%] truncate text-[11px] font-bold text-tinta/50">
+              {guruEmail} →
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="text-tinta/70">Buat akun / Masuk</span>
+            <span className="text-[11px] font-bold text-tinta/45">
+              simpan progres &amp; ikut leaderboard →
+            </span>
+          </>
+        )}
+      </button>
 
       <button
         type="button"

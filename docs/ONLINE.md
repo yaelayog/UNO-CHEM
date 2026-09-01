@@ -109,3 +109,62 @@ supabase functions deploy aksi --no-verify-jwt
 | `src/lib/supabase.ts` | klien (dynamic import — bundle solo tetap ringan) |
 | `src/online/*` | adapter, hook Realtime, rekonstruksi state, `OnlineSync` |
 | `src/screens/OnlineLobby.tsx` | layar buat/gabung room + lobby |
+
+---
+
+## Akun & Kelas (Fase 4 — Minggu 1)
+
+Sistem identitas guru–murid + progres persisten. **Terpisah** dari sistem room.
+
+### Skema
+
+```bash
+supabase db push          # migration 0004 (tabel) + 0005 (grant) + 0006 (pin terbaca)
+```
+
+| tabel | isi | RLS |
+|---|---|---|
+| `kelas` | `id, nama_kelas, kode_kelas UNIK, guru_id, dibuat_pada` | guru CRUD kelas miliknya (`guru_id = auth.uid()`) |
+| `murid` | `nama, pin (4 digit, APA ADANYA — media belajar, guru bisa bantu murid lupa PIN), kode_unik "4821" UNIK, kelas_id NULLABLE, auth_uid, sesi_token_hash` | klien deny-all; guru boleh BACA murid di kelasnya |
+| `progres_murid` | `total_poin, peringkat_golongan_aktif/rekor, badge_diraih, progres_lokal (blob XP lama), …` | klien deny-all; guru BACA murid di kelasnya |
+
+Semua tulis data murid lewat **Edge Function `akun` (service role)** — bukan RLS klien.
+
+### Auth
+
+- **Guru** = Supabase Auth email+password. Di dashboard: **Authentication →
+  Providers → Email** enable. Untuk demo cepat, matikan **Confirm email**
+  (Authentication → Providers → Email → *Confirm email* OFF) supaya guru bisa
+  langsung masuk setelah daftar.
+- **Murid** = Nama + PIN 4 digit (identitas ringan, bukan principal auth).
+  Session token disimpan di `localStorage: chemuno:sesiMurid`; Nama+PIN dipakai
+  untuk pemulihan di device lain. Satu token aktif per murid (login di device
+  baru meng-invalidasi token device lama).
+
+### Deploy Edge Function `akun`
+
+```bash
+supabase functions deploy akun --no-verify-jwt
+```
+
+(Tak butuh `npm run sync:supabase` — fungsi ini tidak memakai engine.)
+
+### Endpoint `akun` (body `{ tipe, ... }`)
+
+| tipe | payload | hasil |
+|---|---|---|
+| `daftar` | `nama, pin, kodeKelas?, progresLokal?` | `{ murid, progres, token }` |
+| `masuk` | `nama, pin, kodeUnik?` | `{ murid, progres, token }` atau `{ pilihan: [...] }` bila >1 akun cocok |
+| `sesi` | `token` | `{ murid, progres, token }` (restore saat app dibuka) |
+| `gabungKelas` | `token, kodeKelas` | `{ murid, progres }` |
+| `sinkronProgres` | `token, progresLokal` | `{ ok: true }` |
+| `keluar` | `token` | `{ ok: true }` |
+
+### Berkas
+
+| berkas | isi |
+|---|---|
+| `supabase/migrations/0004_akun_kelas.sql` · `0005_akun_rpc.sql` · `0006_pin_terbaca.sql` | tabel, RLS, RPC, PIN terbaca |
+| `supabase/functions/akun/index.ts` | Edge Function identitas murid |
+| `src/akun/*` | `akunStore` (Zustand), `klienAkun`, `migrasiProgres` (pure + test), `tipe` |
+| `src/screens/AkunScreen.tsx` | layar `akun` — tab Murid / Guru |

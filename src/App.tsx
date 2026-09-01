@@ -1,6 +1,7 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { MotionConfig } from 'framer-motion';
 import { useGameStore } from './store/gameStore';
+import { useAkunStore } from './akun/akunStore';
 import { MainMenu } from './screens/MainMenu';
 import { Memuat } from './components/Memuat';
 import { LatarLab } from './components/LatarLab';
@@ -19,6 +20,9 @@ const ProfilScreen = lazy(() =>
 const BelajarScreen = lazy(() =>
   import('./screens/BelajarScreen').then((m) => ({ default: m.BelajarScreen })),
 );
+const AkunScreen = lazy(() =>
+  import('./screens/AkunScreen').then((m) => ({ default: m.AkunScreen })),
+);
 const RulesScreen = lazy(() =>
   import('./screens/InfoScreen').then((m) => ({ default: m.RulesScreen })),
 );
@@ -28,6 +32,11 @@ const AboutScreen = lazy(() =>
 
 export default function App() {
   const layar = useGameStore((s) => s.layar);
+  const muatAkun = useAkunStore((s) => s.muat);
+
+  useEffect(() => {
+    void muatAkun();
+  }, [muatAkun]);
 
   let isi;
   switch (layar) {
@@ -45,6 +54,9 @@ export default function App() {
       break;
     case 'belajar':
       isi = <BelajarScreen />;
+      break;
+    case 'akun':
+      isi = <AkunScreen />;
       break;
     case 'online':
       isi = <OnlineLobby />;
