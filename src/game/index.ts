@@ -53,3 +53,20 @@ export {
 } from './funfact';
 export { pilihSoal, BATAS_WAKTU_KUIS_DETIK, AMBANG_CEPAT_DETIK } from './kuis';
 export { lanjutkanOtomatis } from './lanjutkan';
+export {
+  poinJawabanBenar,
+  poinBonusMenangOnline,
+  kebutuhanPoinGolongan,
+  hitungGolonganDariPoin,
+  tambahPoin,
+  terapkanResetMingguan,
+  resetMingguan,
+  POIN_KUIS,
+  POIN_BONUS_MENANG_ONLINE,
+  GOLONGAN_MIN,
+  GOLONGAN_MAKS,
+  PENURUNAN_RESET,
+  LANTAI_RESET,
+  type TingkatKesulitan,
+  type KeadaanPeringkat,
+} from './peringkat';
