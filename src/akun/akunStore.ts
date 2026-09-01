@@ -108,7 +108,11 @@ export const useAkunStore = create<AkunStore>((set, get) => {
         if (token) {
           const r = await kirimAkun('sesi', { token });
           if (r.murid && !r.error) terapkan(r);
-          else if (r.error) simpanToken(null);
+          // Buang token HANYA kalau server bilang sesinya memang tak valid
+          // (akun dihapus / token salah). Error jaringan sesaat → biarkan,
+          // coba lagi saat app dibuka berikutnya.
+          else if (r.error && /tidak valid|not.*valid|401/i.test(r.error))
+            simpanToken(null);
         }
       } finally {
         set({ memuat: false });
