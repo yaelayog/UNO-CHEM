@@ -8,6 +8,7 @@ import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import { useGameStore } from '../store/gameStore';
 import { useAkunStore } from '../akun/akunStore';
 import { namaTampil } from '../akun/tipe';
+import { LencanaPeringkat } from '../components/LencanaPeringkat';
 
 const WARNA = Object.values(WARNA_GOLONGAN);
 
@@ -17,6 +18,7 @@ export function MainMenu() {
   const progres = useGameStore((s) => s.progres);
   const murid = useAkunStore((s) => s.murid);
   const guruEmail = useAkunStore((s) => s.guruEmail);
+  const progresAkun = useAkunStore((s) => s.progresAkun);
   const [jumlahBot, setJumlahBot] = useState(2);
   const [pakaiPeristiwa, setPakaiPeristiwa] = useState(false);
   const bisaPasang = useInstallPrompt();
@@ -77,7 +79,15 @@ export function MainMenu() {
       >
         {murid ? (
           <>
-            <span className="text-lab">{namaTampil(murid)}</span>
+            <span className="flex items-center gap-2 text-lab">
+              {progresAkun && (
+                <LencanaPeringkat
+                  golongan={progresAkun.peringkatGolonganAktif}
+                  ukuran="sm"
+                />
+              )}
+              {namaTampil(murid)}
+            </span>
             <span className="text-[11px] font-bold text-tinta/50">
               {murid.kelasNama ? `Kelas ${murid.kelasNama}` : 'Akun bebas'} →
             </span>
@@ -183,6 +193,7 @@ export function MainMenu() {
       </div>
 
       <div className="flex flex-wrap justify-center gap-2">
+        <MenuLink label="Leaderboard" onClick={() => keLayar('leaderboard')} />
         <MenuLink label="Mode Belajar" onClick={() => keLayar('belajar')} />
         <MenuLink label="Cara Main" onClick={() => keLayar('aturan')} />
         <MenuLink label="Tentang" onClick={() => keLayar('tentang')} />

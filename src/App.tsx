@@ -23,6 +23,11 @@ const BelajarScreen = lazy(() =>
 const AkunScreen = lazy(() =>
   import('./screens/AkunScreen').then((m) => ({ default: m.AkunScreen })),
 );
+const LeaderboardScreen = lazy(() =>
+  import('./screens/LeaderboardScreen').then((m) => ({
+    default: m.LeaderboardScreen,
+  })),
+);
 const RulesScreen = lazy(() =>
   import('./screens/InfoScreen').then((m) => ({ default: m.RulesScreen })),
 );
@@ -57,6 +62,9 @@ export default function App() {
       break;
     case 'akun':
       isi = <AkunScreen />;
+      break;
+    case 'leaderboard':
+      isi = <LeaderboardScreen />;
       break;
     case 'online':
       isi = <OnlineLobby />;

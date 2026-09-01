@@ -19,6 +19,8 @@ import {
   type OpsiPemain,
 } from '../_shared/game/index.ts';
 import { pisahTangan, redaksiState } from '../_shared/redaksi.ts';
+import { beriPoinMurid, muridDariAuthUid } from '../_shared/poin.ts';
+import { poinBonusMenangOnline, poinJawabanBenar } from '../_shared/game/index.ts';
 
 const URL = Deno.env.get('SUPABASE_URL')!;
 const ANON = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -132,11 +134,20 @@ async function tangani(
         return pilihWarna(s, b.golongan as Golongan);
       });
     case 'jawabKuis':
-      return aksiState(db, uid, code, (s) => {
-        assert(s.status === 'menungguKuis' && s.efekTertunda, 'bukan fase kuis');
-        assert(s.efekTertunda.targetPemainId === uid, 'bukan kuismu');
-        return selesaikanKuis(s, b.hasil as 'benarCepat' | 'benarLambat' | 'salah');
-      });
+      return aksiState(
+        db,
+        uid,
+        code,
+        (s) => {
+          assert(s.status === 'menungguKuis' && s.efekTertunda, 'bukan fase kuis');
+          assert(s.efekTertunda.targetPemainId === uid, 'bukan kuismu');
+          return selesaikanKuis(
+            s,
+            b.hasil as 'benarCepat' | 'benarLambat' | 'salah',
+          );
+        },
+        { kuisHasil: b.hasil as 'benarCepat' | 'benarLambat' | 'salah' },
+      );
     case 'lanjut':
       // Hanya Kartu Peristiwa yang tersinkron (efek permainan). Fun Fact &
       // Fakta streak ditutup per orang di klien — server tak menyentuhnya.
@@ -402,6 +413,8 @@ interface OpsiAksi {
   anggotaSaja?: boolean;
   /** Kembali tanpa menulis kalau `ubah` tak mengubah state (mis. cekUno). */
   lewatiBilaSama?: boolean;
+  /** Diisi oleh `jawabKuis` — hasil kuis pemanggil, untuk poin Peringkat Golongan. */
+  kuisHasil?: 'benarCepat' | 'benarLambat' | 'salah';
 }
 
 /** Muat core → jalankan `ubah` → lanjutkanOtomatis → simpan (optimistic lock). */
@@ -440,6 +453,16 @@ async function aksiState(
     lanjutkanOtomatis(diubah, { berhentiKartuFakta: false }),
   );
   const hasil = await simpan(db, code, core.versi as number, next);
+
+  // ── Poin Peringkat Golongan (server-otoritatif, anti-cheat) ──────────
+  if ('ok' in hasil && hasil.ok) {
+    try {
+      await beriPoinPeringkat(db, uid, asal, next, opsi.kuisHasil);
+    } catch (_) {
+      /* poin tak boleh menggagalkan aksi permainan */
+    }
+  }
+
   // Balikan state langsung ke pemanggil (tangan + soal privat miliknya) supaya
   // klien tak perlu menunggu push Realtime — mengurangi delay giliran sendiri.
   if ('ok' in hasil && hasil.ok) {
@@ -452,6 +475,43 @@ async function aksiState(
     return { ...hasil, tanganku, soalPrivat };
   }
   return hasil;
+}
+
+/**
+ * Beri poin ke murid pemanggil: (1) kuis benar → poin kecil dibobot kesulitan,
+ * (2) baru saja menang permainan → bonus besar `poinBonusMenangOnline`.
+ * Akurasi per golongan juga dicatat. No-op untuk tamu/guru (tak ada baris murid).
+ */
+async function beriPoinPeringkat(
+  db: SupabaseClient,
+  uid: string,
+  asal: GameState,
+  next: GameState,
+  kuisHasil?: 'benarCepat' | 'benarLambat' | 'salah',
+) {
+  // (1) Kuis yang baru saja dijawab pemanggil
+  if (kuisHasil && asal.status === 'menungguKuis' && asal.efekTertunda) {
+    const muridId = await muridDariAuthUid(db, uid);
+    if (muridId) {
+      const benar = kuisHasil !== 'salah';
+      const g = asal.soalAktif?.golonganTerkait ?? 'umum';
+      const poin = benar ? poinJawabanBenar(asal.efekTertunda.tingkatKuis) : 0;
+      await beriPoinMurid(db, muridId, poin, {
+        [g]: { benar: benar ? 1 : 0, total: 1 },
+      });
+    }
+  }
+
+  // (2) Permainan baru saja usai — bonus besar untuk pemenang manusia
+  if (
+    asal.status !== 'selesai' &&
+    next.status === 'selesai' &&
+    next.pemenangId &&
+    !next.pemenangId.startsWith('bot-')
+  ) {
+    const muridId = await muridDariAuthUid(db, next.pemenangId);
+    if (muridId) await beriPoinMurid(db, muridId, poinBonusMenangOnline());
+  }
 }
 
 async function simpan(

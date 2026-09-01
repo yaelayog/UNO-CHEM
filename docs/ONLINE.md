@@ -119,7 +119,7 @@ Sistem identitas guru–murid + progres persisten. **Terpisah** dari sistem room
 ### Skema
 
 ```bash
-supabase db push          # migration 0004 (tabel) + 0005 (grant) + 0006 (pin terbaca)
+supabase db push          # 0004 (tabel) + 0005 (grant) + 0006 (pin terbaca) + 0007 (RPC leaderboard)
 ```
 
 | tabel | isi | RLS |
@@ -141,13 +141,15 @@ Semua tulis data murid lewat **Edge Function `akun` (service role)** — bukan R
   untuk pemulihan di device lain. Satu token aktif per murid (login di device
   baru meng-invalidasi token device lama).
 
-### Deploy Edge Function `akun`
+### Deploy Edge Function `akun` + `aksi`
+
+Sejak Minggu 2 keduanya memakai `_shared/game/peringkat.ts` + `_shared/poin.ts`:
 
 ```bash
+npm run sync:supabase
 supabase functions deploy akun --no-verify-jwt
+supabase functions deploy aksi --no-verify-jwt
 ```
-
-(Tak butuh `npm run sync:supabase` — fungsi ini tidak memakai engine.)
 
 ### Endpoint `akun` (body `{ tipe, ... }`)
 
@@ -157,8 +159,20 @@ supabase functions deploy akun --no-verify-jwt
 | `masuk` | `nama, pin, kodeUnik?` | `{ murid, progres, token }` atau `{ pilihan: [...] }` bila >1 akun cocok |
 | `sesi` | `token` | `{ murid, progres, token }` (restore saat app dibuka) |
 | `gabungKelas` | `token, kodeKelas` | `{ murid, progres }` |
+| `tambahPoin` | `token, poin, akurasi` | `{ ok, progres }` — laporan poin sesi SOLO |
 | `sinkronProgres` | `token, progresLokal` | `{ ok: true }` |
 | `keluar` | `token` | `{ ok: true }` |
+
+### Poin Peringkat Golongan (Minggu 2)
+
+- **Online** → Edge Function `aksi` memberi poin **server-side** saat kuis benar
+  (`poinJawabanBenar`, dibobot kesulitan) & saat menang room (`poinBonusMenangOnline`,
+  250). Cari murid via `murid.auth_uid`. Tamu/guru → no-op (tak dapat poin).
+- **Solo** → klien akumulasi poin selama game, kirim `akun/tambahPoin` sekali di akhir.
+  Menang vs bot TIDAK dapat bonus 250.
+- **Leaderboard**: RPC `leaderboard_kelas(kelas_id)` / `leaderboard_global(limit)`
+  (`SECURITY DEFINER`, kolom aman saja). Layar `src/screens/LeaderboardScreen.tsx`.
+- Reset mingguan (`resetMingguan`) **belum** dipasang cron — menyusul.
 
 ### Berkas
 

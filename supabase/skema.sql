@@ -276,3 +276,29 @@ grant execute on function public.murid_cocok_pin(text, text) to service_role;
 grant select, insert, update, delete on public.kelas to authenticated;
 grant select on public.murid to authenticated;
 grant select on public.progres_murid to authenticated;
+
+-- ── Leaderboard (0007): agregat aman lintas-murid ───────────────────
+create or replace function public.leaderboard_kelas(p_kelas_id uuid)
+returns table (nama text, kode_unik text, peringkat_aktif int, peringkat_rekor int, total_poin bigint)
+language sql security definer set search_path = public as $body$
+  select m.nama, m.kode_unik,
+         pm.peringkat_golongan_aktif, pm.peringkat_golongan_rekor, pm.total_poin
+  from public.murid m
+  join public.progres_murid pm on pm.murid_id = m.id
+  where m.kelas_id = p_kelas_id
+  order by pm.peringkat_golongan_aktif desc, pm.total_poin desc, m.nama asc
+$body$;
+
+create or replace function public.leaderboard_global(p_limit int default 100)
+returns table (nama text, kode_unik text, peringkat_aktif int, peringkat_rekor int, total_poin bigint)
+language sql security definer set search_path = public as $body$
+  select m.nama, m.kode_unik,
+         pm.peringkat_golongan_aktif, pm.peringkat_golongan_rekor, pm.total_poin
+  from public.murid m
+  join public.progres_murid pm on pm.murid_id = m.id
+  order by pm.peringkat_golongan_aktif desc, pm.total_poin desc, m.nama asc
+  limit greatest(1, least(coalesce(p_limit, 100), 500))
+$body$;
+
+grant execute on function public.leaderboard_kelas(uuid) to anon, authenticated;
+grant execute on function public.leaderboard_global(int) to anon, authenticated;

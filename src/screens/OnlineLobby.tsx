@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { onlineTersedia, sesiSiap } from '../lib/supabase';
 import { kirimAksi } from '../online/klienOnline';
 import { useGameStore } from '../store/gameStore';
+import { useAkunStore } from '../akun/akunStore';
 import { KontrolSuara } from '../components/KontrolSuara';
 
 export function OnlineLobby() {
@@ -10,9 +11,13 @@ export function OnlineLobby() {
   const dataOnline = useGameStore((s) => s.dataOnline);
   const masukLobbyOnline = useGameStore((s) => s.masukLobbyOnline);
   const keluarOnline = useGameStore((s) => s.keluarOnline);
+  const murid = useAkunStore((s) => s.murid);
+  const guruEmail = useAkunStore((s) => s.guruEmail);
+
+  // Main online butuh identitas akun — tak isi nama lagi.
+  const nama = murid?.nama ?? guruEmail?.split('@')[0] ?? '';
 
   const [uid, setUid] = useState<string | null>(null);
-  const [nama, setNama] = useState('');
   const [kode, setKode] = useState('');
   const [target, setTarget] = useState(4);
   const OPSI_TARGET = [2, 3, 4, 5, 6, 7];
@@ -59,6 +64,31 @@ export function OnlineLobby() {
           <code>VITE_SUPABASE_ANON_KEY</code> di <code>.env</code> lalu jalankan
           ulang. Panduan lengkap ada di <code>docs/ONLINE.md</code>.
         </p>
+      </Bingkai>
+    );
+  }
+
+  // ── Butuh akun untuk main online ──────────────────────────────────
+  if (!online && !nama) {
+    return (
+      <Bingkai onBack={() => keLayar('menu')}>
+        <div className="rounded-2xl bg-white p-4 text-center shadow-empuk">
+          <p className="text-2xl">🔑</p>
+          <p className="mt-1 text-sm font-bold text-tinta">
+            Main online butuh akun
+          </p>
+          <p className="mt-1 text-[12px] text-tinta/55">
+            Biar kemenanganmu masuk poin Peringkat Golongan &amp; leaderboard.
+            Latihan vs bot tetap bisa tanpa akun.
+          </p>
+          <button
+            type="button"
+            onClick={() => keLayar('akun')}
+            className="mt-3 w-full rounded-2xl bg-lab px-4 py-2.5 font-display font-extrabold text-white shadow-empuk transition hover:brightness-110 cursor-pointer"
+          >
+            Buat akun / Masuk
+          </button>
+        </div>
       </Bingkai>
     );
   }
@@ -166,12 +196,15 @@ export function OnlineLobby() {
   // ── Belum di room: buat / gabung ───────────────────────────────────
   return (
     <Bingkai onBack={() => keLayar('menu')}>
-      <input
-        value={nama}
-        onChange={(e) => setNama(e.target.value.slice(0, 16))}
-        placeholder="Nama kamu"
-        className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-bold text-tinta shadow-empuk outline-none focus:border-lab"
-      />
+      <p className="rounded-2xl bg-white px-4 py-2.5 text-sm font-bold text-tinta shadow-empuk">
+        Main sebagai <span className="text-lab">{nama}</span>
+        {murid && (
+          <span className="text-[11px] font-normal text-tinta/45">
+            {' '}
+            #{murid.kodeUnik}
+          </span>
+        )}
+      </p>
 
       <div className="rounded-2xl bg-white p-4 shadow-empuk">
         <p className="text-xs font-bold text-tinta/60">Buat room baru</p>

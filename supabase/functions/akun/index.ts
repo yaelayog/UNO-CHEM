@@ -6,6 +6,7 @@
 // hanya hash-nya di DB), tautkan ke sesi anon device supaya atribusi kemenangan
 // online bisa dilakukan nanti (Minggu 2).
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
+import { beriPoinMurid, type AkurasiDelta } from '../_shared/poin.ts';
 
 const URL = Deno.env.get('SUPABASE_URL')!;
 const ANON = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -83,6 +84,8 @@ async function tangani(
       return sesi(db, anonUid, b);
     case 'gabungKelas':
       return gabungKelas(db, b);
+    case 'tambahPoin':
+      return tambahPoin(db, b);
     case 'sinkronProgres':
       return sinkronProgres(db, b);
     case 'keluar':
@@ -278,6 +281,18 @@ async function gabungKelas(db: SupabaseClient, b: Record<string, unknown>) {
   if (!k) throw new Error('Kode kelas tidak ditemukan');
   await db.from('murid').update({ kelas_id: k.id }).eq('id', murid.id);
   return ringkas(db, { ...murid, kelas_id: k.id as string });
+}
+
+/**
+ * Laporan poin dari SESI SOLO (klien, stakes rendah). `poin` di-clamp; menang
+ * lawan bot TIDAK dapat bonus besar (klien tak boleh mengirimnya).
+ */
+async function tambahPoin(db: SupabaseClient, b: Record<string, unknown>) {
+  const murid = await lewatToken(db, bersih(b.token, 64));
+  const poin = Math.max(0, Math.min(Math.floor(Number(b.poin) || 0), 2000));
+  const akurasi = (b.akurasi ?? {}) as AkurasiDelta;
+  const progres = await beriPoinMurid(db, murid.id, poin, akurasi);
+  return { ok: true, progres };
 }
 
 async function sinkronProgres(db: SupabaseClient, b: Record<string, unknown>) {

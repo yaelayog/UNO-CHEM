@@ -17,6 +17,7 @@ import {
   stampUno,
   segarkanUno,
   cekUnoKadaluarsa,
+  poinJawabanBenar,
   type GameState,
   type HasilKuis,
   type KartuKimia,
@@ -50,6 +51,7 @@ export type Layar =
   | 'belajar'
   | 'profil'
   | 'akun'
+  | 'leaderboard'
   | 'online';
 
 /** Dorong progres terbaru ke akun murid (no-op bila belum masuk). */
@@ -76,6 +78,13 @@ export interface StatistikKuis {
   benarPerGolongan: Partial<Record<Golongan, number>>;
 }
 
+/** Poin Peringkat Golongan + akurasi terkumpul selama satu sesi solo. */
+export interface PoinSesi {
+  poin: number;
+  akurasi: Record<string, { benar: number; total: number }>;
+}
+const POIN_SESI_AWAL: PoinSesi = { poin: 0, akurasi: {} };
+
 interface GameStore {
   layar: Layar;
   keLayar: (l: Layar) => void;
@@ -85,6 +94,8 @@ interface GameStore {
   /** cermin dari `state.soalAktif` — soal yang sedang ditampilkan ke pemain. */
   soalAktif: SoalKuis | null;
   statistik: StatistikKuis;
+  /** Poin Peringkat Golongan sesi solo — dikirim ke akun saat game usai. */
+  poinSesi: PoinSesi;
   jeda: boolean;
 
   /** 'solo' = lawan bot lokal · 'online' = room Supabase (server otoritatif). */
@@ -227,13 +238,19 @@ export const useGameStore = create<GameStore>((set, get) => {
       });
       simpanProgres(rekam.progres);
       sinkronProgresKeAkun(rekam.progres);
+      // Poin Peringkat Golongan sesi solo (menang vs bot TIDAK dapat bonus besar).
+      useAkunStore.getState().kirimPoinSesi(get().poinSesi);
       set({ progres: rekam.progres, rekamTerakhir: rekam });
     }
 
     set({ state: next, soalAktif: next.soalAktif });
   }
 
-  function catatJawabanHuman(hasil: HasilKuis, golongan?: Golongan | 'umum') {
+  function catatJawabanHuman(
+    hasil: HasilKuis,
+    golongan?: Golongan | 'umum',
+    kesulitan?: 'mudah' | 'sedang' | 'sulit',
+  ) {
     const benar = hasil !== 'salah';
     set((s) => {
       const streakBenar = benar ? s.statistik.streakBenar + 1 : 0;
@@ -241,6 +258,21 @@ export const useGameStore = create<GameStore>((set, get) => {
       if (benar && golongan && golongan !== 'umum') {
         bpg[golongan] = (bpg[golongan] ?? 0) + 1;
       }
+
+      // Poin Peringkat Golongan + akurasi sesi (dipakai mode solo).
+      const g = golongan ?? 'umum';
+      const akurasi = { ...s.poinSesi.akurasi };
+      if (g !== 'umum') {
+        const cur = akurasi[g] ?? { benar: 0, total: 0 };
+        akurasi[g] = {
+          benar: cur.benar + (benar ? 1 : 0),
+          total: cur.total + 1,
+        };
+      }
+      const poin =
+        s.poinSesi.poin +
+        (benar && kesulitan ? poinJawabanBenar(kesulitan) : 0);
+
       return {
         statistik: {
           benar: s.statistik.benar + (benar ? 1 : 0),
@@ -249,6 +281,7 @@ export const useGameStore = create<GameStore>((set, get) => {
           streakTerbaik: Math.max(s.statistik.streakTerbaik, streakBenar),
           benarPerGolongan: bpg,
         },
+        poinSesi: { poin, akurasi },
       };
     });
   }
@@ -362,6 +395,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     humanId: 'human',
     soalAktif: null,
     statistik: STAT_AWAL,
+    poinSesi: POIN_SESI_AWAL,
     jeda: false,
     kartuFaktaDitutup: { funFact: null, fakta: null },
 
@@ -430,6 +464,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         state: null,
         soalAktif: null,
         statistik: STAT_AWAL,
+        poinSesi: POIN_SESI_AWAL,
         rekamTerakhir: null,
         rekamOnlineDicatat: false,
         versiOnline: 0,
@@ -512,6 +547,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         state: buatGame(pemain, Date.now(), pakaiPeristiwa, true),
         soalAktif: null,
         statistik: STAT_AWAL,
+        poinSesi: POIN_SESI_AWAL,
         rekamTerakhir: null,
         sedangMembuka: true,
         kartuFaktaDitutup: { funFact: null, fakta: null },
@@ -634,7 +670,11 @@ export const useGameStore = create<GameStore>((set, get) => {
       const { state, humanId, soalAktif, mode, online } = get();
       if (!state || state.status !== 'menungguKuis' || !state.efekTertunda) return;
       if (state.efekTertunda.targetPemainId !== humanId) return;
-      catatJawabanHuman(hasil, soalAktif?.golonganTerkait);
+      catatJawabanHuman(
+        hasil,
+        soalAktif?.golonganTerkait,
+        soalAktif?.tingkatKesulitan,
+      );
       set({ soalAktif: null });
       if (mode === 'online' && online) {
         set({ aksiPending: true });

@@ -11,7 +11,9 @@
 // mingguan). Peringkat aktif = kombinasi lantai hasil reset + golongan alami dari
 // poin minggu ini. `peringkatRekor` menyimpan puncak permanen (hanya naik).
 
-export type TingkatKesulitan = 'mudah' | 'sedang' | 'sulit';
+import type { TingkatKesulitan } from '../data/types';
+
+export type { TingkatKesulitan };
 
 // ── Sumber poin ──────────────────────────────────────────────────────
 /** Poin dari 1 jawaban kuis benar (solo & online), dibobot kesulitan. Kecil. */

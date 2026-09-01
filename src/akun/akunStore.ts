@@ -54,6 +54,11 @@ interface AkunStore {
   gabungKelas: (kodeKelas: string) => Promise<string | null>;
   /** Dorong progres terbaru ke akun (debounced). Aman dipanggil tanpa akun. */
   sinkronProgres: (p: Progres) => void;
+  /** Laporkan poin Peringkat Golongan dari sesi solo. No-op tanpa akun. */
+  kirimPoinSesi: (sesi: {
+    poin: number;
+    akurasi: Record<string, { benar: number; total: number }>;
+  }) => void;
 
   masukGuru: (
     email: string,
@@ -174,6 +179,23 @@ export const useAkunStore = create<AkunStore>((set, get) => {
       timerSinkron = setTimeout(() => {
         void kirimAkun('sinkronProgres', { token, progresLokal: p });
       }, 1500);
+    },
+
+    kirimPoinSesi: (sesi) => {
+      const token = bacaToken();
+      if (!token) return;
+      if (sesi.poin <= 0 && Object.keys(sesi.akurasi).length === 0) return;
+      void kirimAkun('tambahPoin', {
+        token,
+        poin: sesi.poin,
+        akurasi: sesi.akurasi,
+      }).then((r) => {
+        const p = r.progres as Partial<ProgresAkun> | null | undefined;
+        if (p)
+          set((s) => ({
+            progresAkun: s.progresAkun ? { ...s.progresAkun, ...p } : s.progresAkun,
+          }));
+      });
     },
 
     masukGuru: async (email, sandi, daftar) => {
