@@ -52,6 +52,7 @@ export function AkunScreen() {
 
 // ── Murid ────────────────────────────────────────────────────────────
 function PanelMurid() {
+  const keLayar = useGameStore((s) => s.keLayar);
   const murid = useAkunStore((s) => s.murid);
   const progresAkun = useAkunStore((s) => s.progresAkun);
   const sibuk = useAkunStore((s) => s.sibuk);
@@ -145,7 +146,7 @@ function PanelMurid() {
             onClick={async () => {
               const r = await masukMurid(nama, pin, p.kodeUnik);
               if (r.error) setPesan(r.error);
-              else setPilihan(null);
+              else keLayar('menu');
             }}
             className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-left shadow-empuk hover:bg-kertas cursor-pointer"
           >
@@ -226,10 +227,12 @@ function PanelMurid() {
           if (mode === 'daftar') {
             const err = await daftarMurid(nama.trim(), pin, kodeKelas.trim());
             if (err) setPesan(err);
+            else keLayar('menu');
           } else {
             const r = await masukMurid(nama.trim(), pin);
             if (r.pilihan) setPilihan(r.pilihan);
             else if (r.error) setPesan(r.error);
+            else keLayar('menu');
           }
         }}
         className="mt-1 w-full rounded-2xl bg-lab px-4 py-3 font-display text-lg font-extrabold text-white shadow-empuk transition hover:brightness-110 disabled:opacity-40 cursor-pointer"
