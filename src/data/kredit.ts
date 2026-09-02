@@ -12,7 +12,9 @@ export const KREDIT = {
   instansi: 'Universitas Mulawarman',
   pembimbing: 'TODO: Nama dosen pembimbing (opsional)',
   tahun: '2026',
-  kompetisi: 'TODO: Nama lomba media pembelajaran',
+  kompetisi:
+    'Lomba Media Pembelajaran Digital FORKOM FKIP 2026 — ' +
+    'Kategori Gamifikasi Pembelajaran (SAINTEK)',
 
   // ── Sasaran ───────────────────────────────────────────────────────
   jenjang: 'SMA (Fase E) / sederajat',
