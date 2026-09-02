@@ -18,8 +18,13 @@ describe('sumber poin', () => {
     expect(poinJawabanBenar('sulit')).toBe(30);
   });
 
-  it('bonus menang online jauh lebih besar dari poin kuis', () => {
-    expect(poinBonusMenangOnline()).toBeGreaterThan(poinJawabanBenar('sulit') * 5);
+  it('bonus menang online berjenjang per jumlah manusia (min 2)', () => {
+    expect(poinBonusMenangOnline(1)).toBe(0); // cuma bot → tak dapat bonus
+    expect(poinBonusMenangOnline(2)).toBe(250);
+    expect(poinBonusMenangOnline(4)).toBe(450);
+    expect(poinBonusMenangOnline(7)).toBe(750);
+    expect(poinBonusMenangOnline(2)).toBeGreaterThan(poinJawabanBenar('sulit') * 5);
+    expect(poinBonusMenangOnline(5)).toBeGreaterThan(poinBonusMenangOnline(3));
   });
 });
 

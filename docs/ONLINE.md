@@ -166,8 +166,10 @@ supabase functions deploy aksi --no-verify-jwt
 ### Poin Peringkat Golongan (Minggu 2)
 
 - **Online** → Edge Function `aksi` memberi poin **server-side** saat kuis benar
-  (`poinJawabanBenar`, dibobot kesulitan) & saat menang room (`poinBonusMenangOnline`,
-  250). Cari murid via `murid.auth_uid`. Tamu/guru → no-op (tak dapat poin).
+  (`poinJawabanBenar`, dibobot kesulitan) & saat menang room. Bonus menang
+  **berjenjang** per jumlah pemain MANUSIA di room (`poinBonusMenangOnline(n)`:
+  2 manusia=250, 3=350, … 7=750; <2 manusia = 0, mencegah farming lawan bot).
+  Cari murid via `murid.auth_uid`. Tamu/guru → no-op (tak dapat poin).
 - **Solo** → klien akumulasi poin selama game, kirim `akun/tambahPoin` sekali di akhir.
   Menang vs bot TIDAK dapat bonus 250.
 - **Leaderboard**: RPC `leaderboard_kelas(kelas_id)` / `leaderboard_global(limit)` /

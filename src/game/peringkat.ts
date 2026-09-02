@@ -26,11 +26,25 @@ export function poinJawabanBenar(kesulitan: TingkatKesulitan): number {
   return POIN_KUIS[kesulitan] ?? 0;
 }
 
-/** Bonus BESAR khusus menang di sesi ONLINE. Menang lawan bot TIDAK dapat ini. */
-export const POIN_BONUS_MENANG_ONLINE = 250;
-export function poinBonusMenangOnline(): number {
-  return POIN_BONUS_MENANG_ONLINE;
+/**
+ * Bonus BESAR khusus menang di sesi ONLINE — BERJENJANG per jumlah pemain
+ * MANUSIA di room (bot tidak dihitung, supaya tak bisa di-"cheese" dengan
+ * mengisi kursi bot). Butuh minimal 2 manusia; kalau tidak → 0 (efektif solo).
+ *
+ *   2 manusia → 250 · 3 → 350 · 4 → 450 · … · 7 → 750
+ */
+export const BONUS_MENANG_ONLINE_DASAR = 150;
+export const BONUS_MENANG_ONLINE_PER_LAWAN = 100;
+
+export function poinBonusMenangOnline(jumlahManusia: number): number {
+  const n = Math.floor(jumlahManusia) || 0;
+  if (n < 2) return 0;
+  const lawan = Math.min(n, GOLONGAN_MAKS) - 1;
+  return BONUS_MENANG_ONLINE_DASAR + BONUS_MENANG_ONLINE_PER_LAWAN * lawan;
 }
+
+/** @deprecated pakai `poinBonusMenangOnline(jumlahManusia)`. Nilai 2-pemain. */
+export const POIN_BONUS_MENANG_ONLINE = 250;
 
 // ── Kurva peringkat (kuadratik) ──────────────────────────────────────
 export const GOLONGAN_MIN = 1;

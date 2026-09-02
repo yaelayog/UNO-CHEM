@@ -505,13 +505,17 @@ async function beriPoinPeringkat(
 
   // (2) Permainan baru saja usai — bonus pemenang + evaluasi Misi tiap pemain manusia
   if (asal.status !== 'selesai' && next.status === 'selesai') {
+    // Bonus menang berjenjang: makin banyak MANUSIA di room, makin besar.
+    const jumlahManusia = next.pemain.filter((p) => !p.isBot).length;
+    const bonusMenang = poinBonusMenangOnline(jumlahManusia);
+
     for (const p of next.pemain) {
       if (p.isBot) continue;
       const muridId = await muridDariAuthUid(db, p.id);
       if (!muridId) continue;
 
       const menang = next.pemenangId === p.id;
-      if (menang) await beriPoinMurid(db, muridId, poinBonusMenangOnline());
+      if (menang && bonusMenang > 0) await beriPoinMurid(db, muridId, bonusMenang);
 
       const skor = next.skorKuisSesi?.[p.id] ?? {
         benar: 0,
