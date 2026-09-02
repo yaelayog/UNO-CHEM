@@ -40,7 +40,7 @@ export function MainMenu() {
   );
 
   return (
-    <main className="relative mx-auto flex min-h-full max-w-md flex-col items-center justify-center gap-2 overflow-hidden px-4 py-3 text-center no-select">
+    <main className="relative mx-auto flex min-h-full max-w-md flex-col items-center justify-center gap-3 overflow-hidden px-4 py-4 text-center no-select">
       {/* Pengaturan suara — selalu terjangkau dari menu */}
       <div className="absolute right-3 top-3 z-20">
         <PengaturanSuara />
@@ -68,10 +68,10 @@ export function MainMenu() {
         <LogoPanitia judul="FORKOM FKIP 2026 · Gamifikasi Pembelajaran" tinggi={18} />
       </div>
 
-      <div className="flex flex-col items-center">
-        <LogoApp lebarMaks={148} />
+      <div className="flex flex-col items-center gap-1">
+        <LogoApp lebarMaks={208} />
         <h1 className="sr-only">ChemUno</h1>
-        <p className="text-[11px] font-bold text-tinta/55">
+        <p className="text-xs font-bold text-tinta/55">
           Belajar golongan &amp; periode unsur sambil bermain
         </p>
       </div>
