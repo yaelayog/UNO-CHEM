@@ -69,11 +69,9 @@ export function MainMenu() {
         <LogoPanitia judul="Lomba Media Pembelajaran Digital FORKOM FKIP 2026" tinggi={26} />
       </div>
 
-      <div className="relative flex flex-col items-center gap-1">
-        <LogoApp ukuran={92} />
-        <h1 className="font-display text-4xl font-extrabold tracking-tight text-lab">
-          ChemUno
-        </h1>
+      <div className="relative flex flex-col items-center gap-2">
+        <LogoApp lebarMaks={260} />
+        <h1 className="sr-only">ChemUno</h1>
         <p className="text-sm font-bold text-tinta/60">
           Cocokkan golongan &amp; periode unsur — belajar kimia sambil bermain
         </p>

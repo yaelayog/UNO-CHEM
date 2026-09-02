@@ -1,30 +1,32 @@
 import { useState } from 'react';
 
 /**
- * Logo ChemUno di dalam app. Taruh `public/logo-chemuno.png` (transparan,
- * disarankan ≥ 512 px sisi terpanjang) dan otomatis dipakai. Selama file
- * belum ada, jatuh ke emoji ⚗️ — tidak error.
+ * Logo ChemUno (sudah termasuk wordmark). Taruh `public/logo-chemuno.png`
+ * (transparan) dan otomatis dipakai. Selama file belum ada → fallback ke
+ * teks + emoji, tidak error.
+ *
+ * `lebarMaks` = lebar tampil maksimum (px). Tinggi mengikuti rasio gambar.
  */
 export function LogoApp({
-  ukuran = 96,
+  lebarMaks = 260,
   goyang = true,
 }: {
-  ukuran?: number;
+  lebarMaks?: number;
   goyang?: boolean;
 }) {
   const [gagal, setGagal] = useState(false);
   const anim = goyang
-    ? { animation: 'goyangLogo 3.2s ease-in-out infinite' }
+    ? { animation: 'goyangLogo 3.4s ease-in-out infinite' }
     : undefined;
 
   if (gagal) {
     return (
-      <span
-        className="inline-block leading-none"
-        style={{ fontSize: ukuran * 0.75, ...anim }}
-      >
-        ⚗️
-      </span>
+      <div className="flex flex-col items-center gap-1" style={anim}>
+        <span className="text-5xl leading-none">⚗️</span>
+        <span className="font-display text-4xl font-extrabold tracking-tight text-lab">
+          ChemUno
+        </span>
+      </div>
     );
   }
   return (
@@ -32,7 +34,7 @@ export function LogoApp({
       src="/logo-chemuno.png"
       alt="ChemUno"
       onError={() => setGagal(true)}
-      style={{ height: ukuran, width: 'auto', ...anim }}
+      style={{ width: 'min(72vw, ' + lebarMaks + 'px)', height: 'auto', ...anim }}
       className="object-contain"
     />
   );
