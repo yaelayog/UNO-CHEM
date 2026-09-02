@@ -147,15 +147,22 @@ export function AboutScreen() {
           ))}
         </ul>
         <p>{KREDIT.instansi}</p>
-        {!KREDIT.pembimbing.startsWith('TODO') && (
+        {KREDIT.pembimbing && !KREDIT.pembimbing.startsWith('TODO') && (
           <p>Pembimbing: {KREDIT.pembimbing}</p>
         )}
         <p className="text-tinta/55">Dikembangkan untuk {KREDIT.kompetisi}.</p>
       </Bagian>
 
-      <Bagian judul="Jenjang & Mata Pelajaran">
-        <p>{KREDIT.jenjang}</p>
-        <p>{KREDIT.mataPelajaran}</p>
+      <Bagian judul="Sasaran Pembelajaran">
+        <p>
+          <b>Jenjang:</b> {KREDIT.jenjang}
+        </p>
+        <p>
+          <b>Mata Pelajaran:</b> {KREDIT.mataPelajaran}
+        </p>
+        <p>
+          <b>Materi:</b> {KREDIT.materi}
+        </p>
       </Bagian>
 
       <Bagian judul="Capaian Pembelajaran">

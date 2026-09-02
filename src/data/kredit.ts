@@ -10,27 +10,28 @@ export const KREDIT = {
     { nama: 'Fico Fristand Thomas', nim: '2505026024' },
   ],
   instansi: 'Universitas Mulawarman',
-  pembimbing: 'TODO: Nama dosen pembimbing (opsional)',
+  pembimbing: '', // belum ada dosen pembimbing — dikosongkan (tidak ditampilkan)
   tahun: '2026',
   kompetisi:
     'Lomba Media Pembelajaran Digital FORKOM FKIP 2026 — ' +
     'Kategori Gamifikasi Pembelajaran (SAINTEK)',
 
   // ── Sasaran ───────────────────────────────────────────────────────
-  jenjang: 'SMA (Fase E) / sederajat',
-  mataPelajaran: 'Kimia — Struktur Atom & Sistem Periodik Unsur',
+  jenjang: 'SMA / sederajat',
+  mataPelajaran: 'Kimia',
+  materi: 'Sistem Periodik Unsur',
 
   // ── Capaian & tujuan pembelajaran ────────────────────────────────
   capaian:
-    'Peserta didik mampu menganalisis kecenderungan sifat keperiodikan unsur ' +
-    'dan hubungannya dengan konfigurasi elektron, serta menjelaskan pembentukan ' +
-    'ikatan kimia sederhana (ion & kovalen).',
+    'Peserta didik mampu memahami susunan sistem periodik unsur berdasarkan ' +
+    'golongan dan periode, serta menganalisis kecenderungan sifat keperiodikan ' +
+    'unsur dan hubungannya dengan konfigurasi elektron.',
   tujuan: [
-    'Mengelompokkan unsur berdasarkan golongan dan periode pada tabel periodik.',
-    'Menghubungkan nomor golongan dengan jumlah elektron valensi dan nomor periode dengan jumlah kulit.',
+    'Menjelaskan dasar penyusunan unsur pada sistem periodik menurut golongan dan periode.',
+    'Menghubungkan nomor golongan dengan jumlah elektron valensi dan nomor periode dengan jumlah kulit elektron.',
+    'Menentukan letak unsur (golongan & periode) dari konfigurasi elektronnya.',
     'Membandingkan sifat keperiodikan (jari-jari atom, energi ionisasi, keelektronegatifan) dalam satu golongan dan satu periode.',
     'Menjelaskan sifat khas golongan alkali, alkali tanah, halogen, gas mulia, dan logam transisi.',
-    'Menjelaskan pembentukan ikatan ion dan ikatan kovalen dari kecenderungan unsur mencapai kestabilan.',
   ],
 
   // ── Petunjuk penggunaan singkat ─────────────────────────────────
