@@ -3,9 +3,14 @@
 
 export const KREDIT = {
   // ── Identitas pengembang ──────────────────────────────────────────
-  pengembang: 'TODO: Nama pengembang / tim', // mis. "Tim ChemUno — Yael A. & ..."
-  instansi: 'TODO: Nama sekolah / instansi',
-  pembimbing: 'TODO: Nama guru pembimbing (opsional)',
+  namaTim: 'Tim ChemUno',
+  anggota: [
+    { nama: 'Putra Yoga Nugraha', nim: '2305026024' },
+    { nama: 'M. Rian Jafar Shodiq', nim: '2505026010' },
+    { nama: 'Fico Fristand Thomas', nim: '2505026024' },
+  ],
+  instansi: 'Universitas Mulawarman',
+  pembimbing: 'TODO: Nama dosen pembimbing (opsional)',
   tahun: '2026',
   kompetisi: 'TODO: Nama lomba media pembelajaran',
 

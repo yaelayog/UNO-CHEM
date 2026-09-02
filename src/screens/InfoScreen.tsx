@@ -138,7 +138,14 @@ export function AboutScreen() {
       </p>
 
       <Bagian judul="Identitas Pengembang">
-        <p>{KREDIT.pengembang}</p>
+        <p className="font-bold text-tinta">{KREDIT.namaTim}</p>
+        <ul className="list-disc pl-4">
+          {KREDIT.anggota.map((a) => (
+            <li key={a.nim}>
+              {a.nama} <span className="text-tinta/50">(NIM {a.nim})</span>
+            </li>
+          ))}
+        </ul>
         <p>{KREDIT.instansi}</p>
         {!KREDIT.pembimbing.startsWith('TODO') && (
           <p>Pembimbing: {KREDIT.pembimbing}</p>
