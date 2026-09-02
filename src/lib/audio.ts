@@ -56,7 +56,7 @@ function ac(): AudioContext | null {
     masterSfx = ctx.createGain();
     masterMusik = ctx.createGain();
     masterSfx.gain.value = muted ? 0 : volSfx;
-    masterMusik.gain.value = muted || !musikNyala ? 0 : volMusik * 0.6;
+    masterMusik.gain.value = muted || !musikNyala ? 0 : volMusik * 0.5;
     masterSfx.connect(ctx.destination);
     masterMusik.connect(ctx.destination);
 
@@ -195,9 +195,10 @@ export const sfx = {
   },
 };
 
-// ── Musik latar (loop ceria prosedural) ────────────────────────────
-// Progresi pop I–V–vi–IV di C mayor, ~116 BPM. Tiap bar: pad lembut +
-// bass memantul + arpeggio plucky + hi-hat & kick tipis. Dijadwalkan lookahead.
+// ── Musik latar (loop chiptune-pop prosedural) ─────────────────────
+// Progresi I–V–vi–IV di C mayor, 134 BPM. Tiap bar: pad tipis + bass
+// pulse 8-nada + lead square (melodi hook) + drum penuh (kick tiap ketuk,
+// clap di 2 & 4, hi-hat 8th). Dijadwalkan lookahead.
 const LAGU: { root: number; akor: number[] }[] = [
   { root: 130.81, akor: [261.63, 329.63, 392.0] }, // C  (C E G)
   { root: 196.0, akor: [246.94, 293.66, 392.0] }, // G  (B D G)
@@ -205,8 +206,28 @@ const LAGU: { root: number; akor: number[] }[] = [
   { root: 174.61, akor: [261.63, 349.23, 440.0] }, // F  (C F A)
 ];
 
-const BPM = 116;
+// Not (Hz) C mayor sekitar oktaf 4–5 · 0 = diam.
+const D4 = 293.66, E4 = 329.63, F4 = 349.23, G4 = 392.0, A4 = 440.0,
+  B4 = 493.88, C5 = 523.25, D5 = 587.33, E5 = 659.25;
+
+// Melodi hook: 8 nada per bar (¼-ketuk masing-masing), diulang tiap 4 bar.
+const MELODI: number[][] = [
+  [G4, 0, E4, G4, A4, 0, G4, E4], // C
+  [D4, 0, D4, E4, G4, 0, F4, D4], // G
+  [E4, 0, C5, B4, A4, 0, G4, A4], // Am
+  [A4, 0, G4, F4, E4, 0, D4, 0], // F
+];
+// Bar 5–8: variasi lebih tinggi biar terasa "naik".
+const MELODI_B: number[][] = [
+  [C5, E5, D5, C5, G4, 0, E4, G4],
+  [B4, 0, D5, B4, G4, 0, A4, B4],
+  [C5, 0, E5, D5, C5, 0, A4, C5],
+  [D5, C5, B4, A4, G4, 0, E4, 0],
+];
+
+const BPM = 134;
 const KETUK = 60 / BPM; // durasi 1 ketuk
+const SEPEREMPAT = KETUK / 2; // 1/8 not
 const BAR = 4 * KETUK; // 1 bar = 1 akor
 let timerMusik: ReturnType<typeof setInterval> | null = null;
 let waktuJadwal = 0;
@@ -238,75 +259,95 @@ function nadaMusik(
   osc.stop(t + dur + 0.02);
 }
 
-function hatMusik(t: number, gain: number) {
+function derauMusik(
+  t: number,
+  gain: number,
+  jenis: BiquadFilterType,
+  freq: number,
+  dur: number,
+) {
   const c = ac();
   if (!c || !masterMusik || !bufferDerau) return;
   const src = c.createBufferSource();
   src.buffer = bufferDerau;
   const g = c.createGain();
   const flt = c.createBiquadFilter();
-  flt.type = 'highpass';
-  flt.frequency.value = 8000;
+  flt.type = jenis;
+  flt.frequency.value = freq;
   g.gain.setValueAtTime(gain, t);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   src.connect(flt).connect(g).connect(masterMusik);
   src.start(t);
-  src.stop(t + 0.05);
+  src.stop(t + dur + 0.02);
+}
+
+function kickMusik(t: number, keras: number) {
+  const c = ac();
+  if (!c || !masterMusik) return;
+  const osc = c.createOscillator();
+  const g = c.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(140, t);
+  osc.frequency.exponentialRampToValueAtTime(45, t + 0.09);
+  g.gain.setValueAtTime(keras, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+  osc.connect(g).connect(masterMusik);
+  osc.start(t);
+  osc.stop(t + 0.14);
 }
 
 function jadwalkanBar(mulai: number, bar: number) {
   const c = ac();
   if (!c || !masterMusik) return;
   const { root, akor } = LAGU[bar % LAGU.length];
+  const frasaTinggi = bar % 8 >= 4;
+  const melodi = (frasaTinggi ? MELODI_B : MELODI)[bar % 4];
 
-  // Pad: akor ditahan pelan sepanjang bar (triangle, hangat & terang).
+  // Pad: akor ditahan tipis sepanjang bar (triangle, sekadar isi ruang).
   for (const f of akor) {
     const osc = c.createOscillator();
     const g = c.createGain();
     osc.type = 'triangle';
     osc.frequency.value = f;
     g.gain.setValueAtTime(0.0001, mulai);
-    g.gain.linearRampToValueAtTime(0.018, mulai + 0.15);
-    g.gain.setValueAtTime(0.018, mulai + BAR - 0.15);
-    g.gain.linearRampToValueAtTime(0.0001, mulai + BAR + 0.05);
+    g.gain.linearRampToValueAtTime(0.012, mulai + 0.1);
+    g.gain.setValueAtTime(0.012, mulai + BAR - 0.12);
+    g.gain.linearRampToValueAtTime(0.0001, mulai + BAR + 0.04);
     osc.connect(g).connect(masterMusik);
     osc.start(mulai);
     osc.stop(mulai + BAR + 0.1);
   }
 
-  // Bass memantul: root – oktaf – kwint – oktaf tiap ketuk.
-  const polaBass = [root, root * 2, akor[akor.length - 1] / 2, root * 2];
+  // Bass pulse 8-nada: root, sesekali lompat ke oktaf/kwint (groove).
+  const kwint = akor[akor.length - 1] / 2;
+  const polaBass = [root, root, root * 2, root, kwint, root, root * 2, root * 2];
+  for (let i = 0; i < 8; i++) {
+    nadaMusik(polaBass[i], mulai + i * SEPEREMPAT, SEPEREMPAT * 0.9, 0.085, 'square', 900);
+  }
+
+  // Lead square: melodi hook (8 nada per bar).
+  for (let i = 0; i < 8; i++) {
+    if (!melodi[i]) continue;
+    nadaMusik(melodi[i], mulai + i * SEPEREMPAT, SEPEREMPAT * 1.6, 0.05, 'square', 2600);
+  }
+
+  // Drum: kick tiap ketuk (aksen di 1), clap/snare di ketuk 2 & 4, hi-hat 8th.
   for (let k = 0; k < 4; k++) {
-    nadaMusik(polaBass[k], mulai + k * KETUK, KETUK * 0.7, 0.09, 'triangle', 1400);
+    kickMusik(mulai + k * KETUK, k === 0 ? 0.15 : 0.1);
   }
-
-  // Arpeggio 8 nada (satu per ½ ketuk) naik–turun menembus akor + oktaf.
-  const tangga = [akor[0], akor[1], akor[2], akor[2] * 2, akor[1] * 2, akor[2], akor[1], akor[0] * 2];
-  for (let i = 0; i < 8; i++) {
-    nadaMusik(tangga[i], mulai + i * (KETUK / 2), 0.16, 0.042, 'triangle', 4500);
-  }
-
-  // Kick tipis di ketuk 1 & 3, hi-hat di tiap ½ ketuk (aksen di offbeat).
-  for (const k of [0, 2]) {
-    const osc = c.createOscillator();
-    const g = c.createGain();
-    osc.type = 'sine';
-    const t = mulai + k * KETUK;
-    osc.frequency.setValueAtTime(110, t);
-    osc.frequency.exponentialRampToValueAtTime(45, t + 0.11);
-    g.gain.setValueAtTime(0.13, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
-    osc.connect(g).connect(masterMusik);
-    osc.start(t);
-    osc.stop(t + 0.15);
+  for (const k of [1, 3]) {
+    derauMusik(mulai + k * KETUK, 0.06, 'bandpass', 1700, 0.13);
+    derauMusik(mulai + k * KETUK, 0.03, 'highpass', 3500, 0.09);
   }
   for (let i = 0; i < 8; i++) {
-    hatMusik(mulai + i * (KETUK / 2), i % 2 === 1 ? 0.02 : 0.011);
+    derauMusik(mulai + i * SEPEREMPAT, i % 2 ? 0.024 : 0.013, 'highpass', 8500, 0.03);
   }
+  // Open hat di "and" ketuk 4 (isian menuju bar berikutnya).
+  derauMusik(mulai + 3.5 * KETUK, 0.022, 'highpass', 7000, 0.12);
 
-  // Kilau bel sesekali di akhir frasa (tiap 4 bar).
-  if (bar % 4 === 3) {
-    nadaMusik(akor[2] * 2, mulai + BAR - KETUK, 0.9, 0.05, 'sine', 6000);
+  // Crash + fill kecil tiap 8 bar (awal frasa).
+  if (bar % 8 === 0 && bar > 0) {
+    derauMusik(mulai, 0.05, 'highpass', 5000, 0.5);
   }
 }
 
@@ -316,7 +357,7 @@ export function mulaiMusik(): void {
   waktuJadwal = c.currentTime + 0.1;
   indeksBar = 0;
   masterMusik.gain.setTargetAtTime(
-    muted || !musikNyala ? 0 : volMusik * 0.6,
+    muted || !musikNyala ? 0 : volMusik * 0.5,
     c.currentTime,
     0.5,
   );
@@ -350,7 +391,7 @@ export function setMuted(v: boolean): void {
   if (c && masterSfx && masterMusik) {
     masterSfx.gain.setTargetAtTime(v ? 0 : volSfx, c.currentTime, 0.1);
     masterMusik.gain.setTargetAtTime(
-      v || !musikNyala ? 0 : volMusik * 0.6,
+      v || !musikNyala ? 0 : volMusik * 0.5,
       c.currentTime,
       0.3,
     );
@@ -390,5 +431,5 @@ export function setVolumeMusik(v: number): void {
   simpan(KEY_VOL_MUSIK, String(volMusik));
   const c = ac();
   if (c && masterMusik && !muted && musikNyala)
-    masterMusik.gain.setTargetAtTime(volMusik * 0.6, c.currentTime, 0.1);
+    masterMusik.gain.setTargetAtTime(volMusik * 0.5, c.currentTime, 0.1);
 }
