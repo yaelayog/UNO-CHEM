@@ -20,6 +20,7 @@ import {
 } from '../_shared/game/index.ts';
 import { pisahTangan, redaksiState } from '../_shared/redaksi.ts';
 import { beriPoinMurid, muridDariAuthUid } from '../_shared/poin.ts';
+import { evaluasiMisi } from '../_shared/misi.ts';
 import { poinBonusMenangOnline, poinJawabanBenar } from '../_shared/game/index.ts';
 
 const URL = Deno.env.get('SUPABASE_URL')!;
@@ -502,15 +503,29 @@ async function beriPoinPeringkat(
     }
   }
 
-  // (2) Permainan baru saja usai — bonus besar untuk pemenang manusia
-  if (
-    asal.status !== 'selesai' &&
-    next.status === 'selesai' &&
-    next.pemenangId &&
-    !next.pemenangId.startsWith('bot-')
-  ) {
-    const muridId = await muridDariAuthUid(db, next.pemenangId);
-    if (muridId) await beriPoinMurid(db, muridId, poinBonusMenangOnline());
+  // (2) Permainan baru saja usai — bonus pemenang + evaluasi Misi tiap pemain manusia
+  if (asal.status !== 'selesai' && next.status === 'selesai') {
+    for (const p of next.pemain) {
+      if (p.isBot) continue;
+      const muridId = await muridDariAuthUid(db, p.id);
+      if (!muridId) continue;
+
+      const menang = next.pemenangId === p.id;
+      if (menang) await beriPoinMurid(db, muridId, poinBonusMenangOnline());
+
+      const skor = next.skorKuisSesi?.[p.id] ?? {
+        benar: 0,
+        salah: 0,
+        benarGolongan: {},
+      };
+      await evaluasiMisi(db, muridId, {
+        menang,
+        online: true,
+        kuisBenar: skor.benar,
+        kuisSalah: skor.salah,
+        benarPerGolongan: skor.benarGolongan,
+      });
+    }
   }
 }
 

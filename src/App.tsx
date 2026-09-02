@@ -5,6 +5,7 @@ import { useAkunStore } from './akun/akunStore';
 import { MainMenu } from './screens/MainMenu';
 import { Memuat } from './components/Memuat';
 import { LatarLab } from './components/LatarLab';
+import { MisiToast } from './components/MisiToast';
 import { OnlineSync } from './online/OnlineSync';
 
 const OnlineLobby = lazy(() =>
@@ -26,6 +27,11 @@ const AkunScreen = lazy(() =>
 const LeaderboardScreen = lazy(() =>
   import('./screens/LeaderboardScreen').then((m) => ({
     default: m.LeaderboardScreen,
+  })),
+);
+const DashboardGuruScreen = lazy(() =>
+  import('./screens/DashboardGuruScreen').then((m) => ({
+    default: m.DashboardGuruScreen,
   })),
 );
 const RulesScreen = lazy(() =>
@@ -66,6 +72,9 @@ export default function App() {
     case 'leaderboard':
       isi = <LeaderboardScreen />;
       break;
+    case 'dashboard-guru':
+      isi = <DashboardGuruScreen />;
+      break;
     case 'online':
       isi = <OnlineLobby />;
       break;
@@ -77,6 +86,7 @@ export default function App() {
     <MotionConfig reducedMotion="user">
       <LatarLab />
       <OnlineSync />
+      <MisiToast />
       <div key={layar} className="animasi-layar relative z-10 h-full">
         <Suspense fallback={<Memuat />}>{isi}</Suspense>
       </div>

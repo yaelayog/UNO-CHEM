@@ -119,7 +119,7 @@ Sistem identitas guru–murid + progres persisten. **Terpisah** dari sistem room
 ### Skema
 
 ```bash
-supabase db push          # 0004..0008 (tabel, RLS, RPC leaderboard + sesi, pin terbaca)
+supabase db push          # 0004..0009 (akun, RLS, leaderboard, pin terbaca, misi + dashboard guru)
 ```
 
 | tabel | isi | RLS |
@@ -207,6 +207,17 @@ $$);
 Tes manual: `curl -X POST .../functions/v1/reset-mingguan -H "Authorization: Bearer <CRON_SECRET>"`
 → `{"ok":true,"direset":N}`. Aman dipanggil berkali-kali (skip murid yang sudah
 di-reset < 6 hari lalu).
+
+### Challenge / Misi (Minggu 3)
+
+- Tabel `misi` (seed 11 di migration 0009) + `misi_progres_murid`.
+- Fungsi murni `_shared/game/misi.ts` (`kemajuanMisi`); evaluasi `_shared/misi.ts`
+  (`evaluasiMisi`) dipanggil `akun` (solo, dari konteks sesi klien) & `aksi`
+  (online, tiap pemain manusia saat game usai — pakai `GameState.skorKuisSesi`).
+- Selesai → `poin_reward` (via `beriPoinMurid`) + `badge_reward` masuk `badge_diraih`.
+- Klien: `akunStore.misi`/`misiProgres`, `MisiToast`, list di `ProfilScreen`.
+- **Dashboard guru**: RPC `murid_kelas(kelas_id)` (SECURITY DEFINER, guard guru
+  pemilik). Layar `src/screens/DashboardGuruScreen.tsx` (dari panel Guru di Akun).
 
 ### Berkas
 

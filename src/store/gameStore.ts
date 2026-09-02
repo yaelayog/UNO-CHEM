@@ -52,6 +52,7 @@ export type Layar =
   | 'profil'
   | 'akun'
   | 'leaderboard'
+  | 'dashboard-guru'
   | 'online';
 
 /** Dorong progres terbaru ke akun murid (no-op bila belum masuk). */
@@ -238,8 +239,16 @@ export const useGameStore = create<GameStore>((set, get) => {
       });
       simpanProgres(rekam.progres);
       sinkronProgresKeAkun(rekam.progres);
-      // Poin Peringkat Golongan sesi solo (menang vs bot TIDAK dapat bonus besar).
-      useAkunStore.getState().kirimPoinSesi(get().poinSesi);
+      // Poin Peringkat Golongan + evaluasi Misi sesi solo (menang vs bot TIDAK
+      // dapat bonus besar).
+      useAkunStore.getState().kirimPoinSesi({
+        poin: get().poinSesi.poin,
+        akurasi: get().poinSesi.akurasi,
+        menang: next.pemenangId === get().humanId,
+        kuisBenar: stat.benar,
+        kuisSalah: stat.total - stat.benar,
+        benarPerGolongan: stat.benarPerGolongan,
+      });
       set({ progres: rekam.progres, rekamTerakhir: rekam });
     }
 
@@ -353,6 +362,9 @@ export const useGameStore = create<GameStore>((set, get) => {
       });
       simpanProgres(rekam.progres);
       sinkronProgresKeAkun(rekam.progres);
+      // Poin & Misi online sudah dievaluasi server-side (Edge Function `aksi`).
+      // Tarik hasil terbaru (peringkat, progres misi, badge) ke store akun.
+      void useAkunStore.getState().segarkanAkun();
       set({
         progres: rekam.progres,
         rekamTerakhir: rekam,

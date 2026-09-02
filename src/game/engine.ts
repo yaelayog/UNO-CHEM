@@ -109,6 +109,7 @@ export function buatGame(
     giliranKe: 0,
     faktaReward: null,
     streak: {},
+    skorKuisSesi: {},
     pengumumanKuis: null,
     peristiwaDrawPile,
     peristiwaAktif: null,
@@ -527,6 +528,30 @@ export function selesaikanKuis(state: GameState, hasil: HasilKuis): GameState {
     penaltiAkhir,
     dilewati,
   };
+
+  // Skor kuis per pemain manusia (untuk Misi & ringkasan sesi).
+  if (!target.isBot) {
+    const benar = hasil !== 'salah';
+    const g = s.soalAktif?.golonganTerkait;
+    const cur = s.skorKuisSesi[ef.targetPemainId] ?? {
+      benar: 0,
+      salah: 0,
+      benarGolongan: {},
+    };
+    const benarGolongan = { ...cur.benarGolongan };
+    if (benar && g && g !== 'umum') {
+      benarGolongan[g] = (benarGolongan[g] ?? 0) + 1;
+    }
+    s.skorKuisSesi = {
+      ...s.skorKuisSesi,
+      [ef.targetPemainId]: {
+        benar: cur.benar + (benar ? 1 : 0),
+        salah: cur.salah + (benar ? 0 : 1),
+        benarGolongan,
+      },
+    };
+  }
+
   s.efekTertunda = null;
   s.soalAktif = null;
   s.status = 'bermain';

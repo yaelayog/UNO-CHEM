@@ -7,6 +7,8 @@
 // online bisa dilakukan nanti (Minggu 2).
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { beriPoinMurid, type AkurasiDelta } from '../_shared/poin.ts';
+import { evaluasiMisi } from '../_shared/misi.ts';
+import type { KonteksSesi } from '../_shared/game/misi.ts';
 
 const URL = Deno.env.get('SUPABASE_URL')!;
 const ANON = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -132,14 +134,26 @@ async function namaKelas(db: SupabaseClient, kelasId: string | null) {
 }
 
 async function ringkas(db: SupabaseClient, murid: MuridRow, token?: string) {
-  const { data: pr } = await db
-    .from('progres_murid')
-    .select(
-      'total_poin, peringkat_golongan_aktif, peringkat_golongan_rekor, badge_diraih, riwayat_akurasi_per_golongan, progres_lokal',
-    )
-    .eq('murid_id', murid.id)
-    .maybeSingle();
+  const [{ data: pr }, { data: misiProg }] = await Promise.all([
+    db
+      .from('progres_murid')
+      .select(
+        'total_poin, peringkat_golongan_aktif, peringkat_golongan_rekor, badge_diraih, riwayat_akurasi_per_golongan, progres_lokal',
+      )
+      .eq('murid_id', murid.id)
+      .maybeSingle(),
+    db
+      .from('misi_progres_murid')
+      .select('misi_id, progres, selesai, selesai_pada')
+      .eq('murid_id', murid.id),
+  ]);
   return {
+    misiProgres: (misiProg ?? []).map((r) => ({
+      misiId: r.misi_id,
+      progres: r.progres,
+      selesai: r.selesai,
+      selesaiPada: r.selesai_pada,
+    })),
     murid: {
       id: murid.id,
       nama: murid.nama,
@@ -291,8 +305,37 @@ async function tambahPoin(db: SupabaseClient, b: Record<string, unknown>) {
   const murid = await lewatToken(db, bersih(b.token, 64));
   const poin = Math.max(0, Math.min(Math.floor(Number(b.poin) || 0), 2000));
   const akurasi = (b.akurasi ?? {}) as AkurasiDelta;
-  const progres = await beriPoinMurid(db, murid.id, poin, akurasi);
-  return { ok: true, progres };
+  let progres = await beriPoinMurid(db, murid.id, poin, akurasi);
+
+  // Evaluasi Misi dari konteks sesi solo (opsional).
+  let misiSelesai: unknown[] = [];
+  const s = b.sesi as Partial<KonteksSesi> | undefined;
+  if (s) {
+    misiSelesai = await evaluasiMisi(db, murid.id, {
+      menang: Boolean(s.menang),
+      online: false,
+      kuisBenar: Math.max(0, Math.floor(Number(s.kuisBenar) || 0)),
+      kuisSalah: Math.max(0, Math.floor(Number(s.kuisSalah) || 0)),
+      benarPerGolongan: (s.benarPerGolongan ?? {}) as KonteksSesi['benarPerGolongan'],
+    });
+    if (misiSelesai.length) {
+      // reward misi menambah poin → ambil progres terbaru
+      const { data: pr } = await db
+        .from('progres_murid')
+        .select(
+          'total_poin, peringkat_golongan_aktif, peringkat_golongan_rekor',
+        )
+        .eq('murid_id', murid.id)
+        .maybeSingle();
+      if (pr)
+        progres = {
+          totalPoin: pr.total_poin,
+          peringkatGolonganAktif: pr.peringkat_golongan_aktif,
+          peringkatGolonganRekor: pr.peringkat_golongan_rekor,
+        };
+    }
+  }
+  return { ok: true, progres, misiSelesai };
 }
 
 async function sinkronProgres(db: SupabaseClient, b: Record<string, unknown>) {

@@ -139,6 +139,15 @@ export interface GameState {
   pengumumanUno: PengumumanUno | null;
   /** Streak buang kartu segolongan per pemain. */
   streak: Record<string, { golongan: Golongan; count: number }>;
+  /**
+   * Skor kuis per pemain MANUSIA sepanjang sesi ini — dipakai untuk evaluasi
+   * Misi & ringkasan akhir sesi. `benarGolongan` hanya terisi bila soalnya
+   * bertema golongan tertentu (kuis untuk manusia; bot dilewati).
+   */
+  skorKuisSesi: Record<
+    string,
+    { benar: number; salah: number; benarGolongan: Partial<Record<Golongan, number>> }
+  >;
   log: string[];
 }
 

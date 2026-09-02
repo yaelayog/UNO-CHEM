@@ -255,6 +255,7 @@ interface KelasRow {
 }
 
 function PanelGuru() {
+  const keLayar = useGameStore((s) => s.keLayar);
   const guruEmail = useAkunStore((s) => s.guruEmail);
   const sibuk = useAkunStore((s) => s.sibuk);
   const masukGuru = useAkunStore((s) => s.masukGuru);
@@ -303,6 +304,14 @@ function PanelGuru() {
         <div className="rounded-2xl bg-white p-3 text-sm font-bold text-tinta shadow-empuk">
           Masuk sebagai <span className="text-lab">{guruEmail}</span>
         </div>
+
+        <button
+          type="button"
+          onClick={() => keLayar('dashboard-guru')}
+          className="w-full rounded-2xl bg-lab px-4 py-2.5 font-display font-extrabold text-white shadow-empuk transition hover:brightness-110 cursor-pointer"
+        >
+          📊 Lihat Progres Murid
+        </button>
 
         <div className="rounded-2xl bg-white p-3 shadow-empuk">
           <p className="text-xs font-bold text-tinta/60">Buat kelas baru</p>

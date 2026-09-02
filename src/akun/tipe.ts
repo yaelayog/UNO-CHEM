@@ -24,10 +24,26 @@ export interface PilihanAkun {
   kelasNama: string | null;
 }
 
+export interface MisiProgres {
+  misiId: string;
+  progres: number;
+  selesai: boolean;
+  selesaiPada: string | null;
+}
+
+export interface MisiSelesai {
+  id: string;
+  judul: string;
+  poinReward: number;
+  badgeReward: string | null;
+}
+
 /** Balasan Edge Function `akun`. */
 export interface HasilAkun {
   murid?: AkunMurid;
   progres?: ProgresAkun | null;
+  misiProgres?: MisiProgres[];
+  misiSelesai?: MisiSelesai[];
   token?: string;
   /** Diisi bila > 1 akun cocok Nama+PIN — murid harus memilih kode uniknya. */
   pilihan?: PilihanAkun[];

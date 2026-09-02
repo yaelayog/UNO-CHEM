@@ -1,10 +1,19 @@
 import { create } from 'zustand';
 import { bacaProgres, simpanProgres, type Progres } from '../lib/progres';
+import type { Golongan } from '../data/types';
+import type { Misi } from '../game';
 import { getSupabase } from '../lib/supabase';
 import { useGameStore } from '../store/gameStore';
 import { kirimAkun } from './klienAkun';
 import { gabungProgres } from './migrasiProgres';
-import type { AkunMurid, HasilAkun, PilihanAkun, ProgresAkun } from './tipe';
+import type {
+  AkunMurid,
+  HasilAkun,
+  MisiProgres,
+  MisiSelesai,
+  PilihanAkun,
+  ProgresAkun,
+} from './tipe';
 
 const TOKEN_KEY = 'chemuno:sesiMurid';
 
@@ -24,22 +33,34 @@ function simpanToken(t: string | null) {
   }
 }
 
-/** Beri tahu store game agar membaca ulang progres dari localStorage. */
 function segarkanGame() {
   useGameStore.getState().segarkanProgres();
 }
 
+/** Konteks 1 sesi solo untuk evaluasi Misi. */
+export interface KonteksSesiSolo {
+  poin: number;
+  akurasi: Record<string, { benar: number; total: number }>;
+  menang: boolean;
+  kuisBenar: number;
+  kuisSalah: number;
+  benarPerGolongan: Partial<Record<Golongan, number>>;
+}
+
 interface AkunStore {
-  /** Akun murid aktif di device ini (null = belum masuk). */
   murid: AkunMurid | null;
   progresAkun: ProgresAkun | null;
-  /** Email guru bila sesi Supabase Auth non-anon aktif. */
+  misi: Misi[];
+  misiProgres: MisiProgres[];
+  /** Misi yang baru selesai — UI menampilkan toast lalu clear. */
+  misiSelesaiBaru: MisiSelesai[];
   guruEmail: string | null;
-  /** true selama `muat()` pertama berjalan (restore sesi saat app dibuka). */
   memuat: boolean;
   sibuk: boolean;
 
   muat: () => Promise<void>;
+  /** Ambil ulang progres + misi murid dari server (tanpa flash "logout"). */
+  segarkanAkun: () => Promise<void>;
   daftarMurid: (
     nama: string,
     pin: string,
@@ -52,13 +73,10 @@ interface AkunStore {
   ) => Promise<{ error?: string; pilihan?: PilihanAkun[] }>;
   keluarMurid: () => Promise<void>;
   gabungKelas: (kodeKelas: string) => Promise<string | null>;
-  /** Dorong progres terbaru ke akun (debounced). Aman dipanggil tanpa akun. */
   sinkronProgres: (p: Progres) => void;
-  /** Laporkan poin Peringkat Golongan dari sesi solo. No-op tanpa akun. */
-  kirimPoinSesi: (sesi: {
-    poin: number;
-    akurasi: Record<string, { benar: number; total: number }>;
-  }) => void;
+  /** Laporkan hasil sesi solo (poin + konteks Misi). No-op tanpa akun. */
+  kirimPoinSesi: (sesi: KonteksSesiSolo) => void;
+  bersihkanMisiSelesai: () => void;
 
   masukGuru: (
     email: string,
@@ -70,8 +88,25 @@ interface AkunStore {
 
 let timerSinkron: ReturnType<typeof setTimeout> | undefined;
 
+async function muatMisiDefs(): Promise<Misi[]> {
+  const sb = await getSupabase();
+  if (!sb) return [];
+  const { data } = await sb
+    .from('misi')
+    .select('id, judul, deskripsi, tipe, target, poin_reward, badge_reward, urutan')
+    .order('urutan', { ascending: true });
+  return ((data as Record<string, unknown>[] | null) ?? []).map((r) => ({
+    id: String(r.id),
+    judul: String(r.judul),
+    deskripsi: String(r.deskripsi),
+    tipe: r.tipe as Misi['tipe'],
+    target: (r.target ?? {}) as Record<string, unknown>,
+    poinReward: Number(r.poin_reward) || 0,
+    badgeReward: (r.badge_reward as string | null) ?? null,
+  }));
+}
+
 export const useAkunStore = create<AkunStore>((set, get) => {
-  /** Terapkan balasan sukses dari Edge Function `akun`. */
   function terapkan(r: HasilAkun) {
     if (!r.murid) return;
     if (r.token) simpanToken(r.token);
@@ -80,17 +115,22 @@ export const useAkunStore = create<AkunStore>((set, get) => {
       (r.progres?.progresLokal as Partial<Progres> | undefined) ?? null,
     );
     simpanProgres(merged);
-    set({ murid: r.murid, progresAkun: r.progres ?? null });
+    set({
+      murid: r.murid,
+      progresAkun: r.progres ?? null,
+      misiProgres: r.misiProgres ?? [],
+    });
     segarkanGame();
-    // Balikkan hasil merge ke server supaya kedua sisi konsisten.
     const token = bacaToken();
-    if (token)
-      void kirimAkun('sinkronProgres', { token, progresLokal: merged });
+    if (token) void kirimAkun('sinkronProgres', { token, progresLokal: merged });
   }
 
   return {
     murid: null,
     progresAkun: null,
+    misi: [],
+    misiProgres: [],
+    misiSelesaiBaru: [],
     guruEmail: null,
     memuat: true,
     sibuk: false,
@@ -104,18 +144,30 @@ export const useAkunStore = create<AkunStore>((set, get) => {
           const u = data.session?.user;
           if (u && !u.is_anonymous && u.email) set({ guruEmail: u.email });
         }
+        void muatMisiDefs().then((misi) => set({ misi }));
         const token = bacaToken();
         if (token) {
           const r = await kirimAkun('sesi', { token });
           if (r.murid && !r.error) terapkan(r);
-          // Buang token HANYA kalau server bilang sesinya memang tak valid
-          // (akun dihapus / token salah). Error jaringan sesaat → biarkan,
-          // coba lagi saat app dibuka berikutnya.
           else if (r.error && /tidak valid|not.*valid|401/i.test(r.error))
             simpanToken(null);
         }
       } finally {
         set({ memuat: false });
+      }
+    },
+
+    segarkanAkun: async () => {
+      const token = bacaToken();
+      if (!token) return;
+      const r = await kirimAkun('sesi', { token });
+      if (r.murid && !r.error) {
+        set({
+          murid: r.murid,
+          progresAkun: r.progres ?? get().progresAkun,
+          misiProgres: r.misiProgres ?? get().misiProgres,
+        });
+        if (get().misi.length === 0) void muatMisiDefs().then((misi) => set({ misi }));
       }
     },
 
@@ -158,7 +210,7 @@ export const useAkunStore = create<AkunStore>((set, get) => {
     keluarMurid: async () => {
       const token = bacaToken();
       simpanToken(null);
-      set({ murid: null, progresAkun: null });
+      set({ murid: null, progresAkun: null, misiProgres: [] });
       if (token) await kirimAkun('keluar', { token });
     },
 
@@ -188,19 +240,29 @@ export const useAkunStore = create<AkunStore>((set, get) => {
     kirimPoinSesi: (sesi) => {
       const token = bacaToken();
       if (!token) return;
-      if (sesi.poin <= 0 && Object.keys(sesi.akurasi).length === 0) return;
       void kirimAkun('tambahPoin', {
         token,
         poin: sesi.poin,
         akurasi: sesi.akurasi,
+        sesi: {
+          menang: sesi.menang,
+          kuisBenar: sesi.kuisBenar,
+          kuisSalah: sesi.kuisSalah,
+          benarPerGolongan: sesi.benarPerGolongan,
+        },
       }).then((r) => {
         const p = r.progres as Partial<ProgresAkun> | null | undefined;
-        if (p)
-          set((s) => ({
-            progresAkun: s.progresAkun ? { ...s.progresAkun, ...p } : s.progresAkun,
-          }));
+        set((s) => ({
+          progresAkun: p && s.progresAkun ? { ...s.progresAkun, ...p } : s.progresAkun,
+          misiSelesaiBaru: r.misiSelesai?.length
+            ? [...s.misiSelesaiBaru, ...r.misiSelesai]
+            : s.misiSelesaiBaru,
+        }));
+        void get().segarkanAkun();
       });
     },
+
+    bersihkanMisiSelesai: () => set({ misiSelesaiBaru: [] }),
 
     masukGuru: async (email, sandi, daftar) => {
       const sb = await getSupabase();

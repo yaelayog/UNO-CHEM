@@ -434,6 +434,40 @@ describe('draw2 + pengurangan penalti', () => {
   });
 });
 
+describe('skorKuisSesi (Fase 4 — Misi)', () => {
+  const DUA_MANUSIA = [
+    { id: 'p1', nama: 'A', isBot: false },
+    { id: 'p2', nama: 'B', isBot: false },
+  ];
+  function siapkanDraw2Manusia(seed: string) {
+    let s = buatGame(DUA_MANUSIA, seed);
+    const atas = kartuAtas(s);
+    const d2: KartuKimia = { ...kartuAngka(atas.golongan, 0), jenis: 'draw2', id: 'd2' };
+    s = selipkanKartu(s, 0, d2);
+    return mainkanKartu(s, 'p1', d2.id);
+  }
+
+  it('mencatat jawaban benar/salah target manusia', () => {
+    expect(selesaikanKuis(siapkanDraw2Manusia('sk-a'), 'benarCepat').skorKuisSesi.p2)
+      .toEqual({ benar: 1, salah: 0, benarGolongan: {} });
+    expect(selesaikanKuis(siapkanDraw2Manusia('sk-b'), 'salah').skorKuisSesi.p2)
+      .toEqual({ benar: 0, salah: 1, benarGolongan: {} });
+  });
+
+  it('tidak mencatat untuk target bot', () => {
+    const s = selesaikanKuis(siapkanDraw2('sk-bot'), 'salah');
+    expect(s.skorKuisSesi.p2).toBeUndefined();
+  });
+
+  function siapkanDraw2(seed: string) {
+    let s = buatGame(PEMAIN, seed);
+    const atas = kartuAtas(s);
+    const d2: KartuKimia = { ...kartuAngka(atas.golongan, 0), jenis: 'draw2', id: 'd2' };
+    s = selipkanKartu(s, 0, d2);
+    return mainkanKartu(s, 'p1', d2.id);
+  }
+});
+
 describe('wild & wild4', () => {
   it('wild: pilih warna lalu giliran maju', () => {
     let s = buatGame(PEMAIN, 'wild-a');
