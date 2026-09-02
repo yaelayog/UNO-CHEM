@@ -58,6 +58,10 @@ export function MainMenu() {
         ))}
       </div>
 
+      <div className="w-full rounded-2xl border border-black/5 bg-white/70 px-3 py-2 backdrop-blur-sm">
+        <LogoPanitia judul="Lomba Media Pembelajaran Digital FORKOM FKIP 2026" tinggi={26} />
+      </div>
+
       <div className="relative flex flex-col items-center gap-1">
         <span
           className="inline-block text-5xl"
@@ -209,10 +213,6 @@ export function MainMenu() {
           📲 Pasang Aplikasi
         </button>
       )}
-
-      <div className="mt-1 w-full border-t border-black/5 pt-3">
-        <LogoPanitia tinggi={28} />
-      </div>
     </main>
   );
 }
