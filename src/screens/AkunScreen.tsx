@@ -184,7 +184,7 @@ function PanelMurid() {
           onClick={() => setMode('masuk')}
           className={`flex-1 rounded-xl py-2 cursor-pointer ${mode === 'masuk' ? 'bg-white text-lab shadow-empuk' : 'text-tinta/60'}`}
         >
-          Masuk (device lain)
+          Login / Masuk
         </button>
       </div>
 
@@ -238,8 +238,9 @@ function PanelMurid() {
       </button>
 
       <p className="text-[11px] leading-relaxed text-tinta/45">
-        Progres (XP, lencana) di device ini otomatis pindah ke akun. Nama + PIN
-        dipakai untuk masuk lagi di HP/komputer lain.
+        {mode === 'daftar'
+          ? 'Progres (XP, lencana) di device ini otomatis pindah ke akun. Nama + PIN dipakai untuk masuk lagi di HP/komputer lain.'
+          : 'Masukkan Nama + PIN yang sama seperti waktu buat akun — untuk lanjut di HP/komputer lain.'}
       </p>
 
       {pesan && <p className="text-center text-xs font-bold text-alkali">{pesan}</p>}
