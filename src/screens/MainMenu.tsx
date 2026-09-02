@@ -9,6 +9,7 @@ import { useGameStore } from '../store/gameStore';
 import { useAkunStore } from '../akun/akunStore';
 import { namaTampil } from '../akun/tipe';
 import { LencanaPeringkat } from '../components/LencanaPeringkat';
+import { LogoPanitia } from '../components/LogoPanitia';
 
 const WARNA = Object.values(WARNA_GOLONGAN);
 
@@ -208,6 +209,10 @@ export function MainMenu() {
           📲 Pasang Aplikasi
         </button>
       )}
+
+      <div className="mt-1 w-full border-t border-black/5 pt-3">
+        <LogoPanitia tinggi={28} />
+      </div>
     </main>
   );
 }

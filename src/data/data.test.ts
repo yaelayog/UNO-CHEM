@@ -47,9 +47,8 @@ describe('DAFTAR_UNSUR', () => {
 });
 
 describe('BANK_SOAL', () => {
-  it('berisi 30-50 soal (brief)', () => {
-    expect(BANK_SOAL.length).toBeGreaterThanOrEqual(30);
-    expect(BANK_SOAL.length).toBeLessThanOrEqual(50);
+  it('bank soal cukup luas (>= 50, cakupan CP Fase 4 M4)', () => {
+    expect(BANK_SOAL.length).toBeGreaterThanOrEqual(50);
   });
 
   it('id soal unik', () => {

@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import { useGameStore } from '../store/gameStore';
+import { KREDIT } from '../data/kredit';
+import { LogoPanitia } from '../components/LogoPanitia';
 
 function Kerangka({ judul, children }: { judul: string; children: ReactNode }) {
   const keLayar = useGameStore((s) => s.keLayar);
@@ -113,23 +115,72 @@ export function RulesScreen() {
   );
 }
 
+function Bagian({ judul, children }: { judul: string; children: ReactNode }) {
+  return (
+    <section className="rounded-2xl bg-white p-3 shadow-empuk">
+      <h2 className="mb-1.5 font-display text-sm font-extrabold text-lab">
+        {judul}
+      </h2>
+      <div className="flex flex-col gap-1 text-[13px] leading-relaxed text-tinta/80">
+        {children}
+      </div>
+    </section>
+  );
+}
+
 export function AboutScreen() {
   return (
     <Kerangka judul="Tentang">
       <p>
         <b>ChemUno</b> adalah media pembelajaran kimia berbentuk permainan kartu
-        yang mengadaptasi mekanisme UNO untuk mengenalkan golongan unsur, periode,
-        dan ikatan kimia sederhana kepada siswa SMP/SMA.
+        yang mengadaptasi mekanisme UNO: <b>warna kartu = golongan unsur</b>,{' '}
+        <b>angka kartu = periode</b>. Kartu aksi memunculkan kuis kimia singkat.
       </p>
-      <p>
-        Dibuat untuk lomba media pembelajaran kimia. Dapat dimainkan di browser
-        HP maupun komputer, dan bisa dipasang sebagai aplikasi (PWA) untuk
-        digunakan tanpa koneksi internet.
-      </p>
+
+      <Bagian judul="Identitas Pengembang">
+        <p>{KREDIT.pengembang}</p>
+        <p>{KREDIT.instansi}</p>
+        {!KREDIT.pembimbing.startsWith('TODO') && (
+          <p>Pembimbing: {KREDIT.pembimbing}</p>
+        )}
+        <p className="text-tinta/55">
+          {KREDIT.kompetisi} · {KREDIT.tahun}
+        </p>
+      </Bagian>
+
+      <Bagian judul="Jenjang & Mata Pelajaran">
+        <p>{KREDIT.jenjang}</p>
+        <p>{KREDIT.mataPelajaran}</p>
+      </Bagian>
+
+      <Bagian judul="Capaian Pembelajaran">
+        <p>{KREDIT.capaian}</p>
+      </Bagian>
+
+      <Bagian judul="Tujuan Pembelajaran">
+        <ul className="list-disc pl-4">
+          {KREDIT.tujuan.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+        </ul>
+      </Bagian>
+
+      <Bagian judul="Petunjuk Penggunaan">
+        <ol className="list-decimal pl-4">
+          {KREDIT.petunjuk.map((p) => (
+            <li key={p}>{p}</li>
+          ))}
+        </ol>
+      </Bagian>
+
       <p className="text-xs text-tinta/50">
-        Data: 47 unsur representatif dari 5 golongan · 42 soal kuis · 32 Fun
-        Fact. Konten edukasi bersifat penyederhanaan untuk tingkat sekolah.
+        Konten: 47 unsur dari 5 golongan · bank soal kuis bertingkat · Fun Fact
+        edukatif. Materi disederhanakan untuk jenjang sekolah.
       </p>
+
+      <div className="pt-2">
+        <LogoPanitia judul="Diselenggarakan oleh" tinggi={40} />
+      </div>
     </Kerangka>
   );
 }

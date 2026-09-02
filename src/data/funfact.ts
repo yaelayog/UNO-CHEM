@@ -1,9 +1,10 @@
 import type { FunFact } from './types';
 
 /**
- * Bank Fun Fact ChemUno — fakta singkat seputar golongan, periode, sifat unsur,
- * dan ikatan kimia sederhana. Setiap fakta menautkan `bantuSoal` ke id soal di
- * `src/data/kuis.ts` yang isinya memang terbantu bila fakta ini disimak.
+ * Bank Fun Fact ChemUno — 42 fakta singkat seputar golongan, periode,
+ * konfigurasi elektron, sifat keperiodikan, dan ikatan kimia sederhana. Setiap
+ * fakta menautkan `bantuSoal` ke id soal di `src/data/kuis.ts` yang isinya
+ * memang terbantu bila fakta ini disimak.
  *
  * Dipakai lewat `src/game/funfact.ts` (deck teracak, dipicu tiap 1 putaran).
  */
@@ -231,5 +232,77 @@ export const SEMUA_FUNFACT: FunFact[] = [
     golongan: 'halogen',
     ikon: '🔗',
     bantuSoal: ['s05'],
+  },
+
+  // ─────────── TAMBAHAN (cakupan CP) ───────────
+  {
+    id: 'ff-golongan-valensi',
+    teks: 'Untuk golongan utama, nomor golongan = jumlah elektron valensi, dan nomor periode = jumlah kulit elektron. Natrium (2 8 1) → golongan IA, periode 3.',
+    golongan: 'alkali',
+    ikon: '🧮',
+    bantuSoal: ['m17', 'm18', 's17'],
+  },
+  {
+    id: 'ff-oktet',
+    teks: 'Aturan oktet: atom cenderung punya 8 elektron di kulit terluar (seperti gas mulia). Logam melepas elektron, nonlogam menangkap elektron.',
+    golongan: 'gasMulia',
+    ikon: '🎯',
+    bantuSoal: ['m19', 's19', 's24'],
+  },
+  {
+    id: 'ff-jari-atom',
+    teks: 'Jari-jari atom membesar ke bawah dalam satu golongan (kulit bertambah) dan mengecil ke kanan dalam satu periode (tarikan inti menguat).',
+    golongan: 'alkaliTanah',
+    ikon: '📏',
+    bantuSoal: ['s22', 's23', 'x11'],
+  },
+  {
+    id: 'ff-energi-ionisasi-2',
+    teks: 'Energi ionisasi = energi minimum untuk melepas 1 elektron dari atom netral. Atom dengan energi ionisasi kecil (mis. logam alkali) mudah membentuk ion positif.',
+    golongan: 'alkali',
+    ikon: '🔋',
+    bantuSoal: ['x16'],
+  },
+  {
+    id: 'ff-keelektronegatifan',
+    teks: 'Fluorin adalah unsur paling elektronegatif. Dalam golongan halogen: F > Cl > Br > I.',
+    golongan: 'halogen',
+    ikon: '🧲',
+    bantuSoal: ['s25', 'x12'],
+  },
+  {
+    id: 'ff-ion-vs-kovalen',
+    teks: 'Ikatan ion = logam + nonlogam (serah-terima elektron, mis. NaCl). Ikatan kovalen = nonlogam + nonlogam (berbagi elektron, mis. H₂O).',
+    golongan: 'alkali',
+    ikon: '🤝',
+    bantuSoal: ['s20', 's21'],
+  },
+  {
+    id: 'ff-isoelektronik',
+    teks: 'Ion Na⁺ dan atom Ne sama-sama punya 10 elektron — disebut isoelektronik. Ion Cl⁻ punya 18 elektron, seperti argon.',
+    golongan: 'gasMulia',
+    ikon: '👥',
+    bantuSoal: ['x13', 'x15'],
+  },
+  {
+    id: 'ff-rumus-senyawa',
+    teks: 'Rumus senyawa ion dibuat agar muatan total nol: Mg²⁺ + Cl⁻ → MgCl₂ (satu Mg mengikat dua Cl).',
+    golongan: 'alkaliTanah',
+    ikon: '⚖️',
+    bantuSoal: ['x14'],
+  },
+  {
+    id: 'ff-transisi-warna',
+    teks: 'Banyak senyawa logam transisi berwarna (Cu²⁺ biru, Fe³⁺ kuning-cokelat) dan logamnya bisa punya beberapa bilangan oksidasi.',
+    golongan: 'transisi',
+    ikon: '🌈',
+    bantuSoal: ['s26'],
+  },
+  {
+    id: 'ff-argon-udara',
+    teks: 'Argon menyusun sekitar 0,9% udara — gas mulia paling melimpah di atmosfer, dipakai mengisi bola lampu agar filamen awet.',
+    golongan: 'gasMulia',
+    ikon: '💡',
+    bantuSoal: ['x18'],
   },
 ];
