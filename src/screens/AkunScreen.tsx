@@ -208,7 +208,7 @@ function PanelMurid() {
       </Field>
 
       {mode === 'daftar' && (
-        <Field label="Kode kelas (opsional — kosongkan untuk akun bebas)">
+        <Field label="Kode kelas (opsional)">
           <input
             value={kodeKelas}
             onChange={(e) => setKodeKelas(e.target.value.toUpperCase().slice(0, 8))}
