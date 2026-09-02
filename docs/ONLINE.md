@@ -188,23 +188,21 @@ supabase functions deploy reset-mingguan --no-verify-jwt
 supabase secrets set CRON_SECRET=<acak-panjang>
 ```
 
-Jadwalkan (pilih salah satu):
-
-**A. Dashboard** → Integrations → **Cron** → New job → pilih function `reset-mingguan`,
-schedule `0 17 * * 0` (Minggu 17:00 UTC = Senin 00:00 WIB), header
-`Authorization: Bearer <CRON_SECRET>`.
-
-**B. SQL (pg_cron + pg_net)** di SQL Editor:
+**Jadwal terpasang (SQL Editor, pg_cron + pg_net):**
 ```sql
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
-select cron.schedule('chemuno-reset-mingguan', '0 17 * * 0', $$
+select cron.schedule('chemuno-reset-mingguan', '0 3 * * 4', $$
   select net.http_post(
     url := 'https://lyhlrcgrmbumpwowtqgx.supabase.co/functions/v1/reset-mingguan',
     headers := '{"Authorization":"Bearer <CRON_SECRET>"}'::jsonb
   );
 $$);
 ```
+`0 3 * * 4` = **Kamis 03:00 UTC = Kamis 10:00 WIB**. pg_cron pakai UTC.
+
+Cek: `select jobname, schedule, active from cron.job;`
+Riwayat: `select * from cron.job_run_details order by start_time desc limit 5;`
 
 Tes manual: `curl -X POST .../functions/v1/reset-mingguan -H "Authorization: Bearer <CRON_SECRET>"`
 → `{"ok":true,"direset":N}`. Aman dipanggil berkali-kali (skip murid yang sudah
