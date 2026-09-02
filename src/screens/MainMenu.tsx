@@ -9,6 +9,7 @@ import { useGameStore } from '../store/gameStore';
 import { useAkunStore } from '../akun/akunStore';
 import { namaTampil } from '../akun/tipe';
 import { LencanaPeringkat } from '../components/LencanaPeringkat';
+import { LogoApp } from '../components/LogoApp';
 import { LogoPanitia } from '../components/LogoPanitia';
 import { PengaturanSuara } from '../components/PengaturanSuara';
 
@@ -69,12 +70,7 @@ export function MainMenu() {
       </div>
 
       <div className="relative flex flex-col items-center gap-1">
-        <span
-          className="inline-block text-5xl"
-          style={{ animation: 'goyangLogo 3.2s ease-in-out infinite' }}
-        >
-          ⚗️
-        </span>
+        <LogoApp ukuran={92} />
         <h1 className="font-display text-4xl font-extrabold tracking-tight text-lab">
           ChemUno
         </h1>
