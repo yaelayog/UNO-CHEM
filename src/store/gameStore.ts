@@ -48,6 +48,7 @@ export type Layar =
   | 'main'
   | 'aturan'
   | 'tentang'
+  | 'cptp'
   | 'belajar'
   | 'profil'
   | 'akun'

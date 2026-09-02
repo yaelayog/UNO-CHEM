@@ -40,6 +40,9 @@ const RulesScreen = lazy(() =>
 const AboutScreen = lazy(() =>
   import('./screens/InfoScreen').then((m) => ({ default: m.AboutScreen })),
 );
+const CPTPScreen = lazy(() =>
+  import('./screens/CPTPScreen').then((m) => ({ default: m.CPTPScreen })),
+);
 
 export default function App() {
   const layar = useGameStore((s) => s.layar);
@@ -59,6 +62,9 @@ export default function App() {
       break;
     case 'tentang':
       isi = <AboutScreen />;
+      break;
+    case 'cptp':
+      isi = <CPTPScreen />;
       break;
     case 'profil':
       isi = <ProfilScreen />;

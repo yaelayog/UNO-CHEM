@@ -202,6 +202,10 @@ export function MainMenu() {
         <MenuLink label="Mode Belajar" onClick={() => keLayar('belajar')} />
         <MenuLink label="Cara Main" onClick={() => keLayar('aturan')} />
         <MenuLink label="Tentang" onClick={() => keLayar('tentang')} />
+        <MenuLink
+          label="CP & Tujuan Pembelajaran"
+          onClick={() => keLayar('cptp')}
+        />
       </div>
 
       {bisaPasang && (

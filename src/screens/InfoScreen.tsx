@@ -1,30 +1,10 @@
-import type { ReactNode } from 'react';
-import { useGameStore } from '../store/gameStore';
 import { KREDIT } from '../data/kredit';
 import { LogoPanitia } from '../components/LogoPanitia';
-
-function Kerangka({ judul, children }: { judul: string; children: ReactNode }) {
-  const keLayar = useGameStore((s) => s.keLayar);
-  return (
-    <main className="mx-auto flex min-h-full max-w-md flex-col gap-4 p-5 no-select">
-      <button
-        type="button"
-        onClick={() => keLayar('menu')}
-        className="w-fit rounded-full bg-white px-3 py-1 text-xs font-bold text-tinta/70 shadow-empuk cursor-pointer hover:bg-kertas"
-      >
-        ← Menu
-      </button>
-      <h1 className="font-display text-2xl font-extrabold text-lab">{judul}</h1>
-      <div className="flex flex-col gap-3 text-sm leading-relaxed text-tinta/80">
-        {children}
-      </div>
-    </main>
-  );
-}
+import { BagianInfo, KerangkaInfo } from '../components/LayarInfo';
 
 export function RulesScreen() {
   return (
-    <Kerangka judul="Cara Main">
+    <KerangkaInfo judul="Cara Main">
       <p>
         <b>Tujuan:</b> jadi yang pertama menghabiskan kartu di tangan.
       </p>
@@ -111,33 +91,20 @@ export function RulesScreen() {
           berikutnya lebih sering menanyakan hal yang barusan kamu baca.
         </p>
       </div>
-    </Kerangka>
-  );
-}
-
-function Bagian({ judul, children }: { judul: string; children: ReactNode }) {
-  return (
-    <section className="rounded-2xl bg-white p-3 shadow-empuk">
-      <h2 className="mb-1.5 font-display text-sm font-extrabold text-lab">
-        {judul}
-      </h2>
-      <div className="flex flex-col gap-1 text-[13px] leading-relaxed text-tinta/80">
-        {children}
-      </div>
-    </section>
+    </KerangkaInfo>
   );
 }
 
 export function AboutScreen() {
   return (
-    <Kerangka judul="Tentang">
+    <KerangkaInfo judul="Tentang">
       <p>
         <b>ChemUno</b> adalah media pembelajaran kimia berbentuk permainan kartu
         yang mengadaptasi mekanisme UNO: <b>warna kartu = golongan unsur</b>,{' '}
         <b>angka kartu = periode</b>. Kartu aksi memunculkan kuis kimia singkat.
       </p>
 
-      <Bagian judul="Identitas Pengembang">
+      <BagianInfo judul="Identitas Pengembang">
         <p className="font-bold text-tinta">{KREDIT.namaTim}</p>
         <ul className="list-disc pl-4">
           {KREDIT.anggota.map((a) => (
@@ -151,39 +118,23 @@ export function AboutScreen() {
           <p>Pembimbing: {KREDIT.pembimbing}</p>
         )}
         <p className="text-tinta/55">Dikembangkan untuk {KREDIT.kompetisi}.</p>
-      </Bagian>
+      </BagianInfo>
 
-      <Bagian judul="Sasaran Pembelajaran">
-        <p>
-          <b>Jenjang:</b> {KREDIT.jenjang}
+      <BagianInfo judul="Jenjang & Mata Pelajaran">
+        <p>{KREDIT.jenjang}</p>
+        <p className="text-tinta/55">
+          Rincian Capaian &amp; Tujuan Pembelajaran ada di layar{' '}
+          <b>CP &amp; Tujuan Pembelajaran</b> (menu utama).
         </p>
-        <p>
-          <b>Mata Pelajaran:</b> {KREDIT.mataPelajaran}
-        </p>
-        <p>
-          <b>Materi:</b> {KREDIT.materi}
-        </p>
-      </Bagian>
+      </BagianInfo>
 
-      <Bagian judul="Capaian Pembelajaran">
-        <p>{KREDIT.capaian}</p>
-      </Bagian>
-
-      <Bagian judul="Tujuan Pembelajaran">
-        <ul className="list-disc pl-4">
-          {KREDIT.tujuan.map((t) => (
-            <li key={t}>{t}</li>
-          ))}
-        </ul>
-      </Bagian>
-
-      <Bagian judul="Petunjuk Penggunaan">
+      <BagianInfo judul="Petunjuk Penggunaan">
         <ol className="list-decimal pl-4">
           {KREDIT.petunjuk.map((p) => (
             <li key={p}>{p}</li>
           ))}
         </ol>
-      </Bagian>
+      </BagianInfo>
 
       <p className="text-xs text-tinta/50">
         Konten: 47 unsur dari 5 golongan · bank soal kuis bertingkat · Fun Fact
@@ -193,6 +144,6 @@ export function AboutScreen() {
       <div className="pt-2">
         <LogoPanitia judul="Diselenggarakan oleh" tinggi={40} />
       </div>
-    </Kerangka>
+    </KerangkaInfo>
   );
 }

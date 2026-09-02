@@ -1,7 +1,7 @@
 import type { SoalKuis } from './types';
 
 /**
- * Bank soal kuis ChemUno — 68 soal mencakup: golongan & periode, konfigurasi
+ * Bank soal kuis ChemUno — 70 soal mencakup: golongan & periode, konfigurasi
  * elektron, elektron valensi, sifat keperiodikan (jari-jari atom, energi
  * ionisasi, keelektronegatifan), dan ikatan kimia sederhana (ion & kovalen).
  * Setiap soal 4 pilihan; `jawabanBenar` = index.
@@ -657,5 +657,34 @@ export const BANK_SOAL: SoalKuis[] = [
     golonganTerkait: 'gasMulia',
     tingkatKesulitan: 'sulit',
     pembahasan: 'Argon menyusun sekitar 0,9% udara — jauh di atas gas mulia lain.',
+  },
+
+  // ─────────── Sejarah sistem periodik (TP1) ───────────
+  {
+    id: 'm25',
+    pertanyaan:
+      'Ilmuwan yang menyusun tabel periodik dan berani mengosongkan kotak untuk unsur yang belum ditemukan adalah…',
+    pilihan: ['John Dalton', 'Dmitri Mendeleev', 'Niels Bohr', 'Antoine Lavoisier'],
+    jawabanBenar: 1,
+    golonganTerkait: 'umum',
+    tingkatKesulitan: 'mudah',
+    pembahasan:
+      'Mendeleev (1869) menyusun unsur menurut kenaikan massa atom & kemiripan sifat, lalu meramalkan unsur yang kelak ditemukan.',
+  },
+  {
+    id: 's27',
+    pertanyaan:
+      'Dasar penyusunan tabel periodik MODERN (berbeda dari tabel Mendeleev) adalah kenaikan…',
+    pilihan: [
+      'Massa atom',
+      'Nomor atom (jumlah proton)',
+      'Jumlah neutron',
+      'Titik didih unsur',
+    ],
+    jawabanBenar: 1,
+    golonganTerkait: 'umum',
+    tingkatKesulitan: 'sedang',
+    pembahasan:
+      'Setelah Moseley, unsur diurutkan menurut nomor atom — memperbaiki beberapa urutan yang janggal pada tabel Mendeleev.',
   },
 ];

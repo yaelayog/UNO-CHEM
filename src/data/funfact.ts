@@ -1,7 +1,7 @@
 import type { FunFact } from './types';
 
 /**
- * Bank Fun Fact ChemUno — 42 fakta singkat seputar golongan, periode,
+ * Bank Fun Fact ChemUno — 45 fakta singkat seputar golongan, periode,
  * konfigurasi elektron, sifat keperiodikan, dan ikatan kimia sederhana. Setiap
  * fakta menautkan `bantuSoal` ke id soal di `src/data/kuis.ts` yang isinya
  * memang terbantu bila fakta ini disimak.
@@ -304,5 +304,28 @@ export const SEMUA_FUNFACT: FunFact[] = [
     golongan: 'gasMulia',
     ikon: '💡',
     bantuSoal: ['x18'],
+  },
+
+  // ─────────── Sejarah sistem periodik (TP1) ───────────
+  {
+    id: 'ff-mendeleev',
+    teks: 'Dmitri Mendeleev (1869) menyusun unsur menurut kenaikan massa atom & kemiripan sifat. Ia berani mengosongkan kotak dan meramalkan unsur yang belum ditemukan — ramalannya terbukti benar bertahun-tahun kemudian.',
+    golongan: 'alkali',
+    ikon: '📜',
+    bantuSoal: ['m25'],
+  },
+  {
+    id: 'ff-nomor-atom-moseley',
+    teks: 'Tabel periodik modern mengurutkan unsur berdasarkan NOMOR ATOM (jumlah proton), bukan massa atom seperti tabel Mendeleev. Perubahan ini menyelesaikan beberapa urutan yang tadinya janggal.',
+    golongan: 'transisi',
+    ikon: '🔢',
+    bantuSoal: ['s27'],
+  },
+  {
+    id: 'ff-periodik-berkembang',
+    teks: 'Sebelum Mendeleev sudah ada usaha lain: Döbereiner mengelompokkan unsur bertiga ("triad"), dan Newlands menyusun "oktaf". Tabel periodik adalah hasil penyempurnaan bertahap banyak ilmuwan.',
+    golongan: 'halogen',
+    ikon: '🧬',
+    bantuSoal: ['m25', 's27'],
   },
 ];

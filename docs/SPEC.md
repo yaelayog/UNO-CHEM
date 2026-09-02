@@ -32,11 +32,12 @@ Setiap kali pemain berhasil membuang beberapa kartu dari golongan yang sama seca
 4. Efek suara & animasi (kartu dikocok, kartu dimainkan, quiz benar/salah, victory).
 5. Desain responsif mobile-first, dioptimalkan untuk layar sentuh.
 6. Dapat dimainkan offline (PWA, service worker, cache assets).
-7. Halaman menu utama, halaman aturan main, dan halaman "Tentang" (kredit media pembelajaran).
-8. Opsional: mode "Belajar" terpisah dari mode "Bermain" — menampilkan seluruh unsur & penjelasan tanpa unsur kompetisi/skor.
-9. (Fase 3, dikerjakan PALING TERAKHIR) Mode online multiplayer lintas kelas menggunakan kode room, mirip UNO online pada umumnya — detail lengkap di bagian 9.
-10. (Fase 4, dikerjakan setelah Fase 3 stabil) Sistem akun guru-murid, rank/divisi persisten, leaderboard berlapis, dan Challenge/Mission dengan reward badge — detail lengkap di bagian 10.
-11. Slot logo PNG kosong untuk logo wajib panitia lomba — detail di bagian 11.
+7. Halaman menu utama, halaman aturan main, dan halaman "Tentang" (identitas pengembang, jenjang & mapel ringkas, petunjuk penggunaan, kredit lomba, slot logo).
+8. Halaman "CP & Tujuan Pembelajaran" TERPISAH dari halaman "Tentang" — memuat Capaian Pembelajaran (elaborasi) dan daftar Tujuan Pembelajaran lengkap dengan badge dimensi kognitif, diakses lewat entry poin sendiri di menu utama.
+9. Opsional: mode "Belajar" terpisah dari mode "Bermain" — menampilkan seluruh unsur & penjelasan tanpa unsur kompetisi/skor.
+10. (Fase 3, dikerjakan PALING TERAKHIR) Mode online multiplayer lintas kelas menggunakan kode room, mirip UNO online pada umumnya — detail lengkap di bagian 9.
+11. (Fase 4, dikerjakan setelah Fase 3 stabil) Sistem akun guru-murid, rank/divisi persisten, leaderboard berlapis, dan Challenge/Mission dengan reward badge — detail lengkap di bagian 10.
+12. Slot logo PNG kosong untuk logo wajib panitia lomba — detail di bagian 11.
 
 ## 4. Tech Stack yang direkomendasikan
 - React + TypeScript + Vite (build cepat, PWA-ready)
@@ -253,7 +254,7 @@ Fungsi-fungsi ini harus punya unit test seperti pola 102 test yang sudah ada di 
 12. Sambungkan seluruh alur ini ke gameplay solo dan online yang sudah ada, supaya poin/peringkat golongan/progres misi otomatis ter-update setiap kali sesi permainan selesai — baik solo maupun online.
 
 **Minggu 4 (paralel dengan penyelesaian Fase 4 kalau masih berjalan) — Konten & finalisasi:**
-13. Tambah soal kuis dan fun fact baru agar mencakup seluruh materi Capaian Pembelajaran (CP) yang relevan, bukan hanya 42 soal yang sudah ada.
+13. Tambah soal kuis dan fun fact baru agar mencakup seluruh materi Capaian Pembelajaran (CP) yang relevan, bukan hanya 42 soal yang sudah ada. Acuan: docs/CAKUPAN-CP-TP.md — fokuskan konten baru HANYA untuk menutup TP1 (sejarah sistem periodik, via Fun Fact baru) dan TP3 (tren jari-jari atom/energi ionisasi/keelektronegatifan, via soal kuis baru) dari dokumen CP-TP_Sistem_Periodik_Unsur.md. TP2 (konfigurasi elektron dasar) sengaja DIKELUARKAN dari cakupan game — terlalu sulit digamifikasi lewat mekanik kartu, didampingi guru secara terpisah. TP4 dan TP5 sudah tercakup oleh mekanik inti game dan Fun Fact yang ada.
 14. Isi slot logo PNG (bagian 11) dan lengkapi dokumentasi wajib di halaman "Tentang" (identitas pengembang, jenjang & mata pelajaran, capaian & tujuan pembelajaran, petunjuk penggunaan).
 15. Uji menyeluruh lintas perangkat/browser, khususnya alur akun murid, leaderboard, dan reset mingguan yang baru dibangun.
 
