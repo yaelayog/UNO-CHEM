@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { SEMUA_GOLONGAN, WARNA_GOLONGAN } from '../data/golongan';
-import { GAYA_GOLONGAN } from '../lib/tampilan';
+import { WARNA_GOLONGAN } from '../data/golongan';
 import { infoLevel } from '../lib/progres';
 import { picuPasang } from '../lib/pwa';
 import { onlineTersedia } from '../lib/supabase';
@@ -41,7 +40,7 @@ export function MainMenu() {
   );
 
   return (
-    <main className="relative mx-auto flex min-h-full max-w-md flex-col items-center justify-center gap-5 overflow-hidden p-6 text-center no-select">
+    <main className="relative mx-auto flex min-h-full max-w-md flex-col items-center justify-center gap-2 overflow-hidden px-4 py-3 text-center no-select">
       {/* Pengaturan suara — selalu terjangkau dari menu */}
       <div className="absolute right-3 top-3 z-20">
         <PengaturanSuara />
@@ -65,120 +64,91 @@ export function MainMenu() {
         ))}
       </div>
 
-      <div className="w-full rounded-2xl border border-black/5 bg-white/70 px-3 py-2 backdrop-blur-sm">
-        <LogoPanitia judul="Lomba Media Pembelajaran Digital FORKOM FKIP 2026" tinggi={26} />
+      <div className="w-full rounded-xl border border-black/5 bg-white/70 px-3 py-1 backdrop-blur-sm">
+        <LogoPanitia judul="FORKOM FKIP 2026 · Gamifikasi Pembelajaran" tinggi={18} />
       </div>
 
-      <div className="relative flex flex-col items-center gap-2">
-        <LogoApp lebarMaks={260} />
+      <div className="flex flex-col items-center">
+        <LogoApp lebarMaks={148} />
         <h1 className="sr-only">ChemUno</h1>
-        <p className="text-sm font-bold text-tinta/60">
-          Cocokkan golongan &amp; periode unsur — belajar kimia sambil bermain
+        <p className="text-[11px] font-bold text-tinta/55">
+          Belajar golongan &amp; periode unsur sambil bermain
         </p>
       </div>
 
-      <button
-        type="button"
-        onClick={() => keLayar('akun')}
-        className="flex w-full items-center justify-between rounded-2xl border border-black/10 bg-white px-3 py-2.5 text-left text-sm font-extrabold shadow-empuk transition hover:bg-kertas cursor-pointer"
-      >
-        {murid ? (
-          <>
-            <span className="flex items-center gap-2 text-lab">
+      {/* Akun + Level dalam satu baris ringkas */}
+      <div className="flex w-full gap-2">
+        <button
+          type="button"
+          onClick={() => keLayar('akun')}
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-black/10 bg-white px-2.5 py-2 text-left text-xs font-extrabold shadow-empuk transition hover:bg-kertas cursor-pointer"
+        >
+          {murid ? (
+            <>
               {progresAkun && (
                 <LencanaPeringkat
                   golongan={progresAkun.peringkatGolonganAktif}
                   ukuran="sm"
                 />
               )}
-              {namaTampil(murid)}
-            </span>
-            <span className="text-[11px] font-bold text-tinta/50">
-              {murid.kelasNama ? `Kelas ${murid.kelasNama}` : 'Akun bebas'} →
-            </span>
-          </>
-        ) : guruEmail ? (
-          <>
-            <span className="text-lab">Guru</span>
-            <span className="max-w-[60%] truncate text-[11px] font-bold text-tinta/50">
-              {guruEmail} →
-            </span>
-          </>
-        ) : (
-          <>
-            <span className="text-tinta/70">Buat akun / Masuk</span>
-            <span className="text-[11px] font-bold text-tinta/45">
-              simpan progres &amp; ikut leaderboard →
-            </span>
-          </>
-        )}
-      </button>
+              <span className="min-w-0 truncate text-lab">
+                {namaTampil(murid)}
+              </span>
+            </>
+          ) : guruEmail ? (
+            <span className="truncate text-lab">Guru · {guruEmail}</span>
+          ) : (
+            <span className="text-tinta/70">Buat akun / Masuk →</span>
+          )}
+        </button>
 
-      <button
-        type="button"
-        onClick={() => keLayar('profil')}
-        className="w-full rounded-2xl border border-black/10 bg-white p-3 text-left shadow-empuk transition hover:bg-kertas cursor-pointer"
-      >
-        <div className="flex items-center justify-between text-xs font-extrabold text-lab-tinta">
-          <span>Level {lvl.level}</span>
-          <span className="text-tinta/50">
-            {progres.badge.length} lencana · lihat pencapaian →
+        <button
+          type="button"
+          onClick={() => keLayar('profil')}
+          className="flex flex-none items-center gap-1.5 rounded-xl border border-black/10 bg-white px-2.5 py-2 text-xs font-extrabold text-lab-tinta shadow-empuk transition hover:bg-kertas cursor-pointer"
+          title={`${progres.badge.length} lencana`}
+        >
+          Lvl {lvl.level}
+          <span className="h-1.5 w-10 overflow-hidden rounded-full bg-black/10">
+            <span
+              className="block h-full rounded-full bg-lab"
+              style={{ width: `${Math.round(lvl.rasio * 100)}%` }}
+            />
           </span>
-        </div>
-        <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-black/10">
-          <div
-            className="h-full rounded-full bg-lab"
-            style={{ width: `${Math.round(lvl.rasio * 100)}%` }}
-          />
-        </div>
-      </button>
-
-      <div className="flex gap-1.5">
-        {SEMUA_GOLONGAN.map((g) => (
-          <div
-            key={g.key}
-            className={`flex h-14 w-9 items-end justify-center rounded-lg p-1 text-center text-[7.2px] leading-tight font-extrabold shadow-empuk ${GAYA_GOLONGAN[g.key].fill}`}
-          >
-            {g.nomorGolongan}
-          </div>
-        ))}
+        </button>
       </div>
 
-      <div className="w-full rounded-3xl border border-black/10 bg-white p-4 shadow-empuk">
-        <p className="text-xs font-bold text-tinta/60">
-          Jumlah lawan bot <span className="text-tinta/40">(maks. 1 meja = 7 pemain)</span>
-        </p>
-        <div className="mt-2 flex flex-wrap justify-center gap-2">
+      <div className="w-full rounded-2xl border border-black/10 bg-white p-3 shadow-empuk">
+        <p className="text-[11px] font-bold text-tinta/55">Jumlah lawan bot</p>
+        <div className="mt-1 flex flex-wrap justify-center gap-1.5">
           {[1, 2, 3, 4, 5, 6].map((n) => (
             <button
               key={n}
               type="button"
               onClick={() => setJumlahBot(n)}
-              className={`h-9 w-9 rounded-xl font-display font-extrabold transition cursor-pointer
+              className={`h-8 w-8 rounded-lg font-display text-sm font-extrabold transition cursor-pointer
                 ${jumlahBot === n ? 'bg-lab text-white' : 'bg-kertas text-tinta hover:bg-black/5'}`}
             >
               {n}
             </button>
           ))}
         </div>
-        <label className="mt-3 flex cursor-pointer items-center justify-between rounded-xl bg-kertas px-3 py-2 text-xs font-bold text-tinta">
+        <label className="mt-2 flex cursor-pointer items-center justify-between gap-2 rounded-lg bg-kertas px-2.5 py-1.5 text-[11px] font-bold text-tinta">
           <span>
-            Kartu Peristiwa Kimia <span className="text-tinta/40">(opsional)</span>
-            <span className="block text-[10px] font-normal text-tinta/50">
-              Kejutan reaksi tiap beberapa giliran — default: nonaktif
-            </span>
+            Kartu Peristiwa Kimia{' '}
+            <span className="text-tinta/40">(opsional, default nonaktif)</span>
           </span>
           <input
             type="checkbox"
             checked={pakaiPeristiwa}
             onChange={(e) => setPakaiPeristiwa(e.target.checked)}
-            className="h-5 w-5 accent-lab"
+            className="h-4 w-4 flex-none accent-lab"
           />
         </label>
         <button
           type="button"
           onClick={() => mulaiGame(jumlahBot, undefined, pakaiPeristiwa)}
-          className="mt-4 w-full rounded-2xl bg-lab px-4 py-3 font-display text-lg font-extrabold text-white shadow-empuk transition hover:brightness-110 cursor-pointer"
+          className="mt-2.5 w-full rounded-xl bg-lab px-4 py-2.5 font-display text-base font-extrabold text-white shadow-empuk transition hover:brightness-110 cursor-pointer"
         >
           Mulai Main (vs Bot)
         </button>
@@ -186,37 +156,22 @@ export function MainMenu() {
           type="button"
           disabled={!onlineTersedia}
           onClick={() => keLayar('online')}
-          className="mt-2 w-full rounded-2xl border-2 border-lab bg-white px-4 py-2.5 font-display font-extrabold text-lab shadow-empuk transition hover:bg-lab/5 disabled:opacity-40 cursor-pointer"
+          className="mt-1.5 w-full rounded-xl border-2 border-lab bg-white px-4 py-2 font-display text-sm font-extrabold text-lab shadow-empuk transition hover:bg-lab/5 disabled:opacity-40 cursor-pointer"
         >
           🌐 Main Online (kode room)
         </button>
-        {!onlineTersedia && (
-          <p className="mt-1 text-[10px] font-normal text-tinta/45">
-            Mode online belum dikonfigurasi (lihat docs/ONLINE.md)
-          </p>
-        )}
       </div>
 
-      <div className="flex flex-wrap justify-center gap-2">
+      <div className="flex flex-wrap justify-center gap-1.5">
         <MenuLink label="Leaderboard" onClick={() => keLayar('leaderboard')} />
         <MenuLink label="Mode Belajar" onClick={() => keLayar('belajar')} />
         <MenuLink label="Cara Main" onClick={() => keLayar('aturan')} />
         <MenuLink label="Tentang" onClick={() => keLayar('tentang')} />
-        <MenuLink
-          label="CP & Tujuan Pembelajaran"
-          onClick={() => keLayar('cptp')}
-        />
+        <MenuLink label="CP & Tujuan" onClick={() => keLayar('cptp')} />
+        {bisaPasang && (
+          <MenuLink label="📲 Pasang Aplikasi" onClick={() => void picuPasang()} />
+        )}
       </div>
-
-      {bisaPasang && (
-        <button
-          type="button"
-          onClick={() => void picuPasang()}
-          className="rounded-2xl bg-lab-tinta px-4 py-2 text-sm font-extrabold text-white shadow-empuk transition hover:brightness-110 cursor-pointer"
-        >
-          📲 Pasang Aplikasi
-        </button>
-      )}
     </main>
   );
 }
@@ -226,7 +181,7 @@ function MenuLink({ label, onClick }: { label: string; onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="rounded-2xl border-2 border-black/10 bg-white px-4 py-2 text-sm font-bold text-tinta transition hover:bg-kertas cursor-pointer"
+      className="rounded-xl border border-black/10 bg-white px-3 py-1.5 text-xs font-bold text-tinta transition hover:bg-kertas cursor-pointer"
     >
       {label}
     </button>
