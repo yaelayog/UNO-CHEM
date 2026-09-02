@@ -119,7 +119,7 @@ Sistem identitas guru–murid + progres persisten. **Terpisah** dari sistem room
 ### Skema
 
 ```bash
-supabase db push          # 0004 (tabel) + 0005 (grant) + 0006 (pin terbaca) + 0007 (RPC leaderboard)
+supabase db push          # 0004..0008 (tabel, RLS, RPC leaderboard + sesi, pin terbaca)
 ```
 
 | tabel | isi | RLS |
@@ -170,9 +170,43 @@ supabase functions deploy aksi --no-verify-jwt
   250). Cari murid via `murid.auth_uid`. Tamu/guru → no-op (tak dapat poin).
 - **Solo** → klien akumulasi poin selama game, kirim `akun/tambahPoin` sekali di akhir.
   Menang vs bot TIDAK dapat bonus 250.
-- **Leaderboard**: RPC `leaderboard_kelas(kelas_id)` / `leaderboard_global(limit)`
-  (`SECURITY DEFINER`, kolom aman saja). Layar `src/screens/LeaderboardScreen.tsx`.
-- Reset mingguan (`resetMingguan`) **belum** dipasang cron — menyusul.
+- **Leaderboard**: RPC `leaderboard_kelas(kelas_id)` / `leaderboard_global(limit)` /
+  `leaderboard_sesi(uids[])` (`SECURITY DEFINER`, kolom aman saja).
+  Layar `src/screens/LeaderboardScreen.tsx` + ringkasan sesi di `GameOver` (mode online).
+
+### Reset mingguan (cron)
+
+Edge Function `reset-mingguan` — turunkan peringkat aktif ~3 golongan dari puncak
+minggu ini (lantai 3), nol-kan poin minggu. Rekor tak berubah. Rumus di
+`_shared/game/peringkat.ts`.
+
+```bash
+npm run sync:supabase
+supabase functions deploy reset-mingguan --no-verify-jwt
+supabase secrets set CRON_SECRET=<acak-panjang>
+```
+
+Jadwalkan (pilih salah satu):
+
+**A. Dashboard** → Integrations → **Cron** → New job → pilih function `reset-mingguan`,
+schedule `0 17 * * 0` (Minggu 17:00 UTC = Senin 00:00 WIB), header
+`Authorization: Bearer <CRON_SECRET>`.
+
+**B. SQL (pg_cron + pg_net)** di SQL Editor:
+```sql
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
+select cron.schedule('chemuno-reset-mingguan', '0 17 * * 0', $$
+  select net.http_post(
+    url := 'https://lyhlrcgrmbumpwowtqgx.supabase.co/functions/v1/reset-mingguan',
+    headers := '{"Authorization":"Bearer <CRON_SECRET>"}'::jsonb
+  );
+$$);
+```
+
+Tes manual: `curl -X POST .../functions/v1/reset-mingguan -H "Authorization: Bearer <CRON_SECRET>"`
+→ `{"ok":true,"direset":N}`. Aman dipanggil berkali-kali (skip murid yang sudah
+di-reset < 6 hari lalu).
 
 ### Berkas
 

@@ -300,5 +300,15 @@ language sql security definer set search_path = public as $body$
   limit greatest(1, least(coalesce(p_limit, 100), 500))
 $body$;
 
+create or replace function public.leaderboard_sesi(p_uids uuid[])
+returns table (auth_uid uuid, nama text, kode_unik text, peringkat_aktif int, total_poin bigint)
+language sql security definer set search_path = public as $body$
+  select m.auth_uid, m.nama, m.kode_unik, pm.peringkat_golongan_aktif, pm.total_poin
+  from public.murid m
+  join public.progres_murid pm on pm.murid_id = m.id
+  where m.auth_uid = any(p_uids)
+$body$;
+
 grant execute on function public.leaderboard_kelas(uuid) to anon, authenticated;
 grant execute on function public.leaderboard_global(int) to anon, authenticated;
+grant execute on function public.leaderboard_sesi(uuid[]) to anon, authenticated;

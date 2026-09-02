@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react';
 import type { GameState } from '../game';
-import type { StatistikKuis } from '../store/gameStore';
+import { useGameStore, type StatistikKuis } from '../store/gameStore';
 import { SEMUA_BADGE } from '../data/badge';
 import { infoLevel, type HasilRekam } from '../lib/progres';
+import { getSupabase } from '../lib/supabase';
+import { LencanaPeringkat } from './LencanaPeringkat';
 
 interface Props {
   state: GameState;
@@ -46,6 +49,8 @@ export function GameOver({
           <Stat label="Akurasi" nilai={`${akurasi}%`} />
           <Stat label="Streak" nilai={String(statistik.streakTerbaik)} />
         </div>
+
+        <RingkasanSesi state={state} humanId={humanId} />
 
         {rekam && level && (
           <div className="mt-4 rounded-2xl bg-lab/10 p-3 text-left">
@@ -102,6 +107,95 @@ export function GameOver({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Ringkasan peringkat sesi room (mode online) — urutan selesai + Peringkat Golongan. */
+function RingkasanSesi({
+  state,
+  humanId,
+}: {
+  state: GameState;
+  humanId: string;
+}) {
+  const mode = useGameStore((s) => s.mode);
+  const [peringkat, setPeringkat] = useState<
+    Record<string, { peringkat_aktif: number; total_poin: number }>
+  >({});
+
+  const urutan = [...state.pemain].sort((a, b) => {
+    if (a.id === state.pemenangId) return -1;
+    if (b.id === state.pemenangId) return 1;
+    return a.tangan.length - b.tangan.length;
+  });
+  const uidManusia = state.pemain.filter((p) => !p.isBot).map((p) => p.id);
+
+  useEffect(() => {
+    if (mode !== 'online' || uidManusia.length === 0) return;
+    let hidup = true;
+    void (async () => {
+      const sb = await getSupabase();
+      if (!sb) return;
+      const { data } = await sb.rpc('leaderboard_sesi', { p_uids: uidManusia });
+      if (!hidup || !data) return;
+      const map: Record<string, { peringkat_aktif: number; total_poin: number }> =
+        {};
+      for (const r of data as {
+        auth_uid: string;
+        peringkat_aktif: number;
+        total_poin: number;
+      }[]) {
+        map[r.auth_uid] = {
+          peringkat_aktif: r.peringkat_aktif,
+          total_poin: r.total_poin,
+        };
+      }
+      setPeringkat(map);
+    })();
+    return () => {
+      hidup = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, uidManusia.join(',')]);
+
+  if (mode !== 'online') return null;
+
+  return (
+    <div className="mt-4 rounded-2xl bg-kertas p-3 text-left">
+      <p className="mb-2 text-xs font-extrabold text-tinta/60">Peringkat sesi</p>
+      <ol className="flex flex-col gap-1">
+        {urutan.map((p, i) => {
+          const pr = peringkat[p.id];
+          const aku = p.id === humanId;
+          return (
+            <li
+              key={p.id}
+              className={`flex items-center gap-2 rounded-xl px-2 py-1.5 text-sm ${
+                aku ? 'bg-lab/10 font-extrabold text-lab' : 'text-tinta'
+              }`}
+            >
+              <span className="w-4 flex-none text-center text-xs text-tinta/40">
+                {i + 1}
+              </span>
+              {pr ? (
+                <LencanaPeringkat golongan={pr.peringkat_aktif} ukuran="sm" />
+              ) : (
+                <span className="h-8 w-8 flex-none rounded-xl bg-black/5" />
+              )}
+              <span className="min-w-0 flex-1 truncate">
+                {p.isBot ? '🤖 ' : ''}
+                {p.nama}
+              </span>
+              <span className="flex-none text-xs text-tinta/50">
+                {p.id === state.pemenangId
+                  ? '🏆 menang'
+                  : `${p.tangan.length} kartu`}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }

@@ -24,3 +24,7 @@ verify_jwt = false
 
 [functions.akun]
 verify_jwt = false
+
+# Dipanggil cron (Authorization: Bearer <CRON_SECRET>), bukan JWT user.
+[functions.reset-mingguan]
+verify_jwt = false
