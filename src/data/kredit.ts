@@ -10,7 +10,7 @@ export const KREDIT = {
     { nama: 'Fico Fristand Thomas', nim: '2505026024' },
   ],
   instansi: 'Universitas Mulawarman',
-  pembimbing: '', // belum ada dosen pembimbing — dikosongkan (tidak ditampilkan)
+  pembimbing: '' as string, // belum ada dosen pembimbing — dikosongkan (tidak ditampilkan)
   tahun: '2026',
   kompetisi:
     'Lomba Media Pembelajaran Digital FORKOM FKIP 2026 — ' +
