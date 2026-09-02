@@ -5,22 +5,15 @@ export function CPTPScreen() {
   return (
     <KerangkaInfo judul="CP & Tujuan Pembelajaran">
       {/* Header kurikulum */}
-      <section className="rounded-2xl bg-lab/10 p-3">
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[13px] text-tinta/80">
-          <span>
-            <b>Mata Pelajaran:</b> {CPTP.mataPelajaran}
-          </span>
-          <span>
-            <b>Fase:</b> {CPTP.fase}
-          </span>
-          <span>
-            <b>Kelas:</b> {CPTP.kelas}
-          </span>
-          <span>
-            <b>Elemen:</b> {CPTP.elemen}
-          </span>
-        </div>
-        <p className="mt-1.5 text-[13px] text-tinta/80">
+      <section className="flex flex-col gap-0.5 rounded-2xl bg-lab/10 p-3 text-[13px] text-tinta/80">
+        <p>
+          <b>Mata Pelajaran:</b> {CPTP.mataPelajaran} &nbsp;·&nbsp; <b>Fase:</b>{' '}
+          {CPTP.fase} &nbsp;·&nbsp; <b>Kelas:</b> {CPTP.kelas}
+        </p>
+        <p>
+          <b>Elemen:</b> {CPTP.elemen}
+        </p>
+        <p>
           <b>Materi:</b> {CPTP.materi}
         </p>
       </section>
