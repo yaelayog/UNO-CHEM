@@ -10,6 +10,7 @@ import { useAkunStore } from '../akun/akunStore';
 import { namaTampil } from '../akun/tipe';
 import { LencanaPeringkat } from '../components/LencanaPeringkat';
 import { LogoPanitia } from '../components/LogoPanitia';
+import { PengaturanSuara } from '../components/PengaturanSuara';
 
 const WARNA = Object.values(WARNA_GOLONGAN);
 
@@ -40,6 +41,11 @@ export function MainMenu() {
 
   return (
     <main className="relative mx-auto flex min-h-full max-w-md flex-col items-center justify-center gap-5 overflow-hidden p-6 text-center no-select">
+      {/* Pengaturan suara — selalu terjangkau dari menu */}
+      <div className="absolute right-3 top-3 z-20">
+        <PengaturanSuara />
+      </div>
+
       {/* Partikel molekul melayang */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         {partikel.map((p, i) => (
