@@ -120,6 +120,9 @@ export const useAkunStore = create<AkunStore>((set, get) => {
       progresAkun: r.progres ?? null,
       misiProgres: r.misiProgres ?? [],
     });
+    if (get().misi.length === 0) {
+      void muatMisiDefs().then((misi) => set({ misi }));
+    }
     segarkanGame();
     const token = bacaToken();
     if (token) void kirimAkun('sinkronProgres', { token, progresLokal: merged });
