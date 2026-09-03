@@ -7,6 +7,9 @@ import { Memuat } from './components/Memuat';
 import { LatarLab } from './components/LatarLab';
 import { MisiToast } from './components/MisiToast';
 import { OnlineSync } from './online/OnlineSync';
+import { kirimAksi } from './online/klienOnline';
+import { bacaRoomTersimpan, hapusRoomTersimpan } from './online/roomTersimpan';
+import type { RoomRow } from './online/tipe';
 
 const OnlineLobby = lazy(() =>
   import('./screens/OnlineLobby').then((m) => ({ default: m.OnlineLobby })),
@@ -47,10 +50,31 @@ const CPTPScreen = lazy(() =>
 export default function App() {
   const layar = useGameStore((s) => s.layar);
   const muatAkun = useAkunStore((s) => s.muat);
+  const masukLobbyOnline = useGameStore((s) => s.masukLobbyOnline);
 
   useEffect(() => {
     void muatAkun();
   }, [muatAkun]);
+
+  // Sambung ulang otomatis ke room online kalau sebelumnya tak sengaja
+  // refresh/tutup tab di tengah permainan (kode room tersimpan di App start).
+  useEffect(() => {
+    const tersimpan = bacaRoomTersimpan();
+    if (!tersimpan) return;
+    void (async () => {
+      const r = await kirimAksi('sync', { code: tersimpan.code });
+      const room = (r.room as RoomRow | null) ?? null;
+      if (r.error || !room || room.status === 'selesai') {
+        hapusRoomTersimpan();
+        return;
+      }
+      masukLobbyOnline(tersimpan.code, tersimpan.uid);
+      // Denyut langsung (bukan nunggu siklus 12 dtk alami di useRoomOnline) —
+      // kalau sempat diambil alih bot karena lama tak reconnect, kendali
+      // dikembalikan secepatnya begitu server tahu kita sudah hidup lagi.
+      void kirimAksi('denyut', { code: tersimpan.code });
+    })();
+  }, [masukLobbyOnline]);
 
   let isi;
   switch (layar) {

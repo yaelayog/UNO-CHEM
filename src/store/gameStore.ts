@@ -34,6 +34,7 @@ import {
 } from '../online/suaraChat';
 import type { StatePublik } from '../online/tipe';
 import type { DataRoom } from '../online/useRoomOnline';
+import { simpanRoomAktif, hapusRoomTersimpan } from '../online/roomTersimpan';
 import { sfx } from '../lib/audio';
 import {
   bacaProgres,
@@ -468,7 +469,8 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
 
     // ── Mode online ─────────────────────────────────────────────────
-    masukLobbyOnline: (code, uid) =>
+    masukLobbyOnline: (code, uid) => {
+      simpanRoomAktif(code, uid);
       set({
         mode: 'online',
         online: { code, uid },
@@ -485,7 +487,8 @@ export const useGameStore = create<GameStore>((set, get) => {
         sedangMembuka: false,
         kartuFaktaDitutup: { funFact: null, fakta: null },
         layar: 'online',
-      }),
+      });
+    },
 
     pasangDataOnline: (d) => {
       set({ dataOnline: d });
@@ -518,6 +521,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       const st = get();
       if (st.online) void kirimAksi('keluar', { code: st.online.code });
       suaraChat.putus();
+      hapusRoomTersimpan();
       set({
         mode: 'solo',
         online: null,
