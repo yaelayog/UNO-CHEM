@@ -48,14 +48,15 @@ function tujuanPemain(n: number): { x: number; y: number }[] {
 function Belakang({ kecil }: { kecil?: boolean }) {
   return (
     <div
-      className={`flex flex-col items-center justify-center rounded-xl border border-white/40 bg-gradient-to-br from-lab to-lab-tinta text-white/90 shadow-kartu ${
+      className={`flex flex-col items-center justify-center rounded-xl border border-white/40 bg-gradient-to-br from-gas-mulia to-gas-mulia-700 text-white/90 shadow-kartu ${
         kecil ? 'h-14 w-10' : 'h-24 w-16'
       }`}
     >
       <span className={kecil ? 'text-sm' : 'text-xl'}>⚛</span>
       {!kecil && (
-        <span className="font-display text-[8px] font-extrabold tracking-widest">
-          CHEMUNO
+        <span className="flex flex-col items-center font-display text-[8px] font-extrabold leading-[9px] tracking-widest">
+          <span>UNO</span>
+          <span>CHEM</span>
         </span>
       )}
     </div>

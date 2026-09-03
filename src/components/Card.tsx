@@ -80,16 +80,16 @@ export function Card({
   if (faceDown) {
     return (
       <div
-        className={`${u.box} shrink-0 border border-black/10 bg-lab shadow-kartu ${className}`}
+        className={`${u.box} shrink-0 border border-black/10 bg-gradient-to-br from-gas-mulia to-gas-mulia-700 shadow-kartu ${className}`}
         aria-hidden
       >
         <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-white/90">
           <span className="font-display text-[10px] font-extrabold tracking-widest">
-            CHEM
+            UNO
           </span>
           <span className="text-lg">⚛</span>
           <span className="font-display text-[10px] font-extrabold tracking-widest">
-            UNO
+            CHEM
           </span>
         </div>
       </div>
