@@ -3,6 +3,7 @@ import { WARNA_GOLONGAN } from '../data/golongan';
 import { infoLevel } from '../lib/progres';
 import { picuPasang } from '../lib/pwa';
 import { onlineTersedia } from '../lib/supabase';
+import { bacaSoloTersimpan } from '../lib/soloTersimpan';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import { useGameStore } from '../store/gameStore';
 import { useAkunStore } from '../akun/akunStore';
@@ -16,6 +17,7 @@ const WARNA = Object.values(WARNA_GOLONGAN);
 
 export function MainMenu() {
   const mulaiGame = useGameStore((s) => s.mulaiGame);
+  const lanjutkanSolo = useGameStore((s) => s.lanjutkanSolo);
   const keLayar = useGameStore((s) => s.keLayar);
   const progres = useGameStore((s) => s.progres);
   const murid = useAkunStore((s) => s.murid);
@@ -23,6 +25,7 @@ export function MainMenu() {
   const progresAkun = useAkunStore((s) => s.progresAkun);
   const [jumlahBot, setJumlahBot] = useState(2);
   const [pakaiPeristiwa, setPakaiPeristiwa] = useState(false);
+  const [soloTersimpan] = useState(() => bacaSoloTersimpan());
   const bisaPasang = useInstallPrompt();
 
   const lvl = infoLevel(progres.xp);
@@ -117,6 +120,16 @@ export function MainMenu() {
           </span>
         </button>
       </div>
+
+      {soloTersimpan && (
+        <button
+          type="button"
+          onClick={() => lanjutkanSolo()}
+          className="w-full rounded-xl bg-lab-tinta px-4 py-2.5 font-display text-sm font-extrabold text-white shadow-empuk transition hover:brightness-110 cursor-pointer"
+        >
+          ▶ Lanjutkan Game Sebelumnya
+        </button>
+      )}
 
       <div className="w-full rounded-2xl border border-black/10 bg-white p-3 shadow-empuk">
         <p className="text-[11px] font-bold text-tinta/55">Jumlah lawan bot</p>

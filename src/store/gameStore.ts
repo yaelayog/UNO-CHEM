@@ -35,6 +35,11 @@ import {
 import type { StatePublik } from '../online/tipe';
 import type { DataRoom } from '../online/useRoomOnline';
 import { simpanRoomAktif, hapusRoomTersimpan } from '../online/roomTersimpan';
+import {
+  bacaSoloTersimpan,
+  hapusSoloTersimpan,
+  simpanSoloAktif,
+} from '../lib/soloTersimpan';
 import { sfx } from '../lib/audio';
 import {
   bacaProgres,
@@ -140,6 +145,8 @@ interface GameStore {
   selesaiMembuka: () => void;
 
   mulaiGame: (jumlahBot: number, nama?: string, pakaiPeristiwa?: boolean) => void;
+  /** Lanjutkan game solo yang tersimpan (`soloTersimpan.ts`) — tak ada efek bila kosong. */
+  lanjutkanSolo: () => void;
   mainLagi: () => void;
   keluarKeMenu: () => void;
   tutupPeristiwa: () => void;
@@ -581,8 +588,30 @@ export const useGameStore = create<GameStore>((set, get) => {
         konfigTerakhir.pakaiPeristiwa,
       );
     },
+    lanjutkanSolo: () => {
+      const d = bacaSoloTersimpan();
+      if (!d) return;
+      set({
+        mode: 'solo',
+        online: null,
+        dataOnline: null,
+        versiOnline: 0,
+        aksiPending: false,
+        state: d.state,
+        humanId: d.humanId,
+        soalAktif: d.soalAktif,
+        statistik: d.statistik,
+        poinSesi: d.poinSesi,
+        kartuFaktaDitutup: d.kartuFaktaDitutup,
+        jeda: d.jeda,
+        rekamTerakhir: d.rekamTerakhir,
+        sedangMembuka: false,
+        layar: 'main',
+      });
+    },
     keluarKeMenu: () => {
       if (get().mode === 'online') return get().keluarOnline();
+      hapusSoloTersimpan();
       set({
         layar: 'menu',
         state: null,
@@ -819,4 +848,24 @@ export const useGameStore = create<GameStore>((set, get) => {
         set({ state: { ...state, pengumumanUno: null } });
     },
   };
+});
+
+// Simpan progres game SOLO otomatis tiap ada perubahan (refresh tak sengaja
+// tak lagi menghilangkan game yang sedang berjalan — lihat `lanjutkanSolo`).
+// TAK menghapus di sini biarpun `state` kosong — itu kondisi normal setiap
+// boot aplikasi (sebelum sempat "Lanjutkan" diklik) atau saat mode online,
+// dan akan menghapus save valid dari sesi sebelumnya kalau dianggap sinyal
+// "keluar". Satu-satunya penghapus eksplisit: `keluarKeMenu` (solo).
+useGameStore.subscribe((s) => {
+  if (s.mode !== 'solo' || !s.state) return;
+  simpanSoloAktif({
+    state: s.state,
+    humanId: s.humanId,
+    soalAktif: s.soalAktif,
+    statistik: s.statistik,
+    poinSesi: s.poinSesi,
+    kartuFaktaDitutup: s.kartuFaktaDitutup,
+    jeda: s.jeda,
+    rekamTerakhir: s.rekamTerakhir,
+  });
 });
