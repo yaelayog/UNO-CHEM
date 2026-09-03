@@ -59,11 +59,6 @@ export function CPTPScreen() {
           ))}
         </ol>
       </BagianInfo>
-
-      <p className="text-xs text-tinta/45">
-        Dokumen kurikulum lengkap (catatan penyusunan &amp; implementasi) ada di{' '}
-        <code>docs/CP-TP_Sistem_Periodik_Unsur.md</code> pada repositori project.
-      </p>
     </KerangkaInfo>
   );
 }
