@@ -7,7 +7,7 @@ export interface TujuanPembelajaran {
   teks: string;
   dimensi: 'C2' | 'C3';
   dimensiLabel: string;
-  /** Catatan kecil (mis. TP2 di luar cakupan game). */
+  /** Catatan kecil opsional untuk TP tertentu. */
   catatan?: string;
 }
 
@@ -30,13 +30,12 @@ export const CPTP: {
   cpKutipan:
     'menganalisis hubungan struktur atom dengan sistem periodik unsur',
   cpElaborasi:
-    'Pada akhir materi ini, murid mampu menganalisis konfigurasi elektron ' +
-    'berdasarkan model atom mekanika kuantum, mengaitkannya dengan letak unsur ' +
-    '(golongan dan periode) dalam sistem periodik, serta menganalisis dan ' +
-    'memprediksi kecenderungan sifat-sifat periodik unsur (jari-jari atom, ' +
-    'energi ionisasi, afinitas elektron, keelektronegatifan, dan sifat ' +
-    'logam–nonlogam) untuk menjelaskan sifat fisik dan kimia suatu unsur ' +
-    'berdasarkan posisinya dalam tabel periodik.',
+    'Pada akhir materi ini, murid mampu menganalisis letak unsur (golongan dan ' +
+    'periode) dalam sistem periodik, serta menganalisis dan memprediksi ' +
+    'kecenderungan sifat-sifat periodik unsur (jari-jari atom, energi ionisasi, ' +
+    'afinitas elektron, keelektronegatifan, dan sifat logam–nonlogam) untuk ' +
+    'menjelaskan sifat fisik dan kimia suatu unsur berdasarkan posisinya dalam ' +
+    'tabel periodik.',
 
   tujuan: [
     {
@@ -53,20 +52,11 @@ export const CPTP: {
       dimensi: 'C3',
       dimensiLabel: 'Menerapkan',
       teks:
-        'Peserta didik mampu **menuliskan** konfigurasi elektron unsur golongan ' +
-        'utama menggunakan aturan dasar (kulit dan subkulit, aturan Aufbau).',
-      catatan: 'Di luar cakupan interaktif — didampingi guru secara terpisah',
-    },
-    {
-      no: 3,
-      dimensi: 'C3',
-      dimensiLabel: 'Menerapkan',
-      teks:
         'Peserta didik mampu **membandingkan** kecenderungan umum jari-jari atom, ' +
         'energi ionisasi, dan keelektronegatifan dalam satu golongan dan satu periode.',
     },
     {
-      no: 4,
+      no: 3,
       dimensi: 'C3',
       dimensiLabel: 'Menerapkan',
       teks:
@@ -74,7 +64,7 @@ export const CPTP: {
         'unsur berdasarkan letaknya pada tabel periodik.',
     },
     {
-      no: 5,
+      no: 4,
       dimensi: 'C3',
       dimensiLabel: 'Menerapkan',
       teks:
