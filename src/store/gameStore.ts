@@ -17,6 +17,9 @@ import {
   stampUno,
   segarkanUno,
   cekUnoKadaluarsa,
+  stampGiliran,
+  diamSejakGiliran,
+  AMBANG_AFK_MS,
   poinJawabanBenar,
   type GameState,
   type HasilKuis,
@@ -236,6 +239,9 @@ export const useGameStore = create<GameStore>((set, get) => {
     next = stampUno(next);
     next = cekUnoKadaluarsa(next);
 
+    // Jejak giliran (dipakai timer AFK di bawah).
+    next = stampGiliran(next);
+
     // Rekam progres saat permainan baru saja usai.
     if (next.status === 'selesai' && get().state?.status !== 'selesai') {
       const stat = get().statistik;
@@ -407,6 +413,47 @@ export const useGameStore = create<GameStore>((set, get) => {
     }
     set({ aksiPending: false });
   }
+
+  /**
+   * Timer AFK mode solo: kalau manusia diam >= `AMBANG_AFK_MS` pada
+   * gilirannya sendiri (main/pilihWarna/kuis), bot pintar bantu selesaikan
+   * SATU giliran — state TAK ditandai bot permanen, giliran berikutnya
+   * tetap miliknya. Giliran bot lain sudah otomatis lewat `lanjutkanOtomatis`.
+   */
+  function otomatisBilaAfkSolo() {
+    const { mode, state, humanId } = get();
+    if (mode !== 'solo' || !state || state.status === 'selesai') return;
+    if (diamSejakGiliran(state) < AMBANG_AFK_MS) return;
+
+    let target: string | null = null;
+    if (state.status === 'bermain' || state.status === 'menungguPilihWarna') {
+      target = state.pemain[state.giliran]?.id ?? null;
+    } else if (state.status === 'menungguKuis' && state.efekTertunda) {
+      target = state.efekTertunda.targetPemainId;
+    }
+    if (target !== humanId) return;
+
+    let next = state;
+    if (state.status === 'menungguKuis') {
+      const { hasil, state: s2 } = jawabKuisBot(state);
+      next = selesaikanKuis(s2, hasil);
+    } else if (state.status === 'menungguPilihWarna') {
+      next = pilihWarnaEngine(state, warnaBotTerbaik(state, target));
+    } else {
+      const aksi = langkahBot(state);
+      next =
+        aksi.tipe === 'tarik'
+          ? tarikKartu(state, target)
+          : mainkanBerbarengan(
+              state,
+              target,
+              [aksi.kartuId, ...(aksi.ekstraIds ?? [])],
+              { warnaWild: aksi.warnaWild },
+            );
+    }
+    terapkan(next);
+  }
+  setInterval(otomatisBilaAfkSolo, 5000);
 
   return {
     layar: 'menu',

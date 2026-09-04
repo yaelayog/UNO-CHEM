@@ -110,6 +110,12 @@ export interface GameState {
   pemenangId: string | null;
   rng: number; // state PRNG (lihat rng.ts)
   giliranKe: number; // penghitung giliran global (untuk trigger Fase 2)
+  /** Kunci "apa yang sedang ditunggu" (giliran main/pilihWarna/kuis) — dipakai
+   * deteksi AFK. `null` bila tak relevan (pembukaan/peristiwa/selesai). */
+  giliranKunci: string | null;
+  /** ms epoch sejak `giliranKunci` ini mulai — 0 = belum di-stamp. Diisi
+   * lapisan store/server (mirip `StatusUno.padaMs`), bukan engine. */
+  giliranSejak: number;
   /** Fakta golongan yang baru ter-unlock (reward streak) — UI menampilkan lalu clear. */
   faktaReward: { golongan: Golongan; teks: string } | null;
   /** Ringkasan kuis penalti yang baru selesai — UI menampilkan lalu clear. */

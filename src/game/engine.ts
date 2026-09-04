@@ -107,6 +107,8 @@ export function buatGame(
     pemenangId: null,
     rng,
     giliranKe: 0,
+    giliranKunci: null,
+    giliranSejak: 0,
     faktaReward: null,
     streak: {},
     skorKuisSesi: {},

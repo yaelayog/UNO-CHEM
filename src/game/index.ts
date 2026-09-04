@@ -36,6 +36,7 @@ export {
   type OpsiMain,
 } from './engine';
 export { BATAS_UNO_MS, stampUno, segarkanUno, cekUnoKadaluarsa } from './uno';
+export { AMBANG_AFK_MS, stampGiliran, diamSejakGiliran } from './giliran';
 export { langkahBot, jawabKuisBot, warnaBotTerbaik } from './bot';
 export {
   SEMUA_PERISTIWA,

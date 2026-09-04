@@ -5,6 +5,7 @@ import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import {
   buatGame,
   cekUnoKadaluarsa,
+  diamSejakGiliran,
   jawabKuisBot,
   langkahBot,
   lanjutkanOtomatis,
@@ -13,6 +14,7 @@ import {
   pilihWarna,
   segarkanUno,
   selesaikanKuis,
+  stampGiliran,
   stampUno,
   tangkapUno,
   tarikKartu,
@@ -56,11 +58,16 @@ const NAMA_BOT = [
   'Pauling',
   'Rutherford',
 ];
-const AMBANG_MACET_MS = 30_000;
-/** Lewat ambang ini (2 menit tak ada denyut) → giliran diambil alih bot
- * PERMANEN (tak lagi menunggu 30 dtk tiap giliran). Kendali balik otomatis
- * kalau pemainnya kirim denyut/sync lagi (lihat blok reconnect di `denyut`). */
-const AMBANG_BOT_MS = 120_000;
+/** Lewat ambang ini TANPA denyut sama sekali (tab tertutup/jaringan putus)
+ * → giliran diambil alih bot PERMANEN, langsung (tak nunggu lagi). Kendali
+ * balik otomatis kalau pemainnya kirim denyut/sync lagi (blok reconnect di
+ * `denyut`). Beda dari AFK: ini sinyal KONEKSI (heartbeat `room_pemain.last_seen`). */
+const AMBANG_DISKONEKSI_MS = 30_000;
+/** Lewat ambang ini MASIH TERHUBUNG (heartbeat jalan) tapi diam di giliran
+ * sendiri (tak main kartu/pilih apa pun) → bot pintar bantu SATU giliran,
+ * status tetap manusia. Sinyal GILIRAN (`state.giliranSejak`, lihat giliran.ts),
+ * independen dari koneksi. */
+const AMBANG_AFK_MS = 20_000;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
@@ -457,8 +464,8 @@ async function aksiState(
   if (opsi.lewatiBilaSama && diubah === asal) return { ok: true, tanpaUbah: true };
   // Online: kartu Fun Fact / Fakta TIDAK memblokir permainan — tiap klien
   // menutupnya sendiri (per orang).
-  const next = stampUno(
-    lanjutkanOtomatis(diubah, { berhentiKartuFakta: false }),
+  const next = stampGiliran(
+    stampUno(lanjutkanOtomatis(diubah, { berhentiKartuFakta: false })),
   );
   const hasil = await simpan(db, code, core.versi as number, next);
 
@@ -594,14 +601,14 @@ async function simpan(
 }
 
 /**
- * Heartbeat + auto-resolve giliran yang macet (>30 dtk tak ada respons).
- * Lewat 30 dtk → SATU giliran macet diselesaikan pakai keputusan bot pintar
- * (`langkahBot`/`jawabKuisBot`/`warnaBotTerbaik`) tanpa mengubah status
- * `isBot`-nya — begitu ia balik, gilirannya sendiri lagi seperti biasa.
- * Lewat 2 menit tanpa denyut sama sekali → `isBot` ditandai PERMANEN supaya
- * semua giliran berikutnya langsung dijalankan bot (tak perlu nunggu 30 dtk
- * tiap giliran lagi). Begitu pemainnya kirim denyut sendiri lagi (reconnect),
- * kendali dikembalikan otomatis di awal fungsi ini.
+ * Heartbeat + auto-resolve giliran yang macet — dua sinyal INDEPENDEN:
+ * - Terputus (`room_pemain.last_seen` basi >= 30 dtk, tab tertutup/jaringan
+ *   putus): `isBot` ditandai PERMANEN langsung, tak nunggu lagi.
+ * - AFK (`state.giliranSejak` basi >= 20 dtk, TAPI heartbeat masih jalan —
+ *   diam di giliran sendiri): bot pintar bantu SATU giliran, `isBot` TAK
+ *   diubah, giliran berikutnya tetap miliknya.
+ * Begitu pemainnya kirim denyut/sync sendiri lagi (reconnect), kendali
+ * dikembalikan otomatis di awal fungsi ini — baik yang sementara atau permanen.
  */
 async function denyut(db: SupabaseClient, uid: string, code: string) {
   await db
@@ -640,7 +647,9 @@ async function denyut(db: SupabaseClient, uid: string, code: string) {
       db,
       code,
       versi,
-      stampUno(lanjutkanOtomatis(setelahUno, { berhentiKartuFakta: false })),
+      stampGiliran(
+        stampUno(lanjutkanOtomatis(setelahUno, { berhentiKartuFakta: false })),
+      ),
     );
     return { ok: true, unoKadaluarsa: true };
   }
@@ -662,15 +671,28 @@ async function denyut(db: SupabaseClient, uid: string, code: string) {
     .eq('pemain', ditunggu)
     .maybeSingle();
   if (!rp) return { ok: true };
-  const diam = Date.now() - new Date(rp.last_seen).getTime();
-  if (diam < AMBANG_MACET_MS) return { ok: true };
-
-  const permanen = diam >= AMBANG_BOT_MS;
+  const terputus =
+    Date.now() - new Date(rp.last_seen).getTime() >= AMBANG_DISKONEKSI_MS;
+  const afk = diamSejakGiliran(s) >= AMBANG_AFK_MS;
+  if (!terputus && !afk) return { ok: true };
 
   let next: GameState;
-  if (permanen) {
-    // Ambil alih penuh & seterusnya — `lanjutkanOtomatis` men-cascade semua
-    // giliran berikutnya milik `ditunggu` (dan bot lain) seperti bot biasa.
+  if (s.menungguPembukaan) {
+    // Modal (bukan giliran main sesungguhnya) — cuma dilewati sekali,
+    // regardless status koneksi. Tak menyentuh `isBot`.
+    next = lanjutkanOtomatis(
+      { ...s, menungguPembukaan: false },
+      { berhentiKartuFakta: false },
+    );
+  } else if (s.peristiwaAktif) {
+    next = lanjutkanOtomatis(
+      { ...s, peristiwaAktif: null },
+      { berhentiKartuFakta: false },
+    );
+  } else if (terputus) {
+    // Giliran main/kuis/pilihWarna sesungguhnya & jaringan putus → ambil
+    // alih PERMANEN. `lanjutkanOtomatis` men-cascade semua giliran main
+    // berikutnya milik `ditunggu` (dan bot lain) seperti bot biasa.
     next = lanjutkanOtomatis(
       {
         ...s,
@@ -681,13 +703,11 @@ async function denyut(db: SupabaseClient, uid: string, code: string) {
       { berhentiKartuFakta: false },
     );
   } else {
-    // Selesaikan HANYA giliran macet ini pakai keputusan bot pintar — `isBot`
-    // TAK diubah, supaya begitu ia reconnect gilirannya sendiri lagi (tak
-    // "kebablasan" main banyak giliran sekaligus lewat cascade bot).
+    // AFK tapi masih terhubung — selesaikan HANYA giliran ini pakai
+    // keputusan bot pintar. `isBot` TAK diubah: giliran berikutnya tetap
+    // miliknya (tak "kebablasan" main banyak giliran via cascade bot).
     let s1 = s;
-    if (s.menungguPembukaan) s1 = { ...s, menungguPembukaan: false };
-    else if (s.peristiwaAktif) s1 = { ...s, peristiwaAktif: null };
-    else if (s.status === 'menungguKuis') {
+    if (s.status === 'menungguKuis') {
       const { hasil, state: s2 } = jawabKuisBot(s);
       s1 = selesaikanKuis(s2, hasil);
     } else if (s.status === 'menungguPilihWarna') {
@@ -706,8 +726,8 @@ async function denyut(db: SupabaseClient, uid: string, code: string) {
     }
     next = lanjutkanOtomatis(s1, { berhentiKartuFakta: false });
   }
-  await simpan(db, code, versi, next);
-  return { ok: true, autoResolve: true, permanen };
+  await simpan(db, code, versi, stampGiliran(next));
+  return { ok: true, autoResolve: true, terputus, afk };
 }
 
 // ── util ─────────────────────────────────────────────────────────────
