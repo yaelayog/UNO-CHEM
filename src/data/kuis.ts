@@ -1,9 +1,11 @@
 import type { SoalKuis } from './types';
 
 /**
- * Bank soal kuis ChemUno — 70 soal mencakup: golongan & periode, konfigurasi
+ * Bank soal kuis ChemUno — 74 soal mencakup: golongan & periode, konfigurasi
  * elektron, elektron valensi, sifat keperiodikan (jari-jari atom, energi
- * ionisasi, keelektronegatifan), dan ikatan kimia sederhana (ion & kovalen).
+ * ionisasi, keelektronegatifan), ikatan kimia sederhana (ion & kovalen), dan
+ * sejarah perkembangan sistem periodik (Döbereiner → Newlands → Mendeleev →
+ * Moseley/modern).
  * Setiap soal 4 pilihan; `jawabanBenar` = index.
  *
  * Dipakai QuizModal (Tahap 5): draw2 -> soal `mudah`, wild4 -> `sedang`/`sulit`.
@@ -756,5 +758,52 @@ export const BANK_SOAL: SoalKuis[] = [
     tpTerkait: [1],
     pembahasan:
       'Setelah Moseley, unsur diurutkan menurut nomor atom — memperbaiki beberapa urutan yang janggal pada tabel Mendeleev.',
+  },
+  {
+    id: 'm26',
+    pertanyaan:
+      'Sebelum Mendeleev, ilmuwan yang mengelompokkan unsur ke dalam kelompok TIGA (Triade) dengan sifat mirip adalah…',
+    pilihan: ['Johann Döbereiner', 'John Newlands', 'Henry Moseley', 'Antoine Lavoisier'],
+    jawabanBenar: 0,
+    golonganTerkait: 'umum',
+    tingkatKesulitan: 'mudah',
+    tpTerkait: [1],
+    pembahasan:
+      'Hukum Triade Döbereiner (1817): massa atom unsur tengah ≈ rata-rata dua unsur lainnya.',
+  },
+  {
+    id: 's28',
+    pertanyaan:
+      'Hukum Oktaf — sifat unsur berulang setiap unsur kedelapan bila diurutkan menurut kenaikan massa atom — dikemukakan oleh…',
+    pilihan: ['John Newlands', 'Dmitri Mendeleev', 'Johann Döbereiner', 'Henry Moseley'],
+    jawabanBenar: 0,
+    golonganTerkait: 'umum',
+    tingkatKesulitan: 'sedang',
+    tpTerkait: [1],
+    pembahasan:
+      'Newlands (1865) menyusun unsur seperti tangga nada; polanya terganggu setelah golongan tertentu, salah satu alasan Mendeleev menyempurnakannya.',
+  },
+  {
+    id: 's29',
+    pertanyaan: 'Dasar penyusunan tabel periodik Mendeleev (1869) adalah kenaikan…',
+    pilihan: ['Massa atom', 'Nomor atom (jumlah proton)', 'Jumlah neutron', 'Jumlah kulit elektron'],
+    jawabanBenar: 0,
+    golonganTerkait: 'umum',
+    tingkatKesulitan: 'sedang',
+    tpTerkait: [1],
+    pembahasan:
+      'Mendeleev mengurutkan menurut massa atom lalu mengelompokkan unsur bersifat mirip — baru diperbaiki jadi nomor atom oleh Moseley.',
+  },
+  {
+    id: 'x19',
+    pertanyaan:
+      'Ilmuwan yang lewat eksperimen sinar-X menunjukkan bahwa unsur seharusnya diurutkan menurut nomor atom (bukan massa atom) — dasar tabel periodik modern — adalah…',
+    pilihan: ['Henry Moseley', 'Ernest Rutherford', 'Niels Bohr', 'John Newlands'],
+    jawabanBenar: 0,
+    golonganTerkait: 'umum',
+    tingkatKesulitan: 'sulit',
+    tpTerkait: [1],
+    pembahasan:
+      'Moseley (1913) mengukur frekuensi sinar-X unsur dan menemukan pola sesuai nomor atom, membetulkan beberapa urutan janggal pada tabel Mendeleev (mis. Te–I, Ar–K).',
   },
 ];
