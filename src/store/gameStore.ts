@@ -274,6 +274,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     hasil: HasilKuis,
     golongan?: Golongan | 'umum',
     kesulitan?: 'mudah' | 'sedang' | 'sulit',
+    tpTerkait?: number[],
   ) {
     const benar = hasil !== 'salah';
     set((s) => {
@@ -289,6 +290,15 @@ export const useGameStore = create<GameStore>((set, get) => {
       if (g !== 'umum') {
         const cur = akurasi[g] ?? { benar: 0, total: 0 };
         akurasi[g] = {
+          benar: cur.benar + (benar ? 1 : 0),
+          total: cur.total + 1,
+        };
+      }
+      // Bukti capaian belajar per Tujuan Pembelajaran (dashboard guru).
+      for (const tp of tpTerkait ?? []) {
+        const key = `tp${tp}`;
+        const cur = akurasi[key] ?? { benar: 0, total: 0 };
+        akurasi[key] = {
           benar: cur.benar + (benar ? 1 : 0),
           total: cur.total + 1,
         };
@@ -767,6 +777,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         hasil,
         soalAktif?.golonganTerkait,
         soalAktif?.tingkatKesulitan,
+        soalAktif?.tpTerkait,
       );
       set({ soalAktif: null });
       if (mode === 'online' && online) {

@@ -17,6 +17,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'alkali',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
     pembahasan: 'Merah = Logam Alkali (Golongan IA) pada aturan warna ChemUno.',
   },
   {
@@ -31,6 +32,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 2,
     golonganTerkait: 'gasMulia',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
     pembahasan: 'Kulit elektron terluar gas mulia sudah penuh sehingga bersifat inert.',
   },
   {
@@ -40,6 +42,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'alkali',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
   },
   {
     id: 'm04',
@@ -48,6 +51,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 2,
     golonganTerkait: 'transisi',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
   },
   {
     id: 'm05',
@@ -56,6 +60,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 2,
     golonganTerkait: 'halogen',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
     pembahasan: 'Bromin cair; fluor & klor berupa gas, iod berupa padatan.',
   },
   {
@@ -65,6 +70,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 0,
     golonganTerkait: 'gasMulia',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
   },
   {
     id: 'm07',
@@ -73,6 +79,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'alkaliTanah',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [4],
   },
   {
     id: 'm08',
@@ -81,6 +88,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 0,
     golonganTerkait: 'alkali',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
   },
   {
     id: 'm09',
@@ -89,6 +97,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'halogen',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [4],
   },
   {
     id: 'm10',
@@ -97,6 +106,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 0,
     golonganTerkait: 'gasMulia',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
   },
   {
     id: 'm11',
@@ -105,6 +115,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'transisi',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
   },
   {
     id: 'm12',
@@ -113,6 +124,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 0,
     golonganTerkait: 'transisi',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
   },
   {
     id: 'm13',
@@ -121,6 +133,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 2,
     golonganTerkait: 'halogen',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
   },
   {
     id: 'm14',
@@ -129,6 +142,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'alkali',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
   },
   {
     id: 'm15',
@@ -137,6 +151,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'alkali',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
   },
   {
     id: 'm16',
@@ -150,6 +165,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'halogen',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [4],
   },
 
   // ─────────────── SEDANG ───────────────
@@ -165,6 +181,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'alkali',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [3],
   },
   {
     id: 's02',
@@ -173,6 +190,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'alkaliTanah',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [3],
     pembahasan: 'Punya 2 elektron valensi yang dilepas menjadi ion +2.',
   },
   {
@@ -182,6 +200,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 0,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [2],
     pembahasan: 'Jumlah kulit elektron bertambah sehingga atom makin besar.',
   },
   {
@@ -191,6 +210,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [3],
     pembahasan: 'Logam melepas elektron ke nonlogam, terbentuk tarikan antar-ion.',
   },
   {
@@ -205,6 +225,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'halogen',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [3],
     pembahasan: 'Dua atom sejenis berbagi elektron secara merata.',
   },
   {
@@ -214,6 +235,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'halogen',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [2],
     pembahasan: 'Makin ke bawah, daya tarik inti terhadap elektron tambahan melemah.',
   },
   {
@@ -223,6 +245,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 0,
     golonganTerkait: 'alkali',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [2],
     pembahasan: 'Makin ke bawah, elektron valensi makin mudah dilepas.',
   },
   {
@@ -232,6 +255,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'transisi',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [4],
     pembahasan: 'Proses Haber-Bosch: N₂ + 3H₂ → 2NH₃ dengan katalis besi.',
   },
   {
@@ -241,6 +265,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 2,
     golonganTerkait: 'gasMulia',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [3],
   },
   {
     id: 's10',
@@ -249,6 +274,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 0,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [2],
     pembahasan: 'Muatan inti bertambah sementara jumlah kulit tetap, elektron makin sukar dilepas.',
   },
   {
@@ -258,6 +284,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'transisi',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [3],
   },
   {
     id: 's12',
@@ -266,6 +293,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 2,
     golonganTerkait: 'alkaliTanah',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [3],
   },
   {
     id: 's13',
@@ -274,6 +302,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 2,
     golonganTerkait: 'halogen',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [3],
     pembahasan: 'Menangkap 1 elektron untuk mencapai konfigurasi gas mulia.',
   },
   {
@@ -283,6 +312,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'alkaliTanah',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [4],
   },
   {
     id: 's15',
@@ -291,6 +321,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'transisi',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [4],
   },
   {
     id: 's16',
@@ -304,6 +335,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 0,
     golonganTerkait: 'halogen',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [2],
   },
 
   // ─────────────── SULIT ───────────────
@@ -314,6 +346,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'gasMulia',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [3],
     pembahasan: 'Na (2,8,1) melepas 1 elektron menjadi (2,8) seperti neon.',
   },
   {
@@ -323,6 +356,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 0,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [2],
     pembahasan: 'Helium: kulit terluar sangat dekat inti dan sudah penuh.',
   },
   {
@@ -337,6 +371,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'transisi',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [3],
   },
   {
     id: 'x04',
@@ -345,6 +380,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 3,
     golonganTerkait: 'transisi',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [3],
     pembahasan: 'K = +1, O = −2 (×4 = −8); agar netral, Mn = +7.',
   },
   {
@@ -354,6 +390,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'halogen',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [2],
   },
   {
     id: 'x06',
@@ -367,6 +404,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 0,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [3],
   },
   {
     id: 'x07',
@@ -375,6 +413,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 3,
     golonganTerkait: 'alkali',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [2],
     pembahasan: 'Titik leleh logam alkali menurun dari atas ke bawah.',
   },
   {
@@ -389,6 +428,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'alkaliTanah',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [3],
     pembahasan: 'Melepas 2 elektron; jumlah proton tidak berubah.',
   },
   {
@@ -398,6 +438,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'gasMulia',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [3],
   },
   {
     id: 'x10',
@@ -406,6 +447,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [2],
     pembahasan: 'Elektron valensi makin jauh dari inti sehingga makin mudah dilepas.',
   },
 
@@ -417,6 +459,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 0,
     golonganTerkait: 'alkali',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
     pembahasan: 'Nomor golongan utama = jumlah elektron di kulit terluar; IA → 1.',
   },
   {
@@ -426,6 +469,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 2,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
     pembahasan: 'Periode = banyaknya kulit elektron yang terisi.',
   },
   {
@@ -435,6 +479,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 3,
     golonganTerkait: 'gasMulia',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
     pembahasan: 'Konfigurasi oktet (8 elektron terluar) membuat gas mulia stabil.',
   },
   {
@@ -444,6 +489,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'alkali',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
     pembahasan: 'Dari nama Latin kalium; Ca adalah kalsium.',
   },
   {
@@ -458,6 +504,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'alkali',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
     pembahasan: 'Natrium & kalium bereaksi hebat dengan air; minyak menghalangi kontak.',
   },
   {
@@ -467,6 +514,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'alkaliTanah',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
   },
   {
     id: 'm23',
@@ -475,6 +523,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'halogen',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
     pembahasan: 'Halogen kurang 1 elektron dari oktet, jadi menangkap 1 elektron → ion −1.',
   },
   {
@@ -484,6 +533,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'transisi',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [3],
     pembahasan: 'Au dari aurum; Ag adalah perak (argentum).',
   },
   {
@@ -493,6 +543,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 0,
     golonganTerkait: 'alkali',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [3],
     pembahasan: '2 (K) + 8 (L) + 1 (M) = 11. Satu elektron valensi → golongan IA.',
   },
   {
@@ -502,6 +553,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'halogen',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [3],
     pembahasan: '7 elektron valensi → golongan VIIA (halogen).',
   },
   {
@@ -516,6 +568,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'alkali',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [3],
     pembahasan: 'Melepas 1 elektron valensi → ion Na⁺ dengan konfigurasi seperti neon.',
   },
   {
@@ -525,6 +578,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 2,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [3],
     pembahasan: 'Serah-terima elektron antara logam (Na) dan nonlogam (Cl).',
   },
   {
@@ -534,6 +588,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 2,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [3],
     pembahasan: 'H dan O sama-sama nonlogam → berbagi pasangan elektron.',
   },
   {
@@ -543,6 +598,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [2],
     pembahasan: 'Muatan inti bertambah sementara jumlah kulit tetap → elektron ditarik lebih kuat.',
   },
   {
@@ -552,6 +608,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [2],
     pembahasan: 'Jumlah kulit elektron bertambah tiap turun satu periode.',
   },
   {
@@ -561,6 +618,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'alkaliTanah',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [3],
     pembahasan: 'Melepas 2 elektron valensi → ion 2+ (mis. Ca²⁺, Mg²⁺).',
   },
   {
@@ -570,6 +628,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 2,
     golonganTerkait: 'halogen',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [2],
     pembahasan: 'Fluorin (F) paling elektronegatif dari semua unsur.',
   },
   {
@@ -584,6 +643,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'transisi',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [3],
     pembahasan: 'Mis. Fe²⁺/Fe³⁺, ion Cu²⁺ berwarna biru.',
   },
   {
@@ -593,6 +653,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [2],
     pembahasan: 'Satu periode ke kanan (Na→Al) jari-jari makin kecil.',
   },
   {
@@ -602,6 +663,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'halogen',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [2],
     pembahasan: 'Dalam satu golongan, keelektronegatifan menurun dari atas ke bawah.',
   },
   {
@@ -611,6 +673,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 0,
     golonganTerkait: 'gasMulia',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [3],
     pembahasan: 'Na⁺ punya 10 elektron — isoelektronik dengan Ne (Z = 10).',
   },
   {
@@ -620,6 +683,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [3],
     pembahasan: 'Muatan total harus netral: satu Mg²⁺ mengikat dua Cl⁻.',
   },
   {
@@ -629,6 +693,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'halogen',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [3],
     pembahasan: 'Menangkap 1 elektron → 18 elektron, konfigurasi seperti argon.',
   },
   {
@@ -638,6 +703,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [2],
     pembahasan: 'Tarikan inti menguat & jari-jari mengecil → elektron makin sukar dilepas.',
   },
   {
@@ -647,6 +713,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 0,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [2, 3],
     pembahasan: 'Sifat logam menurun ke kanan; Na paling kiri di periode 3.',
   },
   {
@@ -656,6 +723,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 2,
     golonganTerkait: 'gasMulia',
     tingkatKesulitan: 'sulit',
+    tpTerkait: [4],
     pembahasan: 'Argon menyusun sekitar 0,9% udara — jauh di atas gas mulia lain.',
   },
 
@@ -668,6 +736,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'mudah',
+    tpTerkait: [1],
     pembahasan:
       'Mendeleev (1869) menyusun unsur menurut kenaikan massa atom & kemiripan sifat, lalu meramalkan unsur yang kelak ditemukan.',
   },
@@ -684,6 +753,7 @@ export const BANK_SOAL: SoalKuis[] = [
     jawabanBenar: 1,
     golonganTerkait: 'umum',
     tingkatKesulitan: 'sedang',
+    tpTerkait: [1],
     pembahasan:
       'Setelah Moseley, unsur diurutkan menurut nomor atom — memperbaiki beberapa urutan yang janggal pada tabel Mendeleev.',
   },

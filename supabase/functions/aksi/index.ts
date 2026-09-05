@@ -24,7 +24,7 @@ import {
   type OpsiPemain,
 } from '../_shared/game/index.ts';
 import { pisahTangan, redaksiState } from '../_shared/redaksi.ts';
-import { beriPoinMurid, muridDariAuthUid } from '../_shared/poin.ts';
+import { beriPoinMurid, muridDariAuthUid, type AkurasiDelta } from '../_shared/poin.ts';
 import { evaluasiMisi } from '../_shared/misi.ts';
 import { poinBonusMenangOnline, poinJawabanBenar } from '../_shared/game/index.ts';
 
@@ -511,9 +511,11 @@ async function beriPoinPeringkat(
       const benar = kuisHasil !== 'salah';
       const g = asal.soalAktif?.golonganTerkait ?? 'umum';
       const poin = benar ? poinJawabanBenar(asal.efekTertunda.tingkatKuis) : 0;
-      await beriPoinMurid(db, muridId, poin, {
-        [g]: { benar: benar ? 1 : 0, total: 1 },
-      });
+      const akurasiDelta: AkurasiDelta = { [g]: { benar: benar ? 1 : 0, total: 1 } };
+      for (const tp of asal.soalAktif?.tpTerkait ?? []) {
+        akurasiDelta[`tp${tp}`] = { benar: benar ? 1 : 0, total: 1 };
+      }
+      await beriPoinMurid(db, muridId, poin, akurasiDelta);
     }
   }
 

@@ -67,6 +67,11 @@ export interface SoalKuis {
   golonganTerkait: Golongan | 'umum';
   tingkatKesulitan: TingkatKesulitan;
   pembahasan?: string; // ditampilkan setelah dijawab (mode belajar / feedback)
+  /**
+   * Nomor Tujuan Pembelajaran (lihat `data/cptp.ts`) yang dibuktikan soal ini.
+   * Dipakai dashboard guru untuk akurasi per-TP ("bukti capaian belajar").
+   */
+  tpTerkait: number[];
 }
 
 /**
