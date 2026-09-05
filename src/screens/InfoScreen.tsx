@@ -4,7 +4,14 @@ import { BagianInfo, KerangkaInfo } from '../components/LayarInfo';
 
 export function RulesScreen() {
   return (
-    <KerangkaInfo judul="Cara Main">
+    <KerangkaInfo judul="Petunjuk Penggunaan">
+      <div className="rounded-2xl bg-white p-3 shadow-empuk">
+        <ol className="list-decimal pl-4">
+          {KREDIT.petunjuk.map((p) => (
+            <li key={p}>{p}</li>
+          ))}
+        </ol>
+      </div>
       <p>
         <b>Tujuan:</b> jadi yang pertama menghabiskan kartu di tangan.
       </p>
@@ -126,14 +133,6 @@ export function AboutScreen() {
           Rincian Capaian &amp; Tujuan Pembelajaran ada di layar{' '}
           <b>CP &amp; Tujuan Pembelajaran</b> (menu utama).
         </p>
-      </BagianInfo>
-
-      <BagianInfo judul="Petunjuk Penggunaan">
-        <ol className="list-decimal pl-4">
-          {KREDIT.petunjuk.map((p) => (
-            <li key={p}>{p}</li>
-          ))}
-        </ol>
       </BagianInfo>
 
       <p className="text-xs text-tinta/50">

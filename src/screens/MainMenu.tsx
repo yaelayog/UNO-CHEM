@@ -68,7 +68,7 @@ export function MainMenu() {
       </div>
 
       <div className="w-full rounded-xl border border-black/5 bg-white/70 px-3 py-1 backdrop-blur-sm">
-        <LogoPanitia judul="FORKOM FKIP 2026 · Gamifikasi Pembelajaran" tinggi={18} />
+        <LogoPanitia judul="FORKOM FKIP 2026 · Gamifikasi Pembelajaran" tinggi={36} />
       </div>
 
       <div className="flex flex-col items-center gap-1">
@@ -178,7 +178,7 @@ export function MainMenu() {
       <div className="flex flex-wrap justify-center gap-1.5">
         <MenuLink label="Leaderboard" onClick={() => keLayar('leaderboard')} />
         <MenuLink label="Mode Belajar" onClick={() => keLayar('belajar')} />
-        <MenuLink label="Cara Main" onClick={() => keLayar('aturan')} />
+        <MenuLink label="Petunjuk Penggunaan" onClick={() => keLayar('aturan')} />
         <MenuLink label="Tentang" onClick={() => keLayar('tentang')} />
         <MenuLink label="CP & Tujuan" onClick={() => keLayar('cptp')} />
         {bisaPasang && (
