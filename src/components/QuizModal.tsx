@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { SoalKuis } from '../data/types';
 import { hitungPenaltiAkhir, type HasilKuis } from '../game';
 import { sfx } from '../lib/audio';
@@ -15,6 +15,17 @@ interface Props {
   judulKartu: string;
   namaTarget: string;
   onSelesai: (hasil: HasilKuis) => void;
+}
+
+/** Fisher-Yates. Dipakai untuk mengacak URUTAN TAMPIL pilihan (bukan isinya)
+ * supaya pemain yang sering main tak bisa hafal posisi jawaban. */
+function acakUrutan(n: number): number[] {
+  const idx = Array.from({ length: n }, (_, i) => i);
+  for (let i = idx.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [idx[i], idx[j]] = [idx[j], idx[i]];
+  }
+  return idx;
 }
 
 const LABEL_HASIL: Record<'skip' | 'kartu', Record<HasilKuis, string>> = {
@@ -42,6 +53,8 @@ export function QuizModal({
   const [sisa, setSisa] = useState(BATAS_WAKTU_KUIS_DETIK);
   const [dipilih, setDipilih] = useState<number | null>(null);
   const [hasil, setHasil] = useState<HasilKuis | null>(null);
+  // Diacak sekali per soal (bukan tiap render) — muncul lagi nanti, urutannya beda lagi.
+  const urutanPilihan = useMemo(() => acakUrutan(soal.pilihan.length), [soal.id]);
 
   // Hitung mundur
   useEffect(() => {
@@ -120,7 +133,8 @@ export function QuizModal({
         </h2>
 
         <div className="mt-3 grid gap-2">
-          {soal.pilihan.map((opsi, idx) => {
+          {urutanPilihan.map((idx) => {
+            const opsi = soal.pilihan[idx];
             const benar = idx === soal.jawabanBenar;
             const status = !hasil
               ? 'netral'
