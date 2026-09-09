@@ -112,6 +112,31 @@ supabase functions deploy aksi --no-verify-jwt
 
 ---
 
+## Main Lagi (rematch) & ubah jumlah pemain
+
+Butuh migration **`0010_main_lagi.sql`** (`supabase db push`) — tambah kolom
+`room_pemain.siap_lagi` / `siap_lagi_pada`.
+
+- **"Main Lagi" balik ke room yang sama.** GameOver → tombol "Main Lagi" kirim
+  aksi `mainLagi` (bukan `keluar`): room balik status `selesai → lobby` (CAS,
+  aman dari race antar-klien), bot & state game lama dibersihkan. Hanya pemain
+  yang menekan tombol ini yang lanjut — yang tidak (pencet "Menu Utama" atau
+  diam saja) dianggap keluar, kursinya diisi bot lagi saat host menekan Mulai.
+  Ditandai lewat flag `siap_lagi` per baris `room_pemain` (direset `false`
+  untuk semua manusia begitu game `selesai`, di-set `true` lagi oleh `mainLagi`).
+- **Handoff host.** Kalau host asli tak ikut menekan "Main Lagi", giliran host
+  jatuh ke pemain pertama yang menekannya (`efektifHost` di `aksi/index.ts`,
+  dipersist ke `rooms.host` saat `mulai` dipanggil).
+- **Ubah jumlah pemain tanpa room baru.** Selama masih di lobby (termasuk lobby
+  rematch di atas), host bisa ubah `target_pemain` lewat aksi `ubahTarget` —
+  tak perlu keluar & bikin kode baru. `OnlineLobby.tsx` menampilkan selektor
+  ini ke host saja saat `room.status === 'lobby'`.
+- Klien: `terapkanStatePublik` (gameStore) sengaja MENGABAIKAN `statePublik`
+  basi berstatus `selesai` selama `layar === 'online'` — race umum: klien lain
+  keburu baca `game_publik` lama sebelum `mainLagi` sempat menghapusnya.
+
+---
+
 ## Akun & Kelas (Fase 4 — Minggu 1)
 
 Sistem identitas guru–murid + progres persisten. **Terpisah** dari sistem room.

@@ -116,6 +116,10 @@ async function tangani(
       return tendang(db, uid, code, String(b.pemain));
     case 'mulai':
       return mulai(db, uid, code);
+    case 'mainLagi':
+      return mainLagi(db, uid, code);
+    case 'ubahTarget':
+      return ubahTarget(db, uid, code, Number(b.target));
     case 'sync':
       return sync(db, uid, code);
     case 'denyut':
@@ -291,25 +295,112 @@ async function tendang(
   target: string,
 ) {
   const room = await ambilRoom(db, code);
-  assert(room.host === uid, 'hanya host');
   assert(room.status === 'lobby', 'hanya di lobby');
+  const { data: roster } = await db
+    .from('room_pemain')
+    .select('pemain, siap_lagi_pada')
+    .eq('room_code', code)
+    .eq('siap_lagi', true);
+  assert(efektifHost(room, roster ?? []) === uid, 'hanya host');
   assert(target !== uid, 'tak bisa menendang diri sendiri');
   await db.from('room_pemain').delete().eq('room_code', code).eq('pemain', target);
   return { ok: true };
 }
 
+/** Host saja, hanya saat lobby: ubah jumlah target pemain tanpa bikin room baru. */
+async function ubahTarget(
+  db: SupabaseClient,
+  uid: string,
+  code: string,
+  target: number,
+) {
+  const room = await ambilRoom(db, code);
+  assert(room.status === 'lobby', 'jumlah pemain hanya bisa diubah saat lobby');
+  const t = Math.min(7, Math.max(2, Math.trunc(target) || 0));
+  const { data: roster } = await db
+    .from('room_pemain')
+    .select('pemain, siap_lagi_pada')
+    .eq('room_code', code)
+    .eq('siap_lagi', true);
+  const manusia = roster ?? [];
+  assert(efektifHost(room, manusia) === uid, 'hanya host');
+  assert(manusia.length <= t, `sudah ada ${manusia.length} pemain di room`);
+  await db.from('rooms').update({ target_pemain: t }).eq('code', code);
+  return { ok: true, target: t };
+}
+
+/**
+ * "Main Lagi" mode online: pemain yang menekan ini balik ke ROOM YANG SAMA
+ * (kode sama) alih-alih harus keluar & bikin/gabung room baru. Hanya yang
+ * menekan tombol ini yang lanjut ke sesi berikutnya — pemain lain (tak
+ * menekan / sudah keluar) dianggap keluar, kursinya diisi bot lagi saat
+ * host menekan Mulai (lihat `mulai`, filter `siap_lagi`).
+ */
+async function mainLagi(db: SupabaseClient, uid: string, code: string) {
+  const room = await ambilRoom(db, code);
+  assert(
+    room.status === 'selesai' || room.status === 'lobby',
+    'permainan sedang berlangsung',
+  );
+  const { data: existing } = await db
+    .from('room_pemain')
+    .select('pemain')
+    .eq('room_code', code)
+    .eq('pemain', uid)
+    .maybeSingle();
+  assert(existing, 'kamu bukan pemain di permainan sebelumnya di room ini');
+
+  await db
+    .from('room_pemain')
+    .update({
+      siap_lagi: true,
+      siap_lagi_pada: new Date().toISOString(),
+      terhubung: true,
+    })
+    .eq('room_code', code)
+    .eq('pemain', uid);
+
+  // Pemanggil PERTAMA yang membalik status 'selesai' → 'lobby' (CAS, aman
+  // dari race — update lain dengan filter status yang sama akan kena 0 baris)
+  // sekalian bersihkan bot & state game lama; roster manusia TIDAK disentuh
+  // (siapa yang ikut lanjut ditentukan murni oleh flag `siap_lagi`, bukan
+  // keberadaan baris, supaya tak ada race antar-pemain yang menekan bareng).
+  const { data: flip } = await db
+    .from('rooms')
+    .update({ status: 'lobby' })
+    .eq('code', code)
+    .eq('status', 'selesai')
+    .select('code');
+  if (flip && flip.length) {
+    await Promise.all([
+      db.from('room_pemain').delete().eq('room_code', code).eq('is_bot', true),
+      db.from('game_core').delete().eq('room_code', code),
+      db.from('game_publik').delete().eq('room_code', code),
+      db.from('tangan').delete().eq('room_code', code),
+    ]);
+  }
+  return { code };
+}
+
 async function mulai(db: SupabaseClient, uid: string, code: string) {
   const room = await ambilRoom(db, code);
-  assert(room.host === uid, 'hanya host yang bisa memulai');
   assert(room.status === 'lobby', 'permainan sudah dimulai');
 
   const { data: roster } = await db
     .from('room_pemain')
-    .select('pemain, nama, urutan')
+    .select('pemain, nama, urutan, siap_lagi_pada')
     .eq('room_code', code)
+    .eq('siap_lagi', true)
     .order('urutan');
   const manusia = roster ?? [];
   assert(manusia.length >= 1, 'butuh minimal 1 pemain');
+  const hostEfektif = efektifHost(room, manusia);
+  assert(hostEfektif === uid, 'hanya host yang bisa memulai');
+  if (room.host !== hostEfektif) {
+    // Host asli tak ikut lanjut ("Main Lagi") — giliran host jatuh ke
+    // pemain pertama yang menekan "Main Lagi" di lobby ini, dipersist.
+    await db.from('rooms').update({ host: hostEfektif }).eq('code', code);
+  }
 
   const namaTerpakai = new Set(manusia.map((m) => m.nama.toLowerCase()));
   const botTersedia = NAMA_BOT.filter((n) => !namaTerpakai.has(n.toLowerCase()));
@@ -403,7 +494,7 @@ async function turnKredensial() {
 // ── Sinkronisasi & aksi state ────────────────────────────────────────
 async function sync(db: SupabaseClient, uid: string, code: string) {
   const room = await ambilRoom(db, code);
-  const [{ data: roster }, { data: pub }, { data: tangan }] = await Promise.all([
+  const [{ data: rosterRaw }, { data: pub }, { data: tangan }] = await Promise.all([
     db.from('room_pemain').select('*').eq('room_code', code).order('urutan'),
     db.from('game_publik').select('versi, state').eq('room_code', code).maybeSingle(),
     db
@@ -413,9 +504,14 @@ async function sync(db: SupabaseClient, uid: string, code: string) {
       .eq('pemain', uid)
       .maybeSingle(),
   ]);
+  const semua = rosterRaw ?? [];
+  // Di lobby (termasuk lobby rematch "Main Lagi"): sembunyikan baris yang
+  // belum/tak menekan "Main Lagi" — bukan bagian sesi berikutnya lagi.
+  const roster = room.status === 'lobby' ? semua.filter((r) => r.siap_lagi) : semua;
+  const hostEfektif = room.status === 'lobby' ? efektifHost(room, roster) : room.host;
   return {
-    room,
-    roster: roster ?? [],
+    room: { ...room, hostEfektif },
+    roster,
     versi: pub?.versi ?? 0,
     statePublik: pub?.state ?? null,
     tanganku: tangan?.kartu ?? [],
@@ -594,10 +690,19 @@ async function simpan(
       : Promise.resolve(),
   ]);
   if (next.status === 'selesai') {
-    await db
-      .from('rooms')
-      .update({ status: 'selesai', diperbarui: new Date().toISOString() })
-      .eq('code', code);
+    await Promise.all([
+      db
+        .from('rooms')
+        .update({ status: 'selesai', diperbarui: new Date().toISOString() })
+        .eq('code', code),
+      // Kunci ulang gerbang rematch: siapa yang lanjut ke sesi berikutnya
+      // ditentukan lagi dari nol lewat siapa yang menekan "Main Lagi".
+      db
+        .from('room_pemain')
+        .update({ siap_lagi: false })
+        .eq('room_code', code)
+        .eq('is_bot', false),
+    ]);
   }
   return { ok: true, versi: versiBaru, statePublik: publik };
 }
@@ -735,6 +840,24 @@ async function denyut(db: SupabaseClient, uid: string, code: string) {
 // ── util ─────────────────────────────────────────────────────────────
 function assert(kondisi: unknown, pesan: string): asserts kondisi {
   if (!kondisi) throw new Error(pesan);
+}
+
+/**
+ * Host yang BERLAKU untuk aksi lobby (mulai/tendang/ubahTarget): normalnya
+ * `room.host`, KECUALI ia tak ada di `roster` (baris yang sudah menekan
+ * "Main Lagi") — mis. host lama tak ikut lanjut di lobby rematch. Dalam hal
+ * itu giliran host jatuh ke pemain di roster yang paling dulu menekan
+ * "Main Lagi" (`siap_lagi_pada` paling awal).
+ */
+function efektifHost(
+  room: { host: string },
+  roster: { pemain: string; siap_lagi_pada?: string | null }[],
+): string {
+  if (roster.some((r) => r.pemain === room.host)) return room.host;
+  const terurut = [...roster].sort((a, b) =>
+    (a.siap_lagi_pada ?? '').localeCompare(b.siap_lagi_pada ?? ''),
+  );
+  return terurut[0]?.pemain ?? room.host;
 }
 
 async function ambilRoom(db: SupabaseClient, code: string) {

@@ -31,13 +31,18 @@ create table if not exists public.rooms (
 );
 
 create table if not exists public.room_pemain (
-  room_code  text not null references public.rooms(code) on delete cascade,
-  pemain     text not null,          -- uid manusia, atau 'bot-<urutan>' untuk bot
-  nama       text not null,
-  is_bot     boolean not null default false,
-  urutan     int2 not null,
-  terhubung  boolean not null default true,
-  last_seen  timestamptz not null default now(),
+  room_code      text not null references public.rooms(code) on delete cascade,
+  pemain         text not null,          -- uid manusia, atau 'bot-<urutan>' untuk bot
+  nama           text not null,
+  is_bot         boolean not null default false,
+  urutan         int2 not null,
+  terhubung      boolean not null default true,
+  last_seen      timestamptz not null default now(),
+  -- "Main Lagi": true = masih ikut sesi ini (join awal / sudah menekan
+  -- "Main Lagi"). Direset false untuk semua manusia begitu game 'selesai' —
+  -- siapa yang lanjut ke sesi berikutnya ditentukan ulang dari nol.
+  siap_lagi      boolean not null default true,
+  siap_lagi_pada timestamptz not null default now(),
   primary key (room_code, pemain),
   unique (room_code, urutan)
 );

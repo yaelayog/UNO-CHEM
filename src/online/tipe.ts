@@ -23,6 +23,11 @@ export interface RosterRow {
   urutan: number;
   terhubung: boolean;
   last_seen: string;
+  /** true = masih ikut sesi ini (join awal atau menekan "Main Lagi"). false =
+   * peserta permainan sebelumnya yang belum/tak menekan "Main Lagi" — dianggap
+   * keluar, kursinya diisi bot saat host menekan Mulai. */
+  siap_lagi: boolean;
+  siap_lagi_pada: string;
 }
 
 export interface RoomRow {
@@ -31,6 +36,10 @@ export interface RoomRow {
   status: 'lobby' | 'bermain' | 'selesai';
   target_pemain: number;
   pakai_peristiwa: boolean;
+  /** Host yang berlaku sekarang — sama dengan `host`, kecuali host asli belum
+   * menekan "Main Lagi" di lobby rematch: giliran host jatuh ke pemain
+   * pertama yang sudah menekan "Main Lagi". Dihitung server-side. */
+  hostEfektif?: string;
 }
 
 export interface HasilSync {

@@ -11,6 +11,7 @@ export function OnlineLobby() {
   const dataOnline = useGameStore((s) => s.dataOnline);
   const masukLobbyOnline = useGameStore((s) => s.masukLobbyOnline);
   const keluarOnline = useGameStore((s) => s.keluarOnline);
+  const ubahTargetOnline = useGameStore((s) => s.ubahTargetOnline);
   const murid = useAkunStore((s) => s.murid);
   const guruEmail = useAkunStore((s) => s.guruEmail);
 
@@ -96,9 +97,11 @@ export function OnlineLobby() {
   // ── Dalam room: lobby ──────────────────────────────────────────────
   if (online && dataOnline) {
     const { roster, room } = dataOnline;
-    const sayaHost = room?.host === online.uid;
+    const hostEfektif = room?.hostEfektif ?? room?.host;
+    const sayaHost = hostEfektif === online.uid;
     const totalTarget = room?.target_pemain ?? target;
     const slotBot = Math.max(0, totalTarget - roster.length);
+    const OPSI_TARGET_LOBBY = OPSI_TARGET.filter((n) => n >= roster.length);
 
     return (
       <Bingkai onBack={keluarOnline} labelBack="Keluar room">
@@ -126,7 +129,7 @@ export function OnlineLobby() {
                 className="flex items-center justify-between rounded-xl bg-kertas px-3 py-2 text-sm font-bold text-tinta"
               >
                 <span className="flex items-center gap-2">
-                  {p.pemain === room?.host ? '👑' : '🧑'} {p.nama}
+                  {p.pemain === hostEfektif ? '👑' : '🧑'} {p.nama}
                   {p.pemain === online.uid && (
                     <span className="text-[10px] text-tinta/50">(kamu)</span>
                   )}
@@ -160,6 +163,28 @@ export function OnlineLobby() {
             ))}
           </ul>
         </div>
+
+        {sayaHost && room?.status === 'lobby' && (
+          <div className="rounded-2xl bg-white p-3 shadow-empuk">
+            <p className="text-xs font-extrabold text-tinta/60">
+              Jumlah pemain <span className="text-tinta/40">(kursi kosong = bot)</span>
+            </p>
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              {OPSI_TARGET_LOBBY.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => ubahTargetOnline(n)}
+                  className={`h-9 w-9 rounded-xl font-display font-extrabold transition cursor-pointer ${
+                    totalTarget === n ? 'bg-lab text-white' : 'bg-kertas text-tinta'
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-between rounded-2xl bg-white p-3 shadow-empuk">
           <div>

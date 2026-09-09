@@ -123,6 +123,10 @@ interface GameStore {
   keluarOnline: () => void;
   /** Ambil ulang state otoritatif dari server (dipakai saat aksi optimistik gagal / stale). */
   resyncOnline: () => void;
+  /** "Main Lagi" mode online: balik ke room yang sama (bukan room baru) menunggu rematch. */
+  mainLagiOnline: () => void;
+  /** Host saja, saat lobby: ubah jumlah target pemain tanpa bikin room baru. */
+  ubahTargetOnline: (target: number) => void;
 
   /** Voice chat (online): mode mic + status koneksi + jumlah peer tersambung. */
   suaraMode: ModeSuara;
@@ -369,6 +373,12 @@ export const useGameStore = create<GameStore>((set, get) => {
     const sebelum = st.state;
 
     if (st.layar === 'online') {
+      if (next.status === 'selesai') {
+        // State BASI dari game sebelumnya — race saat "Main Lagi": klien lain
+        // sempat baca `game_publik` lama sebelum server sempat menghapusnya
+        // (lihat aksi `mainLagi`). Kita sudah pindah ke lobby, abaikan.
+        return;
+      }
       set({ layar: 'main', sedangMembuka: Boolean(next.menungguPembukaan) });
     }
 
@@ -638,12 +648,42 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
 
     mainLagi: () => {
-      if (get().mode === 'online') return get().keluarOnline();
+      if (get().mode === 'online') return get().mainLagiOnline();
       get().mulaiGame(
         konfigTerakhir.jumlahBot,
         konfigTerakhir.nama,
         konfigTerakhir.pakaiPeristiwa,
       );
+    },
+    mainLagiOnline: () => {
+      const st = get();
+      if (!st.online) return;
+      // Optimistik: balik ke layar lobby room yang SAMA (bukan keluar/room baru).
+      // `dataOnline` akan terisi lagi via Realtime (OnlineSync tetap berjalan).
+      set({
+        layar: 'online',
+        state: null,
+        soalAktif: null,
+        sedangMembuka: false,
+        rekamOnlineDicatat: false,
+        versiOnline: 0,
+        aksiPending: false,
+        kartuFaktaDitutup: { funFact: null, fakta: null },
+      });
+      void kirimAksi('mainLagi', { code: st.online.code }).then((r) => {
+        if (!r.error) return;
+        const d = get().dataOnline;
+        if (d) set({ dataOnline: { ...d, error: r.error as string } });
+      });
+    },
+    ubahTargetOnline: (target) => {
+      const st = get();
+      if (!st.online) return;
+      void kirimAksi('ubahTarget', { code: st.online.code, target }).then((r) => {
+        if (!r.error) return;
+        const d = get().dataOnline;
+        if (d) set({ dataOnline: { ...d, error: r.error as string } });
+      });
     },
     lanjutkanSolo: () => {
       const d = bacaSoloTersimpan();
