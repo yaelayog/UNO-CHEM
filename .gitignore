@@ -22,3 +22,14 @@ supabase/functions/_shared/game/
 supabase/functions/_shared/data/
 supabase/.temp/
 supabase/.branches/
+
+# android-twa — kunci tanda tangan & hasil build JANGAN di-commit (backup kunci terpisah!)
+android-twa/*.keystore
+android-twa/keystore-rahasia.txt
+android-twa/*.apk
+android-twa/*.aab
+android-twa/*.idsig
+android-twa/.gradle/
+android-twa/build/
+android-twa/app/build/
+android-twa/local.properties

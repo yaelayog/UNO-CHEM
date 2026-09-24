@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.chemuno.app",
+      "sha256_cert_fingerprints": [
+        "51:32:55:36:65:E0:D6:34:C3:41:8C:CE:20:6F:A5:98:AA:28:8D:5A:73:3F:C7:9E:93:D7:B9:17:7E:F9:6C:27"
+      ]
+    }
+  }
+]

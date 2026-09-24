@@ -1,78 +1,61 @@
-# Membungkus ChemUno menjadi APK Android (Capacitor)
+# APK Android ChemUno (TWA)
 
-ChemUno adalah PWA — di HP Android/Chrome sudah bisa "Pasang Aplikasi" langsung
-dari browser (tombol muncul di menu utama). Panduan ini **hanya** diperlukan bila
-kamu butuh file **.apk** untuk dibagikan/diinstal manual (mis. laptop panitia
-lomba tanpa internet).
+APK ChemUno adalah **Trusted Web Activity (TWA)**: aplikasi Android yang membuka
+`https://uno-chem.vercel.app` layar penuh lewat Chrome. Karena isinya website yang
+sama, pemain APK, website, dan PWA **main online di room yang sama** (backend
+Supabase yang sama), dan setiap deploy ke Vercel langsung terbawa ke APK tanpa
+build ulang.
 
-## Prasyarat
+- Package: `com.chemuno.app`
+- Proyek Android: `android-twa/` (di-generate Bubblewrap dari `twa-manifest.json`)
+- Verifikasi domain: `public/.well-known/assetlinks.json` — **harus ter-deploy**,
+  kalau tidak APK tetap jalan tapi menampilkan address bar Chrome di atas.
 
-- Node.js (sudah ada untuk proyek ini)
-- **Android Studio** + Android SDK (sekali pasang) — https://developer.android.com/studio
-- JDK 17 (biasanya sudah dibundel Android Studio)
+## Kunci tanda tangan (PENTING)
 
-## Langkah
+`android-twa/chemuno-release.keystore` + `android-twa/keystore-rahasia.txt`
+(password) **tidak di-commit**. Backup keduanya ke tempat aman. Kalau hilang:
+APK baru tidak bisa meng-update APK lama, dan fingerprint di `assetlinks.json`
+harus diganti.
 
-### 1. Pasang Capacitor
-
-```bash
-npm install @capacitor/core @capacitor/cli @capacitor/android
-```
-
-### 2. Inisialisasi
-
-```bash
-npx cap init ChemUno com.chemuno.app --web-dir=dist
-```
-
-`com.chemuno.app` = application id (boleh diganti, harus unik & format domain terbalik).
-
-### 3. Build web + tambahkan platform Android
+## Prasyarat (sekali pasang, macOS)
 
 ```bash
-npm run build
-npx cap add android
-npx cap sync
+brew install openjdk@17
+brew install --cask android-commandlinetools
+export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+SDK=$HOME/Library/Android/sdk
+yes | sdkmanager --sdk_root=$SDK --licenses
+sdkmanager --sdk_root=$SDK "platform-tools" "platforms;android-36" "build-tools;36.1.0"
 ```
 
-`npx cap sync` menyalin isi `dist/` ke proyek Android dan menyinkronkan plugin.
-**Ulangi `npm run build && npx cap sync` setiap kali kode berubah.**
+## Build ulang APK
 
-### 4. Ikon & splash (opsional tapi disarankan)
+Hanya perlu bila ganti ikon/nama/versi aplikasi — perubahan game cukup deploy ke Vercel.
+Naikkan `appVersionCode`/`appVersionName` di `android-twa/twa-manifest.json` dan
+`versionCode`/`versionName` di `android-twa/app/build.gradle`, lalu:
 
 ```bash
-npm install -D @capacitor/assets
-# taruh 1 file ikon 1024x1024 di resources/icon.png dan resources/splash.png
-npx capacitor-assets generate --android
+cd android-twa
+export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+export ANDROID_HOME=$HOME/Library/Android/sdk
+BT=$ANDROID_HOME/build-tools/36.1.0
+PW=$(grep storePassword keystore-rahasia.txt | cut -d= -f2)
+
+./gradlew assembleRelease
+$BT/zipalign -f -p 4 app/build/outputs/apk/release/app-release-unsigned.apk /tmp/aligned.apk
+$BT/apksigner sign --ks chemuno-release.keystore --ks-key-alias chemuno \
+  --ks-pass pass:$PW --key-pass pass:$PW --out ChemUno-<versi>.apk /tmp/aligned.apk
+$BT/apksigner verify ChemUno-<versi>.apk
 ```
 
-Atau pakai ikon PWA yang sudah ada (`public/pwa-512x512.png`) sebagai dasar.
+## Pasang di HP
 
-### 5. Buka di Android Studio & build APK
-
-```bash
-npx cap open android
-```
-
-Di Android Studio:
-
-- **Build → Build Bundle(s)/APK(s) → Build APK(s)**
-- APK debug ada di `android/app/build/outputs/apk/debug/app-debug.apk`
-- Untuk APK rilis yang ditandatangani: **Build → Generate Signed Bundle / APK**,
-  buat keystore baru, pilih **APK**, varian **release**.
-
-### 6. Pasang di HP
-
-Kirim file `.apk` ke HP, buka, izinkan "Instal aplikasi tidak dikenal".
+Kirim `.apk` ke HP, buka, izinkan "Instal aplikasi tidak dikenal". Butuh Chrome
+terpasang (bawaan hampir semua HP Android) dan internet.
 
 ## Catatan
 
-- **Orientasi**: kunci ke potret di `android/app/src/main/AndroidManifest.xml`
-  pada `<activity ... android:screenOrientation="portrait">`.
-- **Offline**: karena aset di-bundle di dalam APK, game jalan penuh tanpa internet.
-  Font Google (Baloo 2 / Nunito) tetap butuh internet pada pemakaian pertama —
-  bila harus 100% offline, self-host font: unduh file `.woff2`, taruh di
-  `public/fonts/`, dan ganti `@import`/`<link>` di `index.html` + `src/index.css`
-  dengan `@font-face` lokal.
-- **Update**: setiap rilis baru = `npm run build && npx cap sync` lalu build APK lagi.
-- Ukuran APK ± 4–6 MB.
+- **Voice chat**: izin mikrofon diminta Chrome seperti di website biasa.
+- **Login**: sesi APK terpisah dari sesi browser — login ulang sekali; datanya sama.
+- **Mode bot offline**: jalan setelah APK pernah dibuka online sekali (service worker PWA).
