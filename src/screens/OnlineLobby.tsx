@@ -273,9 +273,14 @@ export function OnlineLobby() {
         <p className="text-xs font-bold text-tinta/60">Gabung room</p>
         <input
           value={kode}
-          onChange={(e) => setKode(e.target.value.toUpperCase().slice(0, 5))}
+          onChange={(e) => setKode(e.target.value)}
+          maxLength={5}
+          autoCapitalize="characters"
+          autoCorrect="off"
+          autoComplete="off"
+          spellCheck={false}
           placeholder="KODE"
-          className="mt-2 w-full rounded-xl border border-black/10 bg-kertas px-4 py-2.5 text-center font-display text-2xl font-black tracking-[0.3em] text-lab outline-none focus:border-lab"
+          className="mt-2 w-full uppercase rounded-xl border border-black/10 bg-kertas px-4 py-2.5 text-center font-display text-2xl font-black tracking-[0.3em] text-lab outline-none focus:border-lab"
         />
         <button
           type="button"

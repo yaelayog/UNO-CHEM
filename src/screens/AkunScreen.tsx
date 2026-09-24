@@ -97,17 +97,20 @@ function PanelMurid() {
             <div className="mt-2 flex gap-2">
               <input
                 value={kodeGabung}
-                onChange={(e) =>
-                  setKodeGabung(e.target.value.toUpperCase().slice(0, 8))
-                }
+                onChange={(e) => setKodeGabung(e.target.value)}
+                maxLength={8}
+                autoCapitalize="characters"
+                autoCorrect="off"
+                autoComplete="off"
+                spellCheck={false}
                 placeholder="KODE KELAS"
-                className="min-w-0 flex-1 rounded-xl border border-black/10 bg-kertas px-3 py-2 text-center font-display font-black tracking-widest text-lab outline-none focus:border-lab"
+                className="uppercase min-w-0 flex-1 rounded-xl border border-black/10 bg-kertas px-3 py-2 text-center font-display font-black tracking-widest text-lab outline-none focus:border-lab"
               />
               <button
                 type="button"
                 disabled={sibuk || kodeGabung.length < 4}
                 onClick={async () => {
-                  const err = await gabungKelas(kodeGabung);
+                  const err = await gabungKelas(kodeGabung.trim().toUpperCase());
                   setPesan(err ?? 'Berhasil gabung kelas');
                   if (!err) setKodeGabung('');
                 }}
@@ -212,9 +215,14 @@ function PanelMurid() {
         <Field label="Kode kelas (opsional)">
           <input
             value={kodeKelas}
-            onChange={(e) => setKodeKelas(e.target.value.toUpperCase().slice(0, 8))}
+            onChange={(e) => setKodeKelas(e.target.value)}
+            maxLength={8}
+            autoCapitalize="characters"
+            autoCorrect="off"
+            autoComplete="off"
+            spellCheck={false}
             placeholder="dari guru"
-            className="w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-center font-display font-black tracking-widest text-lab shadow-empuk outline-none focus:border-lab"
+            className="not-placeholder-shown:uppercase w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-center font-display font-black tracking-widest text-lab shadow-empuk outline-none focus:border-lab"
           />
         </Field>
       )}
@@ -225,7 +233,7 @@ function PanelMurid() {
         onClick={async () => {
           setPesan('');
           if (mode === 'daftar') {
-            const err = await daftarMurid(nama.trim(), pin, kodeKelas.trim());
+            const err = await daftarMurid(nama.trim(), pin, kodeKelas.trim().toUpperCase());
             if (err) setPesan(err);
             else keLayar('menu');
           } else {
