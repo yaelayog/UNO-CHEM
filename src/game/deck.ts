@@ -37,7 +37,7 @@ function unsurWajib(simbol: string) {
 }
 
 /**
- * Membangun deck ChemUno secara deterministik (belum dikocok).
+ * Membangun deck UNO-Chem secara deterministik (belum dikocok).
  * Komposisi: 2×(tiap unsur) kartu angka + 2×(skip/reverse/draw2) per golongan
  * + 4 wild + 4 wild4.
  */

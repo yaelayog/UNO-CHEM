@@ -1,8 +1,8 @@
 {
   "packageId": "com.chemuno.app",
   "host": "uno-chem.vercel.app",
-  "name": "ChemUno — Game Kartu Kimia",
-  "launcherName": "ChemUno",
+  "name": "UNO-Chem — Game Kartu Kimia",
+  "launcherName": "UNO-Chem",
   "display": "standalone",
   "themeColor": "#0F766E",
   "themeColorDark": "#000000",
@@ -20,8 +20,8 @@
     "path": "/Users/putrayoga/Desktop/Developer/UNO-Chem/android-twa/chemuno-release.keystore",
     "alias": "chemuno"
   },
-  "appVersionName": "1.0.1",
-  "appVersionCode": 2,
+  "appVersionName": "1.0.2",
+  "appVersionCode": 3,
   "shortcuts": [],
   "generatorApp": "unknown",
   "webManifestUrl": "https://uno-chem.vercel.app/manifest.webmanifest",
@@ -43,5 +43,5 @@
   "fileHandlers": [],
   "launchHandlerClientMode": "",
   "displayOverride": [],
-  "appVersion": "1.0.1"
+  "appVersion": "1.0.2"
 }

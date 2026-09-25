@@ -1,4 +1,4 @@
-// ChemUno Fase 4 — Edge Function identitas MURID (ringan: Nama + PIN 4 digit).
+// UNO-Chem Fase 4 — Edge Function identitas MURID (ringan: Nama + PIN 4 digit).
 //
 // Guru memakai Supabase Auth langsung dari klien (RLS `guru_id = auth.uid()`).
 // Fungsi ini KHUSUS murid: simpan PIN (apa adanya — media belajar, lihat 0006),

@@ -106,7 +106,7 @@ export function AboutScreen() {
   return (
     <KerangkaInfo judul="Tentang">
       <p>
-        <b>ChemUno</b> adalah media pembelajaran kimia berbentuk permainan kartu
+        <b>UNO-Chem</b> adalah media pembelajaran kimia berbentuk permainan kartu
         yang mengadaptasi mekanisme UNO: <b>warna kartu = golongan unsur</b>,{' '}
         <b>angka kartu = periode</b>. Kartu aksi memunculkan kuis kimia singkat.
       </p>

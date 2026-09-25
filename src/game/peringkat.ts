@@ -1,4 +1,4 @@
-// ChemUno Fase 4 — Sistem "Peringkat Golongan 1–18" (SPEC bagian 10).
+// UNO-Chem Fase 4 — Sistem "Peringkat Golongan 1–18" (SPEC bagian 10).
 //
 // Fungsi murni, tanpa efek samping (arsitektur brief §6c). Dipakai identik di
 // alur solo & online, dan di Edge Function (cron reset mingguan).

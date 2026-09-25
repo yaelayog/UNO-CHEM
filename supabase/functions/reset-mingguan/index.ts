@@ -1,4 +1,4 @@
-// ChemUno Fase 4 — Reset mingguan Peringkat Golongan (SPEC bagian 10).
+// UNO-Chem Fase 4 — Reset mingguan Peringkat Golongan (SPEC bagian 10).
 //
 // Dijadwalkan sebagai cron (mis. tiap Senin 00:00 WIB). Menurunkan peringkat
 // aktif tiap murid ~3 golongan dari puncak minggu ini (lantai 3 bila pernah

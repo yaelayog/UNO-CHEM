@@ -1,4 +1,4 @@
--- ChemUno — mode online multiplayer (Fase 3)
+-- UNO-Chem — mode online multiplayer (Fase 3)
 -- Otoritas permainan = Edge Function `aksi` (service role). Klien hanya membaca.
 
 -- ── Kode room acak (5 char, tanpa huruf/angka ambigu) ─────────────────

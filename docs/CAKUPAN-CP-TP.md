@@ -1,10 +1,10 @@
-# Cakupan CP & TP di ChemUno
+# Cakupan CP & TP di UNO-Chem
 
 Rincian teknis bagaimana tiap Tujuan Pembelajaran (TP) pada
 `docs/CP-TP_Sistem_Periodik_Unsur.md` (bagian D — Catatan Implementasi)
 diwujudkan di aplikasi.
 
-| TP | Dimensi | Status | Wujud di ChemUno |
+| TP | Dimensi | Status | Wujud di UNO-Chem |
 |----|---------|--------|------------------|
 | **TP1** — menjelaskan perkembangan sistem periodik (Mendeleev → modern) | C2 | ✅ Ditambahkan (Fase 4 Minggu 4, diperkuat setelahnya) | Fun Fact `ff-mendeleev`, `ff-nomor-atom-moseley`, `ff-periodik-berkembang` · soal kuis `m25` (penyusun tabel periodik), `s27` (dasar tabel modern = nomor atom), `m26` (Döbereiner & Triade), `s28` (Newlands & Oktaf), `s29` (dasar tabel Mendeleev = massa atom), `x19` (Moseley & nomor atom) |
 | **TP2** — membandingkan tren jari-jari atom, energi ionisasi, keelektronegatifan (satu golongan & satu periode) | C3 | ✅ Ditambahkan (Fase 4 Minggu 4) | Soal kuis `s22`/`s23` (arah tren jari-jari), `s25` (keelektronegatifan tertinggi), `x11` (urutan jari-jari periode 3), `x12` (urutan keelektronegatifan halogen), `x16` (tren energi ionisasi satu periode) · Fun Fact `ff-jari-atom`, `ff-energi-ionisasi-2`, `ff-keelektronegatifan` |

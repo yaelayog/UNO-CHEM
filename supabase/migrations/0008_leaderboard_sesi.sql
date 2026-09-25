@@ -1,4 +1,4 @@
--- ChemUno Fase 4 — Minggu 2: RPC ringkasan leaderboard SESI (akhir game room).
+-- UNO-Chem Fase 4 — Minggu 2: RPC ringkasan leaderboard SESI (akhir game room).
 -- Ambil Peringkat Golongan + poin beberapa murid sekaligus lewat auth_uid mereka.
 -- SECURITY DEFINER + kolom aman saja (sama pola leaderboard_kelas/global).
 

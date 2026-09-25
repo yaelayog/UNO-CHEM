@@ -1,6 +1,6 @@
 # Voice chat — server TURN
 
-Voice chat ChemUno (WebRTC P2P) butuh **TURN server** kalau pemain lintas
+Voice chat UNO-Chem (WebRTC P2P) butuh **TURN server** kalau pemain lintas
 jaringan (mis. HP data seluler + laptop WiFi). STUN saja gagal karena
 Carrier-Grade NAT operator seluler biasanya "symmetric NAT".
 

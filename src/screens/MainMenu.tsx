@@ -73,7 +73,7 @@ export function MainMenu() {
 
       <div className="flex flex-col items-center gap-1">
         <LogoApp lebarMaks={208} />
-        <h1 className="sr-only">ChemUno</h1>
+        <h1 className="sr-only">UNO-Chem</h1>
         <p className="text-xs font-bold text-tinta/55">
           Belajar golongan &amp; periode unsur sambil bermain
         </p>

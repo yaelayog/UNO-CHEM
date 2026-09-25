@@ -1,4 +1,4 @@
--- ChemUno Fase 4 — PIN murid disimpan APA ADANYA (bukan hash).
+-- UNO-Chem Fase 4 — PIN murid disimpan APA ADANYA (bukan hash).
 --
 -- Alasan: ini media pembelajaran, bukan game kompetitif. Guru perlu bisa
 -- membantu murid yang lupa PIN (lihat lewat Table Editor / Dashboard Guru).

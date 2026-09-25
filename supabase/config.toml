@@ -1,4 +1,4 @@
-# ChemUno — konfigurasi Supabase CLI. Ganti project_id sesuai `supabase link`.
+# UNO-Chem — konfigurasi Supabase CLI. Ganti project_id sesuai `supabase link`.
 project_id = "chemuno"
 
 [api]

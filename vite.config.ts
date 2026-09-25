@@ -12,8 +12,8 @@ export default defineConfig({
       includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
         id: '/',
-        name: 'ChemUno — Game Kartu Kimia',
-        short_name: 'ChemUno',
+        name: 'UNO-Chem — Game Kartu Kimia',
+        short_name: 'UNO-Chem',
         description:
           'Game kartu edukasi kimia berbasis UNO: belajar golongan & periode unsur sambil bermain.',
         lang: 'id',

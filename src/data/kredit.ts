@@ -3,7 +3,7 @@
 
 export const KREDIT = {
   // ── Identitas pengembang ──────────────────────────────────────────
-  namaTim: 'Tim ChemUno',
+  namaTim: 'Tim UNO-Chem',
   anggota: [
     { nama: 'Putra Yoga Nugraha', nim: '2305026024' },
     { nama: 'M. Rian Jafar Shodiq', nim: '2505026010' },

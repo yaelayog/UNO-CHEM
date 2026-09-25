@@ -1,4 +1,4 @@
--- ChemUno Fase 4 — RPC pendukung Edge Function `akun` (identitas murid) + grant.
+-- UNO-Chem Fase 4 — RPC pendukung Edge Function `akun` (identitas murid) + grant.
 -- Hanya service_role (Edge Function) yang boleh memanggil RPC di sini.
 
 -- hash PIN memakai bcrypt (pgcrypto). Tak menyentuh tabel apa pun.

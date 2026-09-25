@@ -38,7 +38,7 @@ export function sesiSiap(): Promise<string | null> {
     if (data.session?.user) return data.session.user.id;
     const { data: baru, error } = await sb.auth.signInAnonymously();
     if (error || !baru.user) {
-      console.error('[ChemUno] anonymous sign-in gagal', error);
+      console.error('[UNO-Chem] anonymous sign-in gagal', error);
       return null;
     }
     return baru.user.id;

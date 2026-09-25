@@ -1,7 +1,7 @@
-# Prompt untuk Claude Code — ChemUno (Game Edukasi Kimia Berbasis UNO)
+# Prompt untuk Claude Code — UNO-Chem (Game Edukasi Kimia Berbasis UNO)
 
 ## 1. Ringkasan Proyek
-Buatkan aplikasi web (progressive web app) bernama "ChemUno" — game kartu edukasi kimia yang mengadaptasi mekanisme UNO, ditujukan untuk lomba media pembelajaran kimia tingkat SMA/SMP. Target pemain: siswa yang belajar unsur kimia, golongan, dan periode dalam tabel periodik. Game harus bisa dimainkan di browser desktop maupun mobile (Android), dan idealnya dapat di-install sebagai PWA / dibungkus jadi APK.
+Buatkan aplikasi web (progressive web app) bernama "UNO-Chem" — game kartu edukasi kimia yang mengadaptasi mekanisme UNO, ditujukan untuk lomba media pembelajaran kimia tingkat SMA/SMP. Target pemain: siswa yang belajar unsur kimia, golongan, dan periode dalam tabel periodik. Game harus bisa dimainkan di browser desktop maupun mobile (Android), dan idealnya dapat di-install sebagai PWA / dibungkus jadi APK.
 
 ## 2. Konsep Gameplay
 Dasar aturan sama seperti UNO: pemain mencocokkan kartu di tangan dengan kartu teratas di tumpukan buang, berdasarkan WARNA atau ANGKA yang sama.

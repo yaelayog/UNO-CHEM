@@ -12,7 +12,7 @@ export const AMBANG_STREAK_FAKTA = 3;
 
 // ── util ────────────────────────────────────────────────────────────
 function assert(kondisi: unknown, pesan: string): asserts kondisi {
-  if (!kondisi) throw new Error(`[ChemUno] ${pesan}`);
+  if (!kondisi) throw new Error(`[UNO-Chem] ${pesan}`);
 }
 
 function clone(state: GameState): GameState {

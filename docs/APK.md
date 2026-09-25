@@ -1,6 +1,6 @@
-# APK Android ChemUno (TWA)
+# APK Android UNO-Chem (TWA)
 
-APK ChemUno adalah **Trusted Web Activity (TWA)**: aplikasi Android yang membuka
+APK UNO-Chem adalah **Trusted Web Activity (TWA)**: aplikasi Android yang membuka
 `https://uno-chem.vercel.app` layar penuh lewat Chrome. Karena isinya website yang
 sama, pemain APK, website, dan PWA **main online di room yang sama** (backend
 Supabase yang sama), dan setiap deploy ke Vercel langsung terbawa ke APK tanpa
@@ -45,8 +45,8 @@ PW=$(grep storePassword keystore-rahasia.txt | cut -d= -f2)
 ./gradlew assembleRelease
 $BT/zipalign -f -p 4 app/build/outputs/apk/release/app-release-unsigned.apk /tmp/aligned.apk
 $BT/apksigner sign --ks chemuno-release.keystore --ks-key-alias chemuno \
-  --ks-pass pass:$PW --key-pass pass:$PW --out ChemUno-<versi>.apk /tmp/aligned.apk
-$BT/apksigner verify ChemUno-<versi>.apk
+  --ks-pass pass:$PW --key-pass pass:$PW --out UNO-Chem-<versi>.apk /tmp/aligned.apk
+$BT/apksigner verify UNO-Chem-<versi>.apk
 ```
 
 ## Pasang di HP

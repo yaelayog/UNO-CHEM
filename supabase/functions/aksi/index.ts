@@ -1,4 +1,4 @@
-// ChemUno — Edge Function otoritatif untuk mode online.
+// UNO-Chem — Edge Function otoritatif untuk mode online.
 // Setiap aksi permainan diproses di sini memakai engine murni yang SAMA dengan
 // klien (supabase/functions/_shared/game — hasil `npm run sync:supabase`).
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';

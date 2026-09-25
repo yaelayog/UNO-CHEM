@@ -1,4 +1,4 @@
-# ChemUno — Mode Online Multiplayer (Fase 3)
+# UNO-Chem — Mode Online Multiplayer (Fase 3)
 
 Siswa lintas kelas main bareng real-time lewat **kode room**. Slot kosong diisi
 **bot** otomatis (mis. 4 pemain, hanya 2 yang online → 2 bot).

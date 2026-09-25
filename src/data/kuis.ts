@@ -1,7 +1,7 @@
 import type { SoalKuis } from './types';
 
 /**
- * Bank soal kuis ChemUno — 74 soal mencakup: golongan & periode, konfigurasi
+ * Bank soal kuis UNO-Chem — 74 soal mencakup: golongan & periode, konfigurasi
  * elektron, elektron valensi, sifat keperiodikan (jari-jari atom, energi
  * ionisasi, keelektronegatifan), ikatan kimia sederhana (ion & kovalen), dan
  * sejarah perkembangan sistem periodik (Döbereiner → Newlands → Mendeleev →
@@ -14,13 +14,13 @@ export const BANK_SOAL: SoalKuis[] = [
   // ─────────────── MUDAH ───────────────
   {
     id: 'm01',
-    pertanyaan: 'Pada ChemUno, warna kartu untuk golongan Logam Alkali adalah…',
+    pertanyaan: 'Pada UNO-Chem, warna kartu untuk golongan Logam Alkali adalah…',
     pilihan: ['Biru', 'Merah', 'Hijau', 'Kuning'],
     jawabanBenar: 1,
     golonganTerkait: 'alkali',
     tingkatKesulitan: 'mudah',
     tpTerkait: [3],
-    pembahasan: 'Merah = Logam Alkali (Golongan IA) pada aturan warna ChemUno.',
+    pembahasan: 'Merah = Logam Alkali (Golongan IA) pada aturan warna UNO-Chem.',
   },
   {
     id: 'm02',
@@ -121,7 +121,7 @@ export const BANK_SOAL: SoalKuis[] = [
   },
   {
     id: 'm12',
-    pertanyaan: 'Pada ChemUno, warna kartu untuk Logam Transisi adalah…',
+    pertanyaan: 'Pada UNO-Chem, warna kartu untuk Logam Transisi adalah…',
     pilihan: ['Biru', 'Hijau', 'Oranye', 'Kuning'],
     jawabanBenar: 0,
     golonganTerkait: 'transisi',

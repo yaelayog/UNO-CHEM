@@ -1,4 +1,4 @@
--- ChemUno Fase 4 — Minggu 2: RPC leaderboard (agregat aman).
+-- UNO-Chem Fase 4 — Minggu 2: RPC leaderboard (agregat aman).
 --
 -- Murid TIDAK boleh baca baris `murid`/`progres_murid` orang lain (RLS deny).
 -- Leaderboard butuh data agregat lintas-murid → SECURITY DEFINER, hanya

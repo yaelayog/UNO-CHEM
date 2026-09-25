@@ -3,7 +3,7 @@
 Jalankan: python3 scripts/gen-icons.py  (butuh Pillow: pip install pillow)
 
 - maskable-512-v2.png: logo 64% di latar putih. Launcher Android memotong ikon
-  jadi lingkaran/squircle dan hanya ~66% tengah yang terlihat; logo ChemUno
+  jadi lingkaran/squircle dan hanya ~66% tengah yang terlihat; logo UNO-Chem
   menjangkau 56% lebar dari pusat, jadi 64% pas masuk lingkaran aman.
 - apple-touch-icon.png: logo 82% di latar putih (iOS mengisi transparan jadi
   hitam dan memotong sudut).

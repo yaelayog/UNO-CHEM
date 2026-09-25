@@ -1,4 +1,4 @@
-// ChemUno Fase 4 — Challenge / Misi (SPEC bagian 10, Minggu 3).
+// UNO-Chem Fase 4 — Challenge / Misi (SPEC bagian 10, Minggu 3).
 //
 // Fungsi murni: hitung kemajuan satu misi setelah sebuah sesi permainan.
 // Dipakai identik di alur solo (Edge Function `akun`) & online (`aksi`).

@@ -1,4 +1,4 @@
-# ChemUno
+# UNO-Chem
 
 Game kartu edukasi kimia berbasis UNO untuk lomba media pembelajaran (SMP/SMA).
 Warna kartu = golongan unsur, angka kartu = periode. Kartu aksi memicu kuis kimia.
@@ -40,7 +40,7 @@ src/
   game/        fungsi murni aturan main + unit test (inti, no React)
     rng.ts        PRNG mulberry32 deterministik + Fisher–Yates
     penalti.ts    hitungPenaltiAkhir (brief §6)
-    deck.ts       buatDeck — komposisi kartu ChemUno
+    deck.ts       buatDeck — komposisi kartu UNO-Chem
     engine.ts     buatGame, mainkanKartu, pilihWarna, selesaikanKuis, tarikKartu
     bot.ts        langkahBot, jawabKuisBot
     types.ts      GameState, Pemain, EfekTertunda, PengumumanKuis

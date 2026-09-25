@@ -1,7 +1,7 @@
 import type { FunFact } from './types';
 
 /**
- * Bank Fun Fact ChemUno — 45 fakta singkat seputar golongan, periode,
+ * Bank Fun Fact UNO-Chem — 45 fakta singkat seputar golongan, periode,
  * konfigurasi elektron, sifat keperiodikan, dan ikatan kimia sederhana. Setiap
  * fakta menautkan `bantuSoal` ke id soal di `src/data/kuis.ts` yang isinya
  * memang terbantu bila fakta ini disimak.
@@ -11,7 +11,7 @@ import type { FunFact } from './types';
 export const SEMUA_FUNFACT: FunFact[] = [
   {
     id: 'ff-warna-uno',
-    teks: 'Di ChemUno tiap golongan punya satu warna tetap: merah = Logam Alkali, oranye = Logam Alkali Tanah, kuning = Halogen, hijau = Gas Mulia, biru = Logam Transisi.',
+    teks: 'Di UNO-Chem tiap golongan punya satu warna tetap: merah = Logam Alkali, oranye = Logam Alkali Tanah, kuning = Halogen, hijau = Gas Mulia, biru = Logam Transisi.',
     golongan: 'alkali',
     ikon: '🎨',
     bantuSoal: ['m01', 'm12'],

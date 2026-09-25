@@ -1,4 +1,4 @@
--- ChemUno Fase 4 — Minggu 1: fondasi akun guru-murid, kelas, progres persisten.
+-- UNO-Chem Fase 4 — Minggu 1: fondasi akun guru-murid, kelas, progres persisten.
 --
 -- Guru  = Supabase Auth (email+password) -> auth.uid(). CRUD kelas via RLS langsung.
 -- Murid = identitas ringan (Nama + PIN 4 digit). BUKAN principal auth.

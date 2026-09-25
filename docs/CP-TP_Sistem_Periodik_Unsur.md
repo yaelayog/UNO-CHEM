@@ -14,7 +14,7 @@ CP Fase F pada elemen Pemahaman Kimia menyatakan bahwa murid mampu *"menganalisi
 
 ## B. Tujuan Pembelajaran (Alur) — Versi Disederhanakan
 
-| No | Tujuan Pembelajaran | Dimensi Kognitif | Cakupan di ChemUno |
+| No | Tujuan Pembelajaran | Dimensi Kognitif | Cakupan di UNO-Chem |
 |----|---|---|---|
 | 1 | Peserta didik mampu **menjelaskan** secara singkat perkembangan sistem periodik unsur dari Mendeleev hingga sistem periodik modern (berdasarkan kenaikan nomor atom). | C2 – Memahami | 🟡 Target konten baru — Fun Fact bertema sejarah sistem periodik (Fase 4 Minggu 4) |
 | 2 | Peserta didik mampu **membandingkan** kecenderungan umum jari-jari atom, energi ionisasi, dan keelektronegatifan dalam satu golongan dan satu periode. | C3 – Menerapkan | 🟡 Target konten baru — soal kuis bertema perbandingan tren periodik (Fase 4 Minggu 4) |
@@ -34,7 +34,7 @@ CP Fase F pada elemen Pemahaman Kimia menyatakan bahwa murid mampu *"menganalisi
 
 ---
 
-## D. Catatan Implementasi di ChemUno
+## D. Catatan Implementasi di UNO-Chem
 
 - **TP1 dan TP2** menjadi target penambahan konten baru (Fun Fact dan soal kuis) pada Fase 4 Minggu 4 pengembangan aplikasi. Rincian teknisnya dicatat di `docs/CAKUPAN-CP-TP.md` dalam project.
 - **TP3 dan TP4** sudah tercakup baik oleh desain inti permainan tanpa perlu penambahan konten lebih lanjut.

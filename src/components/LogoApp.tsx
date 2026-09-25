@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 /**
- * Logo ChemUno (sudah termasuk wordmark). Taruh `public/logo-chemuno.png`
+ * Logo UNO-Chem (sudah termasuk wordmark). Taruh `public/logo-chemuno.png`
  * (transparan) dan otomatis dipakai. Selama file belum ada → fallback ke
  * teks + emoji, tidak error.
  *
@@ -24,7 +24,7 @@ export function LogoApp({
       <div className="flex flex-col items-center gap-1" style={anim}>
         <span className="text-5xl leading-none">⚗️</span>
         <span className="font-display text-4xl font-extrabold tracking-tight text-lab">
-          ChemUno
+          UNO-Chem
         </span>
       </div>
     );
@@ -32,7 +32,7 @@ export function LogoApp({
   return (
     <img
       src="/logo-chemuno.png"
-      alt="ChemUno"
+      alt="UNO-Chem"
       onError={() => setGagal(true)}
       style={{ width: 'min(72vw, ' + lebarMaks + 'px)', height: 'auto', ...anim }}
       className="object-contain"

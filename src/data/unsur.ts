@@ -1,7 +1,7 @@
 import type { Unsur } from './types';
 
 /**
- * Daftar master unsur ChemUno — 47 unsur representatif dari 5 golongan.
+ * Daftar master unsur UNO-Chem — 47 unsur representatif dari 5 golongan.
  * `periode` dipakai sebagai "angka" kartu UNO (1-7).
  *
  * Golongan transisi dibatasi pada periode 4-6 (yang paling sering dipelajari

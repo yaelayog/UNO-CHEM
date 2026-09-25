@@ -1,4 +1,4 @@
--- ChemUno Fase 4 — Minggu 3: Challenge / Misi + RPC dashboard guru.
+-- UNO-Chem Fase 4 — Minggu 3: Challenge / Misi + RPC dashboard guru.
 
 create table if not exists public.misi (
   id           text primary key,
