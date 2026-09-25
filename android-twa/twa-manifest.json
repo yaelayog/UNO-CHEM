@@ -14,7 +14,7 @@
   "enableNotifications": false,
   "startUrl": "/",
   "iconUrl": "https://uno-chem.vercel.app/pwa-512x512.png",
-  "maskableIconUrl": "https://uno-chem.vercel.app/maskable-512.png",
+  "maskableIconUrl": "https://uno-chem.vercel.app/maskable-512-v2.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "/Users/putrayoga/Desktop/Developer/UNO-Chem/android-twa/chemuno-release.keystore",
