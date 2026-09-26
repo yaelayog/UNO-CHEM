@@ -6,8 +6,10 @@ import { getSupabase } from '../lib/supabase';
 import { useGameStore } from '../store/gameStore';
 import { kirimAkun } from './klienAkun';
 import { gabungProgres } from './migrasiProgres';
+import { selisihMisi } from './selisihMisi';
 import type {
   AkunMurid,
+  HarianAkun,
   HasilAkun,
   MisiProgres,
   MisiSelesai,
@@ -45,6 +47,8 @@ export interface KonteksSesiSolo {
   kuisBenar: number;
   kuisSalah: number;
   benarPerGolongan: Partial<Record<Golongan, number>>;
+  /** Benar per nomor TP ("1".."4") — untuk Misi Harian bertema TP. */
+  benarPerTP: Record<string, number>;
 }
 
 interface AkunStore {
@@ -52,6 +56,8 @@ interface AkunStore {
   progresAkun: ProgresAkun | null;
   misi: Misi[];
   misiProgres: MisiProgres[];
+  /** Misi Harian hari ini; null = belum masuk / fitur belum aktif di server. */
+  harian: HarianAkun | null;
   /** Misi yang baru selesai — UI menampilkan toast lalu clear. */
   misiSelesaiBaru: MisiSelesai[];
   guruEmail: string | null;
@@ -59,8 +65,12 @@ interface AkunStore {
   sibuk: boolean;
 
   muat: () => Promise<void>;
-  /** Ambil ulang progres + misi murid dari server (tanpa flash "logout"). */
-  segarkanAkun: () => Promise<void>;
+  /**
+   * Ambil ulang progres + misi murid dari server (tanpa flash "logout").
+   * `umumkan` = tampilkan toast untuk misi yang baru selesai (dipakai sesudah
+   * permainan online, yang misinya dievaluasi server).
+   */
+  segarkanAkun: (opsi?: { umumkan?: boolean }) => Promise<void>;
   daftarMurid: (
     nama: string,
     pin: string,
@@ -119,6 +129,7 @@ export const useAkunStore = create<AkunStore>((set, get) => {
       murid: r.murid,
       progresAkun: r.progres ?? null,
       misiProgres: r.misiProgres ?? [],
+      harian: r.harian ?? null,
     });
     if (get().misi.length === 0) {
       void muatMisiDefs().then((misi) => set({ misi }));
@@ -133,6 +144,7 @@ export const useAkunStore = create<AkunStore>((set, get) => {
     progresAkun: null,
     misi: [],
     misiProgres: [],
+    harian: null,
     misiSelesaiBaru: [],
     guruEmail: null,
     memuat: true,
@@ -160,15 +172,39 @@ export const useAkunStore = create<AkunStore>((set, get) => {
       }
     },
 
-    segarkanAkun: async () => {
+    segarkanAkun: async (opsi) => {
       const token = bacaToken();
       if (!token) return;
       const r = await kirimAkun('sesi', { token });
       if (r.murid && !r.error) {
+        const lama = get();
+        const baru = {
+          progresAkun: r.progres ?? lama.progresAkun,
+          misiProgres: r.misiProgres ?? lama.misiProgres,
+          harian: r.harian === undefined ? lama.harian : r.harian,
+        };
+        const diumumkan =
+          opsi?.umumkan && lama.murid?.id === r.murid.id
+            ? selisihMisi(
+                {
+                  misiProgres: lama.misiProgres,
+                  harian: lama.harian,
+                  badgeDiraih: lama.progresAkun?.badgeDiraih ?? [],
+                },
+                {
+                  misiProgres: baru.misiProgres,
+                  harian: baru.harian,
+                  badgeDiraih: baru.progresAkun?.badgeDiraih ?? [],
+                },
+                lama.misi,
+              )
+            : [];
         set({
           murid: r.murid,
-          progresAkun: r.progres ?? get().progresAkun,
-          misiProgres: r.misiProgres ?? get().misiProgres,
+          ...baru,
+          misiSelesaiBaru: diumumkan.length
+            ? [...get().misiSelesaiBaru, ...diumumkan]
+            : get().misiSelesaiBaru,
         });
         if (get().misi.length === 0) void muatMisiDefs().then((misi) => set({ misi }));
       }
@@ -213,7 +249,7 @@ export const useAkunStore = create<AkunStore>((set, get) => {
     keluarMurid: async () => {
       const token = bacaToken();
       simpanToken(null);
-      set({ murid: null, progresAkun: null, misiProgres: [] });
+      set({ murid: null, progresAkun: null, misiProgres: [], harian: null });
       if (token) await kirimAkun('keluar', { token });
     },
 
@@ -252,6 +288,7 @@ export const useAkunStore = create<AkunStore>((set, get) => {
           kuisBenar: sesi.kuisBenar,
           kuisSalah: sesi.kuisSalah,
           benarPerGolongan: sesi.benarPerGolongan,
+          benarPerTP: sesi.benarPerTP,
         },
       }).then((r) => {
         const p = r.progres as Partial<ProgresAkun> | null | undefined;

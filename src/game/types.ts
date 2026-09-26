@@ -152,7 +152,13 @@ export interface GameState {
    */
   skorKuisSesi: Record<
     string,
-    { benar: number; salah: number; benarGolongan: Partial<Record<Golongan, number>> }
+    {
+      benar: number;
+      salah: number;
+      benarGolongan: Partial<Record<Golongan, number>>;
+      /** Benar per nomor TP ("1".."4"). Opsional: state lama belum punya. */
+      benarTP?: Record<string, number>;
+    }
   >;
   log: string[];
 }

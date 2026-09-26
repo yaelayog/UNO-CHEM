@@ -17,6 +17,7 @@ import {
 import { langkahBot, jawabKuisBot } from './bot';
 import { BATAS_UNO_MS, cekUnoKadaluarsa } from './uno';
 import type { GameState, KartuKimia } from './types';
+import { BANK_SOAL } from '../data/kuis';
 
 const PEMAIN = [
   { id: 'p1', nama: 'Kamu', isBot: false },
@@ -449,9 +450,28 @@ describe('skorKuisSesi (Fase 4 — Misi)', () => {
 
   it('mencatat jawaban benar/salah target manusia', () => {
     expect(selesaikanKuis(siapkanDraw2Manusia('sk-a'), 'benarCepat').skorKuisSesi.p2)
-      .toEqual({ benar: 1, salah: 0, benarGolongan: {} });
+      .toEqual({ benar: 1, salah: 0, benarGolongan: {}, benarTP: {} });
     expect(selesaikanKuis(siapkanDraw2Manusia('sk-b'), 'salah').skorKuisSesi.p2)
-      .toEqual({ benar: 0, salah: 1, benarGolongan: {} });
+      .toEqual({ benar: 0, salah: 1, benarGolongan: {}, benarTP: {} });
+  });
+
+  it('mencatat benar per golongan & per TP dari soal aktif (Misi Harian)', () => {
+    const soal = BANK_SOAL.find(
+      (q) => q.golonganTerkait === 'halogen' && q.tpTerkait.length > 0,
+    )!;
+    const benar = selesaikanKuis(
+      { ...siapkanDraw2Manusia('sk-tp'), soalAktif: soal },
+      'benarLambat',
+    ).skorKuisSesi.p2;
+    expect(benar.benarGolongan).toEqual({ halogen: 1 });
+    expect(benar.benarTP).toEqual(
+      Object.fromEntries(soal.tpTerkait.map((tp) => [tp, 1])),
+    );
+    const salah = selesaikanKuis(
+      { ...siapkanDraw2Manusia('sk-tp2'), soalAktif: soal },
+      'salah',
+    ).skorKuisSesi.p2;
+    expect(salah.benarTP).toEqual({});
   });
 
   it('tidak mencatat untuk target bot', () => {

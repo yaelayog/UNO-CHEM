@@ -5,9 +5,11 @@ import { picuPasang } from '../lib/pwa';
 import { onlineTersedia } from '../lib/supabase';
 import { bacaSoloTersimpan } from '../lib/soloTersimpan';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
+import { golonganHariIni, misiHarianUntuk, tanggalWIB } from '../game';
+import { GOLONGAN } from '../data/golongan';
 import { useGameStore } from '../store/gameStore';
 import { useAkunStore } from '../akun/akunStore';
-import { namaTampil } from '../akun/tipe';
+import { namaTampil, type HarianAkun } from '../akun/tipe';
 import { LencanaPeringkat } from '../components/LencanaPeringkat';
 import { LogoApp } from '../components/LogoApp';
 import { LogoPanitia } from '../components/LogoPanitia';
@@ -23,6 +25,7 @@ export function MainMenu() {
   const murid = useAkunStore((s) => s.murid);
   const guruEmail = useAkunStore((s) => s.guruEmail);
   const progresAkun = useAkunStore((s) => s.progresAkun);
+  const harian = useAkunStore((s) => s.harian);
   const [jumlahBot, setJumlahBot] = useState(2);
   const [pakaiPeristiwa, setPakaiPeristiwa] = useState(false);
   const [soloTersimpan] = useState(() => bacaSoloTersimpan());
@@ -122,6 +125,12 @@ export function MainMenu() {
         </button>
       </div>
 
+      <TombolMisiHarian
+        onClick={() => keLayar('misi')}
+        masuk={Boolean(murid)}
+        harian={harian}
+      />
+
       {soloTersimpan && (
         <button
           type="button"
@@ -188,6 +197,60 @@ export function MainMenu() {
         )}
       </div>
     </main>
+  );
+}
+
+function TombolMisiHarian({
+  onClick,
+  masuk,
+  harian,
+}: {
+  onClick: () => void;
+  masuk: boolean;
+  harian: HarianAkun | null;
+}) {
+  const tanggal = harian?.tanggal ?? tanggalWIB();
+  const g = GOLONGAN[golonganHariIni(tanggal)];
+  const selesai = new Set(
+    (harian?.progres ?? []).filter((p) => p.selesai).map((p) => p.misiId),
+  );
+  const daftar = misiHarianUntuk(tanggal);
+  const n = daftar.filter((m) => selesai.has(m.id)).length;
+  const streak = harian?.streak ?? 0;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-2 rounded-xl border border-black/10 bg-white px-3 py-2 text-left text-xs font-extrabold shadow-empuk transition hover:bg-kertas cursor-pointer"
+    >
+      <span className="text-base leading-none">🎯</span>
+      <span className="text-tinta">Misi Harian</span>
+      {masuk && harian ? (
+        <>
+          <span className="flex gap-0.5">
+            {daftar.map((m) => (
+              <span
+                key={m.id}
+                className={`h-2 w-4 rounded-full ${selesai.has(m.id) ? 'bg-lab' : 'bg-black/10'}`}
+              />
+            ))}
+          </span>
+          <span className="text-tinta/50">{n}/3</span>
+          <span className={`ml-auto ${streak > 0 ? 'text-alkali-700' : 'text-tinta/35'}`}>
+            🔥 {streak}
+          </span>
+        </>
+      ) : (
+        <span className="ml-auto flex min-w-0 items-center gap-1 truncate text-[11px] text-tinta/55">
+          <span
+            className="h-2 w-2 flex-none rounded-full"
+            style={{ background: g.warnaUno }}
+          />
+          <span className="truncate">Golongan hari ini: {g.nama} →</span>
+        </span>
+      )}
+    </button>
   );
 }
 

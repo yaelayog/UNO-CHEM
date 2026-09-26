@@ -21,6 +21,9 @@ const GameBoard = lazy(() =>
 const ProfilScreen = lazy(() =>
   import('./screens/ProfilScreen').then((m) => ({ default: m.ProfilScreen })),
 );
+const MisiScreen = lazy(() =>
+  import('./screens/MisiScreen').then((m) => ({ default: m.MisiScreen })),
+);
 const BelajarScreen = lazy(() =>
   import('./screens/BelajarScreen').then((m) => ({ default: m.BelajarScreen })),
 );
@@ -92,6 +95,9 @@ export default function App() {
       break;
     case 'profil':
       isi = <ProfilScreen />;
+      break;
+    case 'misi':
+      isi = <MisiScreen />;
       break;
     case 'belajar':
       isi = <BelajarScreen />;

@@ -544,12 +544,19 @@ export function selesaikanKuis(state: GameState, hasil: HasilKuis): GameState {
     if (benar && g && g !== 'umum') {
       benarGolongan[g] = (benarGolongan[g] ?? 0) + 1;
     }
+    const benarTP = { ...(cur.benarTP ?? {}) };
+    if (benar) {
+      for (const tp of s.soalAktif?.tpTerkait ?? []) {
+        benarTP[tp] = (benarTP[tp] ?? 0) + 1;
+      }
+    }
     s.skorKuisSesi = {
       ...s.skorKuisSesi,
       [ef.targetPemainId]: {
         benar: cur.benar + (benar ? 1 : 0),
         salah: cur.salah + (benar ? 0 : 1),
         benarGolongan,
+        benarTP,
       },
     };
   }

@@ -36,6 +36,20 @@ export interface MisiSelesai {
   judul: string;
   poinReward: number;
   badgeReward: string | null;
+  /** misi = jangka panjang; harian; lengkap = bonus 3/3 harian; lencana = lencana harian. */
+  jenis?: 'misi' | 'harian' | 'lengkap' | 'lencana';
+}
+
+/** Status Misi Harian hari ini (WIB) dari server. */
+export interface HarianAkun {
+  /** 'YYYY-MM-DD' WIB menurut server — definisi misi dihitung dari sini. */
+  tanggal: string;
+  progres: { misiId: string; progres: number; selesai: boolean }[];
+  /** Streak yang masih menyala (0 bila sudah putus). */
+  streak: number;
+  streakTerbaik: number;
+  totalLengkap: number;
+  lengkapHariIni: boolean;
 }
 
 /** Balasan Edge Function `akun`. */
@@ -44,6 +58,8 @@ export interface HasilAkun {
   progres?: ProgresAkun | null;
   misiProgres?: MisiProgres[];
   misiSelesai?: MisiSelesai[];
+  /** null bila fitur harian belum aktif di server. */
+  harian?: HarianAkun | null;
   token?: string;
   /** Diisi bila > 1 akun cocok Nama+PIN — murid harus memilih kode uniknya. */
   pilihan?: PilihanAkun[];

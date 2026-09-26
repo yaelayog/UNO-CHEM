@@ -6,7 +6,8 @@
 // Dua kelompok tipe:
 //  · KEJADIAN  — counter bertambah per sesi yang memenuhi syarat. Andal walau
 //                progres agregat klien belum tersinkron ke server.
-//                (menang, mainGame, kuisBenarTotal, kuisBenarGolongan)
+//                (menang, mainGame, kuisBenarTotal, kuisBenarGolongan,
+//                 kuisBenarTP, kuisBenarSesi, akurasiSesi)
 //  · AGREGAT   — progres = nilai capaian terkini murid (yang otoritatif di
 //                `progres_murid` server): (peringkatGolongan, badgeMaster)
 
@@ -17,6 +18,9 @@ export type TipeMisi =
   | 'mainGame'
   | 'kuisBenarTotal'
   | 'kuisBenarGolongan'
+  | 'kuisBenarTP'
+  | 'kuisBenarSesi'
+  | 'akurasiSesi'
   | 'peringkatGolongan'
   | 'badgeMaster';
 
@@ -25,7 +29,10 @@ export interface Misi {
   judul: string;
   deskripsi: string;
   tipe: TipeMisi;
-  /** Parameter: { jumlah?, golongan?, online?, tanpaSalah? }. */
+  /**
+   * Parameter: { jumlah?, golongan?, online?, tanpaSalah?, tp?, minBenar?,
+   * persen?, minKuis? }.
+   */
   target: Record<string, unknown>;
   poinReward: number;
   badgeReward: string | null;
@@ -38,6 +45,8 @@ export interface KonteksSesi {
   kuisBenar: number;
   kuisSalah: number;
   benarPerGolongan: Partial<Record<Golongan, number>>;
+  /** Jawaban benar per nomor Tujuan Pembelajaran ("1".."4"). Opsional. */
+  benarPerTP?: Record<string, number>;
 }
 
 /** Snapshot capaian agregat murid saat ini (dari `progres_murid` server). */
@@ -58,6 +67,9 @@ const AGREGAT: Record<TipeMisi, boolean> = {
   mainGame: false,
   kuisBenarTotal: false,
   kuisBenarGolongan: false,
+  kuisBenarTP: false,
+  kuisBenarSesi: false,
+  akurasiSesi: false,
   peringkatGolongan: true,
   badgeMaster: true,
 };
@@ -89,6 +101,22 @@ export function kemajuanMisi(
     case 'kuisBenarGolongan': {
       const g = String(t.golongan) as Golongan;
       progres = progresLama + (sesi.benarPerGolongan[g] ?? 0);
+      break;
+    }
+    case 'kuisBenarTP':
+      progres = progresLama + (sesi.benarPerTP?.[String(t.tp)] ?? 0);
+      break;
+    case 'kuisBenarSesi':
+      // Hitung 1 per sesi yang mencapai `minBenar` jawaban benar.
+      if (sesi.kuisBenar >= (Number(t.minBenar) || 1)) progres = progresLama + 1;
+      break;
+    case 'akurasiSesi': {
+      // Hitung 1 per sesi dengan akurasi ≥ `persen` (minimal `minKuis` soal).
+      const total = sesi.kuisBenar + sesi.kuisSalah;
+      const cukup = total >= (Number(t.minKuis) || 1);
+      if (cukup && sesi.kuisBenar * 100 >= (Number(t.persen) || 100) * total) {
+        progres = progresLama + 1;
+      }
       break;
     }
     case 'mainGame':

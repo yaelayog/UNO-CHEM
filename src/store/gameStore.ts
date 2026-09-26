@@ -60,6 +60,7 @@ export type Layar =
   | 'cptp'
   | 'belajar'
   | 'profil'
+  | 'misi'
   | 'akun'
   | 'leaderboard'
   | 'dashboard-guru'
@@ -202,6 +203,18 @@ let konfigTerakhir: {
   pakaiPeristiwa: false, // Kartu Peristiwa = opsional, default nonaktif
 };
 
+/** Ambil hitungan benar per TP dari akurasi sesi (kunci `tp1`..`tp4`). */
+function benarPerTPDari(
+  akurasi: Record<string, { benar: number; total: number }>,
+): Record<string, number> {
+  const hasil: Record<string, number> = {};
+  for (const [k, v] of Object.entries(akurasi)) {
+    const m = /^tp(\d+)$/.exec(k);
+    if (m && v.benar > 0) hasil[m[1]] = v.benar;
+  }
+  return hasil;
+}
+
 export const useGameStore = create<GameStore>((set, get) => {
   /**
    * Terapkan GameState baru. Kalau butuh kuis untuk PEMAIN MANUSIA, pilih soal
@@ -267,6 +280,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         kuisBenar: stat.benar,
         kuisSalah: stat.total - stat.benar,
         benarPerGolongan: stat.benarPerGolongan,
+        benarPerTP: benarPerTPDari(get().poinSesi.akurasi),
       });
       set({ progres: rekam.progres, rekamTerakhir: rekam });
     }
@@ -399,7 +413,13 @@ export const useGameStore = create<GameStore>((set, get) => {
       sinkronProgresKeAkun(rekam.progres);
       // Poin & Misi online sudah dievaluasi server-side (Edge Function `aksi`).
       // Tarik hasil terbaru (peringkat, progres misi, badge) ke store akun.
-      void useAkunStore.getState().segarkanAkun();
+      // State "selesai" bisa tiba lewat Realtime SEBELUM server selesai
+      // mengevaluasi misi pemain lain → segarkan lagi sebentar kemudian.
+      // Toast dihitung dari selisih, jadi tak ada yang terumumkan dua kali.
+      void useAkunStore.getState().segarkanAkun({ umumkan: true });
+      setTimeout(() => {
+        void useAkunStore.getState().segarkanAkun({ umumkan: true });
+      }, 4000);
       set({
         progres: rekam.progres,
         rekamTerakhir: rekam,

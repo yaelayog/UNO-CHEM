@@ -17,6 +17,10 @@ export const MISI_BADGE: MisiBadge[] = [
   { id: 'misi-golongan-5', nama: 'Peringkat Golongan 5', ikon: '🥉' },
   { id: 'misi-golongan-10', nama: 'Peringkat Golongan 10', ikon: '🥈' },
   { id: 'misi-golongan-18', nama: 'Puncak Periodik', ikon: '👑' },
+  // Misi Harian (lihat `game/misiHarian.ts`)
+  { id: 'harian-streak-3', nama: 'Semangat 3 Hari', ikon: '🔥' },
+  { id: 'harian-streak-7', nama: 'Seminggu Penuh', ikon: '🌟' },
+  { id: 'harian-total-10', nama: 'Pejuang Harian', ikon: '📅' },
 ];
 
 const PETA = new Map(MISI_BADGE.map((b) => [b.id, b]));

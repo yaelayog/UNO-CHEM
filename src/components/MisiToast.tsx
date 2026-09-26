@@ -1,6 +1,21 @@
 import { useEffect } from 'react';
 import { useAkunStore } from '../akun/akunStore';
+import type { MisiSelesai } from '../akun/tipe';
 import { misiBadge } from '../data/misiBadge';
+
+const LABEL: Record<NonNullable<MisiSelesai['jenis']>, string> = {
+  misi: 'Misi selesai!',
+  harian: 'Misi Harian selesai!',
+  lengkap: 'Bonus Harian!',
+  lencana: 'Lencana baru!',
+};
+
+function ikon(m: MisiSelesai): string {
+  if (m.badgeReward) return misiBadge(m.badgeReward)?.ikon ?? '🎖️';
+  if (m.jenis === 'lengkap') return '🔥';
+  if (m.jenis === 'harian') return '📅';
+  return '🎯';
+}
 
 /** Toast global saat satu/lebih Misi baru selesai. */
 export function MisiToast() {
@@ -20,23 +35,27 @@ export function MisiToast() {
       {selesai.map((m, i) => (
         <div
           key={`${m.id}-${i}`}
-          className="pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-2xl border border-lab/30 bg-white px-4 py-3 shadow-empuk"
+          className={`pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-2xl border px-4 py-3 shadow-empuk ${
+            m.jenis === 'lengkap' ? 'border-alkali/40 bg-alkali-050' : 'border-lab/30 bg-white'
+          }`}
           onClick={bersihkan}
         >
-          <span className="text-2xl">
-            {m.badgeReward ? (misiBadge(m.badgeReward)?.ikon ?? '🎯') : '🎯'}
-          </span>
+          <span className="text-2xl">{ikon(m)}</span>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-extrabold uppercase tracking-wide text-lab">
-              Misi selesai!
+              {LABEL[m.jenis ?? 'misi']}
             </p>
             <p className="truncate text-sm font-extrabold text-tinta">
-              {m.judul}
+              {m.jenis === 'lencana' && m.badgeReward
+                ? (misiBadge(m.badgeReward)?.nama ?? m.judul)
+                : m.judul}
             </p>
           </div>
-          <span className="flex-none text-sm font-extrabold text-lab">
-            +{m.poinReward}
-          </span>
+          {m.poinReward > 0 && (
+            <span className="flex-none text-sm font-extrabold text-lab">
+              +{m.poinReward}
+            </span>
+          )}
         </div>
       ))}
     </div>

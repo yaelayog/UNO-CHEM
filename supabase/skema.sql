@@ -209,7 +209,11 @@ create table if not exists public.progres_murid (
   riwayat_akurasi_per_golongan jsonb not null default '{}'::jsonb,
   badge_diraih                 jsonb not null default '[]'::jsonb,
   progres_lokal                jsonb not null default '{}'::jsonb,
-  diperbarui_pada              timestamptz not null default now()
+  diperbarui_pada              timestamptz not null default now(),
+  harian_streak                int not null default 0,
+  harian_streak_terbaik        int not null default 0,
+  harian_terakhir              date,
+  harian_total                 int not null default 0
 );
 
 create or replace function public.progres_murid_sebelum_tulis()
@@ -362,15 +366,36 @@ on conflict (id) do update set
   judul=excluded.judul, deskripsi=excluded.deskripsi, tipe=excluded.tipe, target=excluded.target,
   poin_reward=excluded.poin_reward, badge_reward=excluded.badge_reward, urutan=excluded.urutan;
 
-create or replace function public.murid_kelas(p_kelas_id uuid)
+-- ── Misi Harian (0011) ───────────────────────────────────────────────
+create table if not exists public.misi_harian_progres (
+  murid_id     uuid not null references public.murid(id) on delete cascade,
+  tanggal      date not null,
+  misi_id      text not null,
+  progres      int not null default 0,
+  selesai      boolean not null default false,
+  selesai_pada timestamptz,
+  primary key (murid_id, tanggal, misi_id)
+);
+create index if not exists idx_misi_harian_murid on public.misi_harian_progres(murid_id, tanggal);
+alter table public.misi_harian_progres enable row level security;
+drop policy if exists "misi harian guru baca" on public.misi_harian_progres;
+create policy "misi harian guru baca" on public.misi_harian_progres for select to authenticated using (
+  murid_id in (select m.id from public.murid m join public.kelas k on k.id = m.kelas_id where k.guru_id = auth.uid())
+);
+grant select on public.misi_harian_progres to authenticated;
+
+drop function if exists public.murid_kelas(uuid);
+create function public.murid_kelas(p_kelas_id uuid)
 returns table (murid_id uuid, nama text, kode_unik text, peringkat_aktif int, peringkat_rekor int,
-               total_poin bigint, riwayat_akurasi jsonb, misi_selesai int, dibuat_pada timestamptz)
+               total_poin bigint, riwayat_akurasi jsonb, misi_selesai int, dibuat_pada timestamptz,
+               harian_streak int, harian_streak_terbaik int, harian_terakhir date, harian_total int)
 language sql security definer set search_path = public as $body$
   select m.id, m.nama, m.kode_unik,
          pm.peringkat_golongan_aktif, pm.peringkat_golongan_rekor, pm.total_poin,
          pm.riwayat_akurasi_per_golongan,
          (select count(*)::int from public.misi_progres_murid mp where mp.murid_id = m.id and mp.selesai),
-         m.dibuat_pada
+         m.dibuat_pada,
+         pm.harian_streak, pm.harian_streak_terbaik, pm.harian_terakhir, pm.harian_total
   from public.murid m
   join public.progres_murid pm on pm.murid_id = m.id
   where m.kelas_id = p_kelas_id

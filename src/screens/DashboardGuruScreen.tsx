@@ -7,6 +7,7 @@ import type { Golongan } from '../data/types';
 import { GAYA_GOLONGAN } from '../lib/tampilan';
 import { useGameStore } from '../store/gameStore';
 import { LencanaPeringkat } from '../components/LencanaPeringkat';
+import { streakAktif, tanggalWIB } from '../game';
 
 /** Buang penanda **tebal** dari teks TP untuk dipakai di atribut `title`. */
 const polos = (teks: string) => teks.replace(/\*\*/g, '');
@@ -70,6 +71,10 @@ interface MuridRow {
   total_poin: number;
   riwayat_akurasi: Record<string, { benar: number; total: number }>;
   misi_selesai: number;
+  /** Kolom Misi Harian (migrasi 0011) — opsional agar aman sebelum dimigrasi. */
+  harian_streak?: number;
+  harian_terakhir?: string | null;
+  harian_total?: number;
 }
 
 export function DashboardGuruScreen() {
@@ -171,6 +176,20 @@ export function DashboardGuruScreen() {
                   rekor G{m.peringkat_rekor} · {m.total_poin} poin/mgg ·{' '}
                   {m.misi_selesai} misi
                 </p>
+                {m.harian_total !== undefined && (
+                  <p
+                    className="text-[10px] font-bold text-tinta/45"
+                    title="Konsistensi belajar: hari berturut-turut & total hari ketiga Misi Harian selesai"
+                  >
+                    🔥{' '}
+                    {streakAktif(
+                      m.harian_terakhir ?? null,
+                      m.harian_streak ?? 0,
+                      tanggalWIB(),
+                    )}{' '}
+                    hari beruntun · {m.harian_total} hari misi harian lengkap
+                  </p>
+                )}
               </div>
             </div>
 

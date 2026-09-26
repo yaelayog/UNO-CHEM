@@ -5,6 +5,8 @@ import { SEMUA_BADGE } from '../data/badge';
 import { infoLevel, type HasilRekam } from '../lib/progres';
 import { getSupabase } from '../lib/supabase';
 import { LencanaPeringkat } from './LencanaPeringkat';
+import { useAkunStore } from '../akun/akunStore';
+import { bonusLengkap, misiHarianUntuk, targetMisi } from '../game';
 
 interface Props {
   state: GameState;
@@ -90,6 +92,8 @@ export function GameOver({
           </div>
         )}
 
+        <RingkasanHarian />
+
         <div className="mt-5 flex flex-col gap-2">
           <button
             type="button"
@@ -107,6 +111,47 @@ export function GameOver({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Kemajuan Misi Harian — mendorong "satu permainan lagi". Hanya untuk murid. */
+function RingkasanHarian() {
+  const murid = useAkunStore((s) => s.murid);
+  const harian = useAkunStore((s) => s.harian);
+  if (!murid || !harian) return null;
+
+  const daftar = misiHarianUntuk(harian.tanggal);
+  const pr = new Map(harian.progres.map((p) => [p.misiId, p]));
+  const n = daftar.filter((m) => pr.get(m.id)?.selesai).length;
+  const berikut = daftar.find((m) => !pr.get(m.id)?.selesai);
+
+  return (
+    <div className="mt-3 rounded-2xl bg-kertas p-3 text-left">
+      <div className="flex items-center justify-between text-xs font-extrabold text-tinta">
+        <span>🎯 Misi Harian {n}/3</span>
+        <span className={harian.streak > 0 ? 'text-alkali-700' : 'text-tinta/40'}>
+          🔥 {harian.streak} hari
+        </span>
+      </div>
+      <div className="mt-1.5 flex gap-1">
+        {daftar.map((m) => (
+          <span
+            key={m.id}
+            className={`h-1.5 flex-1 rounded-full ${pr.get(m.id)?.selesai ? 'bg-lab' : 'bg-black/10'}`}
+          />
+        ))}
+      </div>
+      <p className="mt-1 text-[11px] font-bold text-tinta/60">
+        {harian.lengkapHariIni || !berikut
+          ? 'Semua misi hari ini beres! Datang lagi besok.'
+          : `Berikutnya: ${berikut.deskripsi} (${Math.min(
+              pr.get(berikut.id)?.progres ?? 0,
+              targetMisi(berikut),
+            )}/${targetMisi(berikut)})${
+              n === 2 ? ` — bonus +${bonusLengkap(harian.streak + 1)} menanti!` : ''
+            }`}
+      </p>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { beriPoinMurid, type AkurasiDelta } from '../_shared/poin.ts';
 import { evaluasiMisi } from '../_shared/misi.ts';
 import type { KonteksSesi } from '../_shared/game/misi.ts';
+import { streakAktif, tanggalWIB } from '../_shared/game/misiHarian.ts';
 
 const URL = Deno.env.get('SUPABASE_URL')!;
 const ANON = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -133,8 +134,41 @@ async function namaKelas(db: SupabaseClient, kelasId: string | null) {
   return (data?.nama_kelas as string | undefined) ?? null;
 }
 
+/**
+ * Status Misi Harian hari ini (WIB). null bila tabel/kolom harian belum
+ * dimigrasi — klien lalu menyembunyikan fitur ini, akun tetap jalan.
+ */
+async function ringkasHarian(db: SupabaseClient, muridId: string) {
+  const tanggal = tanggalWIB();
+  const [prog, pm] = await Promise.all([
+    db
+      .from('misi_harian_progres')
+      .select('misi_id, progres, selesai')
+      .eq('murid_id', muridId)
+      .eq('tanggal', tanggal),
+    db
+      .from('progres_murid')
+      .select('harian_streak, harian_streak_terbaik, harian_terakhir, harian_total')
+      .eq('murid_id', muridId)
+      .maybeSingle(),
+  ]);
+  if (prog.error || pm.error || !pm.data) return null;
+  return {
+    tanggal,
+    progres: (prog.data ?? []).map((r) => ({
+      misiId: r.misi_id as string,
+      progres: r.progres as number,
+      selesai: r.selesai as boolean,
+    })),
+    streak: streakAktif(pm.data.harian_terakhir, pm.data.harian_streak ?? 0, tanggal),
+    streakTerbaik: pm.data.harian_streak_terbaik ?? 0,
+    totalLengkap: pm.data.harian_total ?? 0,
+    lengkapHariIni: pm.data.harian_terakhir === tanggal,
+  };
+}
+
 async function ringkas(db: SupabaseClient, murid: MuridRow, token?: string) {
-  const [{ data: pr }, { data: misiProg }] = await Promise.all([
+  const [{ data: pr }, { data: misiProg }, harian] = await Promise.all([
     db
       .from('progres_murid')
       .select(
@@ -146,8 +180,10 @@ async function ringkas(db: SupabaseClient, murid: MuridRow, token?: string) {
       .from('misi_progres_murid')
       .select('misi_id, progres, selesai, selesai_pada')
       .eq('murid_id', murid.id),
+    ringkasHarian(db, murid.id),
   ]);
   return {
+    harian,
     misiProgres: (misiProg ?? []).map((r) => ({
       misiId: r.misi_id,
       progres: r.progres,
@@ -297,6 +333,17 @@ async function gabungKelas(db: SupabaseClient, b: Record<string, unknown>) {
   return ringkas(db, { ...murid, kelas_id: k.id as string });
 }
 
+/** Peta hitungan dari klien → hanya bilangan bulat 0..50 (buang nilai aneh). */
+function petaAngka(v: unknown): Record<string, number> {
+  const hasil: Record<string, number> = {};
+  if (!v || typeof v !== 'object') return hasil;
+  for (const [k, n] of Object.entries(v as Record<string, unknown>)) {
+    const x = Math.floor(Number(n));
+    if (Number.isFinite(x) && x > 0) hasil[k.slice(0, 20)] = Math.min(x, 50);
+  }
+  return hasil;
+}
+
 /**
  * Laporan poin dari SESI SOLO (klien, stakes rendah). `poin` di-clamp; menang
  * lawan bot TIDAK dapat bonus besar (klien tak boleh mengirimnya).
@@ -316,7 +363,8 @@ async function tambahPoin(db: SupabaseClient, b: Record<string, unknown>) {
       online: false,
       kuisBenar: Math.max(0, Math.floor(Number(s.kuisBenar) || 0)),
       kuisSalah: Math.max(0, Math.floor(Number(s.kuisSalah) || 0)),
-      benarPerGolongan: (s.benarPerGolongan ?? {}) as KonteksSesi['benarPerGolongan'],
+      benarPerGolongan: petaAngka(s.benarPerGolongan) as KonteksSesi['benarPerGolongan'],
+      benarPerTP: petaAngka(s.benarPerTP),
     });
     if (misiSelesai.length) {
       // reward misi menambah poin → ambil progres terbaru
