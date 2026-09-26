@@ -109,7 +109,7 @@ export function MainMenu() {
           type="button"
           onClick={() => keLayar('profil')}
           className="flex flex-none items-center gap-1.5 rounded-xl border border-black/10 bg-white px-2.5 py-2 text-xs font-extrabold text-lab-tinta shadow-empuk transition hover:bg-kertas cursor-pointer"
-          title={`${progres.badge.length} lencana`}
+          aria-label={`Level ${lvl.level}, ${progres.badge.length} lencana — lihat pencapaian`}
         >
           Lvl {lvl.level}
           <span className="h-1.5 w-10 overflow-hidden rounded-full bg-black/10">
@@ -118,6 +118,7 @@ export function MainMenu() {
               style={{ width: `${Math.round(lvl.rasio * 100)}%` }}
             />
           </span>
+          <span className="text-tinta/70">🏅 {progres.badge.length}</span>
         </button>
       </div>
 
@@ -176,6 +177,7 @@ export function MainMenu() {
       </div>
 
       <div className="flex flex-wrap justify-center gap-1.5">
+        <MenuLink label="🏅 Lencana" onClick={() => keLayar('profil')} />
         <MenuLink label="Leaderboard" onClick={() => keLayar('leaderboard')} />
         <MenuLink label="Mode Belajar" onClick={() => keLayar('belajar')} />
         <MenuLink label="Petunjuk Penggunaan" onClick={() => keLayar('aturan')} />
