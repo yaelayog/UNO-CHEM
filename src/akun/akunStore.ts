@@ -7,6 +7,13 @@ import { useGameStore } from '../store/gameStore';
 import { kirimAkun } from './klienAkun';
 import { gabungProgres } from './migrasiProgres';
 import { selisihMisi } from './selisihMisi';
+import {
+  bacaAntrian,
+  buatSesiId,
+  galatSementara,
+  rapikanAntrian,
+  simpanAntrian,
+} from './antrianLaporan';
 import type {
   AkunMurid,
   HarianAkun,
@@ -49,6 +56,8 @@ export interface KonteksSesiSolo {
   benarPerGolongan: Partial<Record<Golongan, number>>;
   /** Benar per nomor TP ("1".."4") — untuk Misi Harian bertema TP. */
   benarPerTP: Record<string, number>;
+  /** Kartu yang dimainkan per golongan — untuk Misi Harian bertema golongan. */
+  kartuPerGolongan: Partial<Record<Golongan, number>>;
 }
 
 interface AkunStore {
@@ -86,6 +95,8 @@ interface AkunStore {
   sinkronProgres: (p: Progres) => void;
   /** Laporkan hasil sesi solo (poin + konteks Misi). No-op tanpa akun. */
   kirimPoinSesi: (sesi: KonteksSesiSolo) => void;
+  /** Kirim (ulang) laporan sesi yang tertunda di antrean localStorage. */
+  kirimLaporanTertunda: () => Promise<void>;
   bersihkanMisiSelesai: () => void;
 
   masukGuru: (
@@ -97,6 +108,7 @@ interface AkunStore {
 }
 
 let timerSinkron: ReturnType<typeof setTimeout> | undefined;
+let sedangMengirimLaporan = false;
 
 async function muatMisiDefs(): Promise<Misi[]> {
   const sb = await getSupabase();
@@ -170,6 +182,8 @@ export const useAkunStore = create<AkunStore>((set, get) => {
       } finally {
         set({ memuat: false });
       }
+      // Laporan permainan yang gagal terkirim sebelumnya (sinyal putus, dll).
+      void get().kirimLaporanTertunda();
     },
 
     segarkanAkun: async (opsi) => {
@@ -279,27 +293,70 @@ export const useAkunStore = create<AkunStore>((set, get) => {
     kirimPoinSesi: (sesi) => {
       const token = bacaToken();
       if (!token) return;
-      void kirimAkun('tambahPoin', {
-        token,
-        poin: sesi.poin,
-        akurasi: sesi.akurasi,
-        sesi: {
-          menang: sesi.menang,
-          kuisBenar: sesi.kuisBenar,
-          kuisSalah: sesi.kuisSalah,
-          benarPerGolongan: sesi.benarPerGolongan,
-          benarPerTP: sesi.benarPerTP,
+      // Simpan ke antrean DULU → tak hilang walau pengiriman gagal.
+      simpanAntrian([
+        ...bacaAntrian(),
+        {
+          sesiId: buatSesiId(),
+          token,
+          dibuat: Date.now(),
+          percobaan: 0,
+          payload: {
+            poin: sesi.poin,
+            akurasi: sesi.akurasi,
+            sesi: {
+              menang: sesi.menang,
+              kuisBenar: sesi.kuisBenar,
+              kuisSalah: sesi.kuisSalah,
+              benarPerGolongan: sesi.benarPerGolongan,
+              benarPerTP: sesi.benarPerTP,
+              kartuPerGolongan: sesi.kartuPerGolongan,
+            },
+          },
         },
-      }).then((r) => {
-        const p = r.progres as Partial<ProgresAkun> | null | undefined;
-        set((s) => ({
-          progresAkun: p && s.progresAkun ? { ...s.progresAkun, ...p } : s.progresAkun,
-          misiSelesaiBaru: r.misiSelesai?.length
-            ? [...s.misiSelesaiBaru, ...r.misiSelesai]
-            : s.misiSelesaiBaru,
-        }));
-        void get().segarkanAkun();
-      });
+      ]);
+      void get().kirimLaporanTertunda();
+    },
+
+    kirimLaporanTertunda: async () => {
+      if (sedangMengirimLaporan) return;
+      sedangMengirimLaporan = true;
+      let adaTerkirim = false;
+      try {
+        simpanAntrian(rapikanAntrian(bacaAntrian()));
+        for (const lap of bacaAntrian()) {
+          const r = await kirimAkun('tambahPoin', {
+            token: lap.token,
+            sesiId: lap.sesiId,
+            ...lap.payload,
+          });
+          if (r.error && galatSementara(r.error)) {
+            // Tandai percobaan gagal lalu berhenti — coba lagi di pemicu berikutnya.
+            simpanAntrian(
+              rapikanAntrian(bacaAntrian()).map((x) =>
+                x.sesiId === lap.sesiId ? { ...x, percobaan: x.percobaan + 1 } : x,
+              ),
+            );
+            break;
+          }
+          simpanAntrian(bacaAntrian().filter((x) => x.sesiId !== lap.sesiId));
+          if (r.error) continue; // sesi tak valid → laporan dibuang
+          adaTerkirim = true;
+          // Toast hanya untuk laporan milik akun yang sedang masuk.
+          if (lap.token === bacaToken()) {
+            const p = r.progres as Partial<ProgresAkun> | null | undefined;
+            set((s) => ({
+              progresAkun: p && s.progresAkun ? { ...s.progresAkun, ...p } : s.progresAkun,
+              misiSelesaiBaru: r.misiSelesai?.length
+                ? [...s.misiSelesaiBaru, ...r.misiSelesai]
+                : s.misiSelesaiBaru,
+            }));
+          }
+        }
+      } finally {
+        sedangMengirimLaporan = false;
+      }
+      if (adaTerkirim) void get().segarkanAkun();
     },
 
     bersihkanMisiSelesai: () => set({ misiSelesaiBaru: [] }),
@@ -329,3 +386,10 @@ export const useAkunStore = create<AkunStore>((set, get) => {
     },
   };
 });
+
+// Perangkat kembali online → kirim laporan permainan yang tertunda.
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    void useAkunStore.getState().kirimLaporanTertunda();
+  });
+}

@@ -7,7 +7,7 @@
 //  · KEJADIAN  — counter bertambah per sesi yang memenuhi syarat. Andal walau
 //                progres agregat klien belum tersinkron ke server.
 //                (menang, mainGame, kuisBenarTotal, kuisBenarGolongan,
-//                 kuisBenarTP, kuisBenarSesi, akurasiSesi)
+//                 kuisBenarTP, kuisBenarSesi, akurasiSesi, kartuGolongan)
 //  · AGREGAT   — progres = nilai capaian terkini murid (yang otoritatif di
 //                `progres_murid` server): (peringkatGolongan, badgeMaster)
 
@@ -21,6 +21,7 @@ export type TipeMisi =
   | 'kuisBenarTP'
   | 'kuisBenarSesi'
   | 'akurasiSesi'
+  | 'kartuGolongan'
   | 'peringkatGolongan'
   | 'badgeMaster';
 
@@ -47,6 +48,8 @@ export interface KonteksSesi {
   benarPerGolongan: Partial<Record<Golongan, number>>;
   /** Jawaban benar per nomor Tujuan Pembelajaran ("1".."4"). Opsional. */
   benarPerTP?: Record<string, number>;
+  /** Kartu yang dimainkan per golongan dalam sesi ini. Opsional. */
+  kartuPerGolongan?: Partial<Record<Golongan, number>>;
 }
 
 /** Snapshot capaian agregat murid saat ini (dari `progres_murid` server). */
@@ -70,6 +73,7 @@ const AGREGAT: Record<TipeMisi, boolean> = {
   kuisBenarTP: false,
   kuisBenarSesi: false,
   akurasiSesi: false,
+  kartuGolongan: false,
   peringkatGolongan: true,
   badgeMaster: true,
 };
@@ -106,6 +110,11 @@ export function kemajuanMisi(
     case 'kuisBenarTP':
       progres = progresLama + (sesi.benarPerTP?.[String(t.tp)] ?? 0);
       break;
+    case 'kartuGolongan': {
+      const g = String(t.golongan) as Golongan;
+      progres = progresLama + (sesi.kartuPerGolongan?.[g] ?? 0);
+      break;
+    }
     case 'kuisBenarSesi':
       // Hitung 1 per sesi yang mencapai `minBenar` jawaban benar.
       if (sesi.kuisBenar >= (Number(t.minBenar) || 1)) progres = progresLama + 1;

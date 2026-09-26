@@ -281,6 +281,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         kuisSalah: stat.total - stat.benar,
         benarPerGolongan: stat.benarPerGolongan,
         benarPerTP: benarPerTPDari(get().poinSesi.akurasi),
+        kartuPerGolongan: next.kartuSesi?.[get().humanId] ?? {},
       });
       set({ progres: rekam.progres, rekamTerakhir: rekam });
     }

@@ -641,6 +641,7 @@ async function beriPoinPeringkat(
         kuisSalah: skor.salah,
         benarPerGolongan: skor.benarGolongan,
         benarPerTP: skor.benarTP ?? {},
+        kartuPerGolongan: next.kartuSesi?.[p.id] ?? {},
       });
     }
   }

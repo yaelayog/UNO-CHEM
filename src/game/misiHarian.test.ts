@@ -11,6 +11,7 @@ import {
   streakAktif,
   badgeHarianBaru,
   POIN_HARIAN,
+  WARNA_KARTU,
 } from './misiHarian';
 import { kemajuanMisi, targetMisi, type KonteksSesi } from './misi';
 import { MISI_BADGE } from '../data/misiBadge';
@@ -72,6 +73,7 @@ describe('misiHarianUntuk', () => {
       for (const x of misiHarianUntuk(t).filter((y) => y.bertemaGolongan)) {
         expect(x.target.golongan).toBe(g);
         expect(x.deskripsi).toContain(GOLONGAN[g].nama);
+        expect(x.deskripsi).toContain(WARNA_KARTU[g]);
       }
     }
   });
@@ -80,7 +82,7 @@ describe('misiHarianUntuk', () => {
     const kombinasi = new Set(HARI.map((t) => misiHarianUntuk(t).map((x) => x.id).join('|')));
     expect(kombinasi.size).toBeGreaterThan(10);
     const semuaId = new Set(HARI.flatMap((t) => misiHarianUntuk(t).map((x) => x.id)));
-    expect(semuaId.size).toBe(12); // semua templat pernah muncul dalam 60 hari
+    expect(semuaId.size).toBe(11); // semua templat pernah muncul dalam 60 hari
   });
 
   it('golongan hari ini berputar tiap hari; fakta berasal dari golongan itu', () => {
@@ -114,6 +116,18 @@ describe('tipe misi baru (dipakai Misi Harian)', () => {
     const x = dengan('kuisBenarSesi', { jumlah: 1, minBenar: 5 });
     expect(kemajuanMisi(x, 0, sesi({ kuisBenar: 4 }), capaian).selesai).toBe(false);
     expect(kemajuanMisi(x, 0, sesi({ kuisBenar: 5 }), capaian).selesai).toBe(true);
+  });
+
+  it('kartuGolongan menjumlahkan kartu golongan yang dituju', () => {
+    const x = dengan('kartuGolongan', { golongan: 'halogen', jumlah: 4 });
+    expect(
+      kemajuanMisi(x, 1, sesi({ kartuPerGolongan: { halogen: 2, alkali: 5 } }), capaian).progres,
+    ).toBe(3);
+    expect(kemajuanMisi(x, 3, sesi({ kartuPerGolongan: { halogen: 3 } }), capaian)).toMatchObject({
+      progres: 4,
+      selesai: true,
+    });
+    expect(kemajuanMisi(x, 0, sesi(), capaian).progres).toBe(0);
   });
 
   it('akurasiSesi butuh akurasi ≥ persen DAN jumlah soal minimum', () => {

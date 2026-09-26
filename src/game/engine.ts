@@ -112,6 +112,7 @@ export function buatGame(
     faktaReward: null,
     streak: {},
     skorKuisSesi: {},
+    kartuSesi: {},
     pengumumanKuis: null,
     peristiwaDrawPile,
     peristiwaAktif: null,
@@ -244,6 +245,17 @@ function perbaruiStreak(
   return null;
 }
 
+/** Hitung kartu segolongan yang dimainkan pemain MANUSIA (Misi Harian). */
+function catatKartuSesi(s: GameState, pemainId: string, golongan: Golongan | null) {
+  if (!golongan) return;
+  if (s.pemain.find((p) => p.id === pemainId)?.isBot !== false) return;
+  const cur = s.kartuSesi?.[pemainId] ?? {};
+  s.kartuSesi = {
+    ...(s.kartuSesi ?? {}),
+    [pemainId]: { ...cur, [golongan]: (cur[golongan] ?? 0) + 1 },
+  };
+}
+
 // ── menarik kartu ───────────────────────────────────────────────────
 export function isiUlangDrawPile(s: GameState): void {
   if (s.discardPile.length <= 1) return;
@@ -300,6 +312,7 @@ export function mainkanKartu(
     const fr = perbaruiStreak(s, pemainId, kartu.golongan);
     if (fr) s.faktaReward = fr;
   }
+  catatKartuSesi(s, pemainId, kartu.golongan);
 
   if (p.tangan.length === 0) {
     s.status = 'selesai';
@@ -450,6 +463,7 @@ export function mainkanBerbarengan(
     s.discardPile.push(kartu);
     const f = perbaruiStreak(s, pemainId, kartu.golongan);
     if (f) fakta = f;
+    catatKartuSesi(s, pemainId, kartu.golongan);
   }
   if (fakta) s.faktaReward = fakta;
   s.log.push(

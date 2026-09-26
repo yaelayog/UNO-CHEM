@@ -160,6 +160,11 @@ export interface GameState {
       benarTP?: Record<string, number>;
     }
   >;
+  /**
+   * Kartu yang dimainkan per golongan, per pemain manusia, sepanjang sesi
+   * (untuk Misi Harian "mainkan N kartu golongan X"). Opsional: state lama.
+   */
+  kartuSesi?: Record<string, Partial<Record<Golongan, number>>>;
   log: string[];
 }
 

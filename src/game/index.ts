@@ -88,6 +88,7 @@ export {
   geserTanggal,
   msSampaiReset,
   golonganHariIni,
+  WARNA_KARTU,
   faktaHariIni,
   misiHarianUntuk,
   bonusLengkap,

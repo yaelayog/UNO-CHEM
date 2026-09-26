@@ -435,6 +435,26 @@ describe('draw2 + pengurangan penalti', () => {
   });
 });
 
+describe('kartuSesi (Misi Harian — kartu per golongan)', () => {
+  it('menghitung kartu yang dimainkan manusia, tidak untuk bot', () => {
+    const PEMAIN = [
+      { id: 'h', nama: 'Aku', isBot: false },
+      { id: 'b', nama: 'Bot', isBot: true },
+    ];
+    let s = buatGame(PEMAIN, 'ks-1');
+    const atas = kartuAtas(s);
+    const k1 = kartuAngka(atas.golongan, 7);
+    s = selipkanKartu(s, 0, k1);
+    s = mainkanKartu(s, 'h', k1.id);
+    expect(s.kartuSesi?.h).toEqual({ [atas.golongan!]: 1 });
+
+    const k2 = kartuAngka(atas.golongan, 7);
+    s = selipkanKartu(s, 1, k2);
+    s = mainkanKartu(s, 'b', k2.id);
+    expect(s.kartuSesi?.b).toBeUndefined();
+  });
+});
+
 describe('skorKuisSesi (Fase 4 — Misi)', () => {
   const DUA_MANUSIA = [
     { id: 'p1', nama: 'A', isBot: false },

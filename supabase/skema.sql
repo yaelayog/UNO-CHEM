@@ -384,6 +384,15 @@ create policy "misi harian guru baca" on public.misi_harian_progres for select t
 );
 grant select on public.misi_harian_progres to authenticated;
 
+-- ── Idempotensi laporan sesi solo (0012) ─────────────────────────────
+create table if not exists public.laporan_sesi (
+  murid_id    uuid not null references public.murid(id) on delete cascade,
+  sesi_id     text not null,
+  dibuat_pada timestamptz not null default now(),
+  primary key (murid_id, sesi_id)
+);
+alter table public.laporan_sesi enable row level security;
+
 drop function if exists public.murid_kelas(uuid);
 create function public.murid_kelas(p_kelas_id uuid)
 returns table (murid_id uuid, nama text, kode_unik text, peringkat_aktif int, peringkat_rekor int,

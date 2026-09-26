@@ -8,6 +8,11 @@
 //  · Selesaikan ketiganya → Bonus Lengkap + streak 🔥 (hari berturut-turut).
 //
 // Kemajuan tiap misi dihitung `kemajuanMisi` (misi.ts) — satu sumber rumus.
+//
+// Kalibrasi target: pemain manusia rata-rata hanya dapat ±2 kuis per permainan
+// (kuis muncul saat terkena Skip/+2/+4 lawan, temanya = warna kartu serangan),
+// jadi misi kuis dibuat kecil & misi bertema golongan memakai KARTU yang
+// dimainkan — sesuatu yang bisa diusahakan pemain sendiri.
 
 import { GOLONGAN } from '../data/golongan';
 import type { Golongan } from '../data/types';
@@ -47,6 +52,15 @@ const URUTAN_GOLONGAN: Golongan[] = [
   'transisi',
 ];
 
+/** Nama warna kartu UNO per golongan (untuk teks misi & tips). */
+export const WARNA_KARTU: Record<Golongan, string> = {
+  alkali: 'merah',
+  alkaliTanah: 'oranye',
+  halogen: 'kuning',
+  gasMulia: 'hijau',
+  transisi: 'biru',
+};
+
 export function golonganHariIni(tanggal: string): Golongan {
   const n = URUTAN_GOLONGAN.length;
   return URUTAN_GOLONGAN[((nomorHari(tanggal) % n) + n) % n];
@@ -79,8 +93,8 @@ export interface MisiHarian extends Misi {
 interface Templat {
   kunci: string;
   tipe: TipeMisi;
-  judul: (nama: string) => string;
-  deskripsi: (nama: string) => string;
+  judul: (nama: string, warna: string) => string;
+  deskripsi: (nama: string, warna: string) => string;
   target: (g: Golongan) => Record<string, unknown>;
   bertemaGolongan?: boolean;
 }
@@ -95,58 +109,51 @@ const KUMPULAN: Record<TingkatHarian, Templat[]> = {
       target: () => ({ jumlah: 1 }),
     },
     {
-      kunci: 'h-benar-3',
+      kunci: 'h-benar-2',
       tipe: 'kuisBenarTotal',
-      judul: () => 'Tiga Jawaban Tepat',
-      deskripsi: () => 'Jawab 3 kuis dengan benar',
-      target: () => ({ jumlah: 3 }),
+      judul: () => 'Dua Jawaban Tepat',
+      deskripsi: () => 'Jawab 2 kuis dengan benar',
+      target: () => ({ jumlah: 2 }),
     },
     {
-      kunci: 'h-gol-1',
-      tipe: 'kuisBenarGolongan',
-      judul: (nama) => `Sapa ${nama}`,
-      deskripsi: (nama) => `Jawab 1 kuis bertema ${nama} dengan benar`,
-      target: (g) => ({ jumlah: 1, golongan: g }),
+      kunci: 'h-kartu-4',
+      tipe: 'kartuGolongan',
+      judul: (nama) => `Kenali ${nama}`,
+      deskripsi: (nama, warna) => `Mainkan 4 kartu ${nama} (kartu ${warna})`,
+      target: (g) => ({ jumlah: 4, golongan: g }),
       bertemaGolongan: true,
     },
   ],
   belajar: [
     {
-      kunci: 'h-gol-3',
-      tipe: 'kuisBenarGolongan',
-      judul: (nama) => `Fokus ${nama}`,
-      deskripsi: (nama) => `Jawab 3 kuis bertema ${nama} dengan benar`,
-      target: (g) => ({ jumlah: 3, golongan: g }),
-      bertemaGolongan: true,
-    },
-    {
       kunci: 'h-tp2',
       tipe: 'kuisBenarTP',
       judul: () => 'Tren Periodik',
       deskripsi: () =>
-        'Jawab 2 soal jari-jari atom, energi ionisasi, atau keelektronegatifan dengan benar',
-      target: () => ({ jumlah: 2, tp: 2 }),
+        'Jawab 1 soal jari-jari atom, energi ionisasi, atau keelektronegatifan dengan benar',
+      target: () => ({ jumlah: 1, tp: 2 }),
     },
     {
       kunci: 'h-tp3',
       tipe: 'kuisBenarTP',
       judul: () => 'Logam atau Nonlogam?',
-      deskripsi: () => 'Jawab 4 soal sifat logam–nonlogam unsur dengan benar',
-      target: () => ({ jumlah: 4, tp: 3 }),
+      deskripsi: () => 'Jawab 2 soal sifat logam–nonlogam unsur dengan benar',
+      target: () => ({ jumlah: 2, tp: 3 }),
     },
     {
       kunci: 'h-akurat',
       tipe: 'akurasiSesi',
       judul: () => 'Teliti Itu Kunci',
-      deskripsi: () => 'Selesaikan 1 permainan dengan akurasi kuis ≥ 80% (min. 4 soal)',
-      target: () => ({ jumlah: 1, persen: 80, minKuis: 4 }),
+      deskripsi: () =>
+        'Jawab SEMUA kuis dengan benar dalam 1 permainan (min. 2 soal)',
+      target: () => ({ jumlah: 1, persen: 100, minKuis: 2 }),
     },
     {
-      kunci: 'h-benar-8',
+      kunci: 'h-benar-5',
       tipe: 'kuisBenarTotal',
       judul: () => 'Rajin Menjawab',
-      deskripsi: () => 'Jawab 8 kuis dengan benar',
-      target: () => ({ jumlah: 8 }),
+      deskripsi: () => 'Jawab 5 kuis dengan benar',
+      target: () => ({ jumlah: 5 }),
     },
   ],
   tantangan: [
@@ -158,11 +165,11 @@ const KUMPULAN: Record<TingkatHarian, Templat[]> = {
       target: () => ({ jumlah: 1 }),
     },
     {
-      kunci: 'h-sesi-5',
+      kunci: 'h-sesi-3',
       tipe: 'kuisBenarSesi',
       judul: () => 'Reaksi Kilat',
-      deskripsi: () => 'Jawab 5 kuis dengan benar dalam satu permainan',
-      target: () => ({ jumlah: 1, minBenar: 5 }),
+      deskripsi: () => 'Jawab 3 kuis dengan benar dalam satu permainan',
+      target: () => ({ jumlah: 1, minBenar: 3 }),
     },
     {
       kunci: 'h-sempurna',
@@ -201,6 +208,7 @@ export function misiHarianUntuk(tanggal: string): MisiHarian[] {
   const hari = nomorHari(tanggal);
   const g = golonganHariIni(tanggal);
   const nama = GOLONGAN[g].nama;
+  const warna = WARNA_KARTU[g];
 
   const pilih = (tingkat: TingkatHarian, hindariGolongan: boolean): Templat => {
     const pool = KUMPULAN[tingkat];
@@ -222,8 +230,8 @@ export function misiHarianUntuk(tanggal: string): MisiHarian[] {
     ] as const
   ).map(([tingkat, t]) => ({
     id: t.kunci,
-    judul: t.judul(nama),
-    deskripsi: t.deskripsi(nama),
+    judul: t.judul(nama, warna),
+    deskripsi: t.deskripsi(nama, warna),
     tipe: t.tipe,
     target: t.target(g),
     poinReward: POIN_HARIAN[tingkat],

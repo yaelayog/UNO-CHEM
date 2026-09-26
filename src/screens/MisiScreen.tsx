@@ -7,22 +7,14 @@ import {
   msSampaiReset,
   tanggalWIB,
   targetMisi,
+  WARNA_KARTU,
   type MisiHarian,
   type TingkatHarian,
 } from '../game';
 import { GOLONGAN } from '../data/golongan';
 import { misiBadge } from '../data/misiBadge';
-import type { Golongan } from '../data/types';
 import { useGameStore } from '../store/gameStore';
 import { useAkunStore } from '../akun/akunStore';
-
-const WARNA_KARTU: Record<Golongan, string> = {
-  alkali: 'merah',
-  alkaliTanah: 'oranye',
-  halogen: 'kuning',
-  gasMulia: 'hijau',
-  transisi: 'biru',
-};
 
 const TINGKAT: Record<TingkatHarian, { label: string; kelas: string }> = {
   pemanasan: { label: 'Pemanasan', kelas: 'bg-gas-mulia-050 text-gas-mulia-700' },
@@ -177,9 +169,12 @@ export function MisiScreen() {
         </p>
         <p className="mt-1 text-xs leading-relaxed text-tinta/75">{faktaHariIni(tanggal)}</p>
         <p className="mt-2 rounded-xl bg-kertas px-2.5 py-1.5 text-[11px] font-bold text-tinta/70">
-          💡 Soal kuis mengikuti warna kartu teratas. Mainkan kartu{' '}
-          <span style={{ color: info.warnaUno }}>{WARNA_KARTU[g]}</span> supaya soal{' '}
-          {info.nama} lebih sering muncul!
+          🃏 Kartu <span style={{ color: info.warnaUno }}>{WARNA_KARTU[g]}</span> = unsur{' '}
+          {info.nama}. Perhatikan simbol &amp; periode di kartunya saat kamu memainkannya!
+        </p>
+        <p className="mt-1.5 px-1 text-[10px] leading-snug text-tinta/50">
+          Kuis muncul saat kamu terkena kartu Skip / +2 / +4 lawan — temanya mengikuti warna
+          kartu serangan itu.
         </p>
       </section>
 

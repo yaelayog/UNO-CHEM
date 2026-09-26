@@ -350,6 +350,18 @@ function petaAngka(v: unknown): Record<string, number> {
  */
 async function tambahPoin(db: SupabaseClient, b: Record<string, unknown>) {
   const murid = await lewatToken(db, bersih(b.token, 64));
+
+  // Idempotensi: klien mengirim ulang laporan yang gagal. Laporan dengan
+  // `sesiId` yang sudah pernah diproses → abaikan (jangan hitung dua kali).
+  // Bila tabel belum dimigrasi (0012), lanjut tanpa pengecekan.
+  const sesiId = bersih(b.sesiId, 64);
+  if (sesiId) {
+    const { error } = await db
+      .from('laporan_sesi')
+      .insert({ murid_id: murid.id, sesi_id: sesiId });
+    if (error?.code === '23505') return { ok: true, duplikat: true, misiSelesai: [] };
+    if (error) console.error('laporan_sesi', error.message);
+  }
   const poin = Math.max(0, Math.min(Math.floor(Number(b.poin) || 0), 2000));
   const akurasi = (b.akurasi ?? {}) as AkurasiDelta;
   let progres = await beriPoinMurid(db, murid.id, poin, akurasi);
@@ -365,6 +377,7 @@ async function tambahPoin(db: SupabaseClient, b: Record<string, unknown>) {
       kuisSalah: Math.max(0, Math.floor(Number(s.kuisSalah) || 0)),
       benarPerGolongan: petaAngka(s.benarPerGolongan) as KonteksSesi['benarPerGolongan'],
       benarPerTP: petaAngka(s.benarPerTP),
+      kartuPerGolongan: petaAngka(s.kartuPerGolongan) as KonteksSesi['kartuPerGolongan'],
     });
     if (misiSelesai.length) {
       // reward misi menambah poin → ambil progres terbaru
