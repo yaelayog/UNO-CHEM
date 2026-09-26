@@ -8,7 +8,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt': SW baru menunggu sampai `src/lib/pembaruan.ts` mengaktifkannya
+      // (saat pemain di menu) — bukan langsung ambil alih di tengah permainan.
+      registerType: 'prompt',
       includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
         id: '/',
