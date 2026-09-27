@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
     const aktif = r.peringkat_golongan_aktif ?? 1;
     const rekor = r.peringkat_golongan_rekor ?? 1;
     const key = `${aktif}|${rekor}`;
-    const g = grup.get(key) ?? { aktif, rekor, ids: [] };
+    const g = grup.get(key) ?? { aktif, rekor, ids: [] as string[] };
     g.ids.push(r.murid_id as string);
     grup.set(key, g);
   }
