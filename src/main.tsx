@@ -21,6 +21,7 @@ import '@fontsource/nunito/latin-ext-800.css';
 import './index.css';
 import App from './App.tsx';
 import { mulaiPembaruanOtomatis } from './lib/pembaruan';
+import { mulaiTombolKembali } from './lib/tombolKembali';
 
 // Catatan: StrictMode sengaja tidak dipakai — double-invoke dev-nya membuat
 // animasi mount Framer Motion (modal) macet di tengah. Logika inti diverifikasi
@@ -29,6 +30,9 @@ createRoot(document.getElementById('root')!).render(<App />);
 
 // PWA: cek & terapkan versi baru otomatis (hanya saat di menu utama).
 mulaiPembaruanOtomatis();
+
+// Tombol kembali HP: pindah ke layar induk, bukan langsung keluar aplikasi.
+mulaiTombolKembali();
 
 // Chunk lazy versi lama sudah tak ada di server (mis. halaman lama diambil alih
 // SW baru) → muat ulang sekali ke versi terbaru, jangan layar kosong. Kunci

@@ -6,6 +6,7 @@ import { MainMenu } from './screens/MainMenu';
 import { Memuat } from './components/Memuat';
 import { LatarLab } from './components/LatarLab';
 import { MisiToast } from './components/MisiToast';
+import { KembaliToast } from './components/KembaliToast';
 import { OnlineSync } from './online/OnlineSync';
 import { kirimAksi } from './online/klienOnline';
 import { bacaRoomTersimpan, hapusRoomTersimpan } from './online/roomTersimpan';
@@ -123,6 +124,7 @@ export default function App() {
       <LatarLab />
       <OnlineSync />
       <MisiToast />
+      <KembaliToast />
       <div key={layar} className="animasi-layar relative z-10 h-full">
         <Suspense fallback={<Memuat />}>{isi}</Suspense>
       </div>
