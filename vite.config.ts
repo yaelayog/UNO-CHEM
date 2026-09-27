@@ -42,6 +42,9 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,mp3}'],
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
+        // Ambil alih SW warisan (sebelum mode prompt) yang tak bisa kirim
+        // SKIP_WAITING — lihat public/sw-migrasi.js.
+        importScripts: ['sw-migrasi.js'],
       },
     }),
   ],
