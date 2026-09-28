@@ -1,8 +1,8 @@
 import type { FunFact } from './types';
 
 /**
- * Bank Fun Fact UNO-Chem — 45 fakta singkat seputar golongan, periode,
- * konfigurasi elektron, sifat keperiodikan, dan ikatan kimia sederhana. Setiap
+ * Bank Fun Fact UNO-Chem — 44 fakta singkat seputar golongan, periode,
+ * elektron valensi, sifat keperiodikan, dan ikatan kimia sederhana. Setiap
  * fakta menautkan `bantuSoal` ke id soal di `src/data/kuis.ts` yang isinya
  * memang terbantu bila fakta ini disimak.
  *
@@ -185,13 +185,6 @@ export const SEMUA_FUNFACT: FunFact[] = [
     bantuSoal: ['s15'],
   },
   {
-    id: 'ff-na-neon',
-    teks: 'Ketika natrium (2,8,1) melepas 1 elektron menjadi Na⁺, konfigurasinya menjadi (2,8) — sama persis dengan atom neon.',
-    golongan: 'gasMulia',
-    ikon: '🟰',
-    bantuSoal: ['x01'],
-  },
-  {
     id: 'ff-biloks-kmno4',
     teks: 'Menghitung bilangan oksidasi Mn dalam KMnO₄: K = +1, empat O = −8. Supaya senyawa netral, Mn harus +7.',
     golongan: 'transisi',
@@ -240,7 +233,7 @@ export const SEMUA_FUNFACT: FunFact[] = [
     teks: 'Untuk golongan utama, nomor golongan = jumlah elektron valensi, dan nomor periode = jumlah kulit elektron. Natrium (2 8 1) → golongan IA, periode 3.',
     golongan: 'alkali',
     ikon: '🧮',
-    bantuSoal: ['m17', 'm18', 's17'],
+    bantuSoal: ['m17', 'm18'],
   },
   {
     id: 'ff-oktet',
@@ -282,7 +275,7 @@ export const SEMUA_FUNFACT: FunFact[] = [
     teks: 'Ion Na⁺ dan atom Ne sama-sama punya 10 elektron — disebut isoelektronik. Ion Cl⁻ punya 18 elektron, seperti argon.',
     golongan: 'gasMulia',
     ikon: '👥',
-    bantuSoal: ['x13', 'x15'],
+    bantuSoal: ['x13'],
   },
   {
     id: 'ff-rumus-senyawa',

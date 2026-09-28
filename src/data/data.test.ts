@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { DAFTAR_UNSUR } from './unsur';
 import { BANK_SOAL } from './kuis';
 import { GOLONGAN } from './golongan';
+import { CPTP } from './cptp';
 import { soalByKesulitan, unsurByGolongan, cariUnsur, soalAcak } from './index';
 import type { Golongan } from './types';
 
@@ -74,6 +75,30 @@ describe('BANK_SOAL', () => {
     expect(soalByKesulitan('mudah').length).toBeGreaterThanOrEqual(5);
     expect(soalByKesulitan('sedang').length).toBeGreaterThanOrEqual(5);
     expect(soalByKesulitan('sulit').length).toBeGreaterThanOrEqual(5);
+  });
+
+  it('tpTerkait hanya berisi nomor TP yang ada di CPTP', () => {
+    const tpValid = new Set(CPTP.tujuan.map((t) => t.no));
+    for (const q of BANK_SOAL) {
+      expect(q.tpTerkait.length).toBeGreaterThan(0);
+      for (const tp of q.tpTerkait) expect(tpValid.has(tp)).toBe(true);
+    }
+  });
+
+  // pilihSoal mengutamakan golongan kartu penyerang, jadi soal `umum` jarang
+  // keluar. Tiap golongan × tingkat harus punya soal untuk setiap TP agar
+  // semua TP benar-benar teruji saat bermain.
+  it('tiap golongan × tingkat punya soal untuk setiap TP', () => {
+    for (const g of Object.keys(GOLONGAN) as Golongan[]) {
+      for (const t of ['mudah', 'sedang', 'sulit'] as const) {
+        for (const { no } of CPTP.tujuan) {
+          const ada = BANK_SOAL.some(
+            (q) => q.golonganTerkait === g && q.tingkatKesulitan === t && q.tpTerkait.includes(no),
+          );
+          expect(ada, `${g}/${t} tanpa soal TP${no}`).toBe(true);
+        }
+      }
+    }
   });
 
   it('soalAcak deterministik dengan rng ter-inject', () => {

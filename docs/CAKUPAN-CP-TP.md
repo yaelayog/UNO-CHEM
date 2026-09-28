@@ -17,6 +17,17 @@ diwujudkan di aplikasi.
   total +5 soal kuis dan +3 Fun Fact bertema kedua TP tersebut.
 - **Ditambahkan setelahnya:** +4 soal TP1 (`m26`, `s28`, `s29`, `x19`) — TP1
   sebelumnya cuma 2 dari 70 soal, sehingga nyaris tak pernah terpilih acak.
+- **Perluasan 28 Sep 2026:** +52 soal baru, dan 4 soal konfigurasi elektron lama
+  (`x01`, `s17`, `s18`, `x15`) serta Fun Fact `ff-na-neon` dihapus (bank soal 74 → 122). Soal kuis dipilih
+  menurut warna kartu penyerang, sehingga soal bergolongan `umum` (termasuk
+  semua soal TP1 lama) nyaris tak pernah keluar. Soal baru karena itu ditandai
+  golongan: setiap golongan × tingkat kesulitan kini punya soal TP1, TP2, TP3,
+  dan TP4 (dijaga test `data.test.ts`). Sebaran per TP: TP1 6 → 21, TP2 16 → 32,
+  TP3 46 → 52, TP4 7 → 23. Ragam baru: hitungan triade (Li–Na–K, Ca–Sr–Ba,
+  Cl–Br–I), kejanggalan urutan massa (K–Ar, Te–I, Co–Ni), ramalan eka-mangan,
+  urutan tren periodik, identifikasi sifat dari letak (golongan + periode), dan
+  penerapan sehari-hari (baterai litium, lampu natrium, pasta gigi fluorida,
+  PVC, CFC, las argon, radon, klorofil, kembang api, katalis knalpot).
 - Materi konfigurasi elektron dihapus sepenuhnya dari alur TP (lihat
   `docs/CP-TP_Sistem_Periodik_Unsur.md`, bagian C & D) — tidak lagi
   didokumentasikan maupun ditampilkan di aplikasi.
