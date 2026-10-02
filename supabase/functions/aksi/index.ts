@@ -236,11 +236,42 @@ async function gabung(
 
   const { data: roster } = await db
     .from('room_pemain')
-    .select('pemain, urutan')
+    .select('pemain, urutan, siap_lagi, siap_lagi_pada')
     .eq('room_code', code);
   const list = roster ?? [];
-  if (list.some((r) => r.pemain === uid)) return { code, sudahGabung: true };
-  assert(list.length < room.target_pemain, 'room penuh');
+  // Hanya baris `siap_lagi` yang ikut sesi berikutnya (lihat `mainLagi`);
+  // sisa ronde lalu tak dihitung memakan kursi.
+  const aktif = list.filter((r) => r.siap_lagi);
+  const aku = list.find((r) => r.pemain === uid);
+  if (aku?.siap_lagi) return { code, sudahGabung: true };
+  assert(aktif.length < room.target_pemain, 'room penuh');
+
+  if (aku) {
+    // Pemain ronde lalu yang tak sempat menekan "Main Lagi" (ke Menu Utama,
+    // app tertutup) lalu masuk lagi pakai kode yang sama: hidupkan lagi
+    // barisnya. Tanpa ini ia tak muncul di lobby & dilewati `mulai`.
+    if (room.host === uid && aktif.length) {
+      // Host lama balik: jangan rebut mahkota dari host lobby saat ini.
+      await db
+        .from('rooms')
+        .update({ host: efektifHost(room, aktif) })
+        .eq('code', code);
+    }
+    const kini = new Date().toISOString();
+    const { error } = await db
+      .from('room_pemain')
+      .update({
+        nama,
+        siap_lagi: true,
+        siap_lagi_pada: kini,
+        terhubung: true,
+        last_seen: kini,
+      })
+      .eq('room_code', code)
+      .eq('pemain', uid);
+    if (error) throw error;
+    return { code, sudahGabung: true };
+  }
 
   const dipakai = new Set(list.map((r) => r.urutan));
   let urutan = 0;
@@ -261,7 +292,14 @@ async function keluar(db: SupabaseClient, uid: string, code: string) {
   if (!room) return { ok: true };
 
   if (room.status === 'lobby') {
-    if (room.host === uid) {
+    // Pakai host efektif: host lama yang tak ikut "Main Lagi" lalu ke menu
+    // tak boleh membubarkan lobby rematch milik pemain lain.
+    const { data: aktif } = await db
+      .from('room_pemain')
+      .select('pemain, siap_lagi_pada')
+      .eq('room_code', code)
+      .eq('siap_lagi', true);
+    if (efektifHost(room, aktif ?? []) === uid) {
       await db.from('rooms').delete().eq('code', code);
     } else {
       await db.from('room_pemain').delete().eq('room_code', code).eq('pemain', uid);
@@ -394,12 +432,34 @@ async function mulai(db: SupabaseClient, uid: string, code: string) {
     .order('urutan');
   const manusia = roster ?? [];
   assert(manusia.length >= 1, 'butuh minimal 1 pemain');
+  assert(manusia.length <= room.target_pemain, 'room penuh');
   const hostEfektif = efektifHost(room, manusia);
   assert(hostEfektif === uid, 'hanya host yang bisa memulai');
   if (room.host !== hostEfektif) {
     // Host asli tak ikut lanjut ("Main Lagi") — giliran host jatuh ke
     // pemain pertama yang menekan "Main Lagi" di lobby ini, dipersist.
     await db.from('rooms').update({ host: hostEfektif }).eq('code', code);
+  }
+  // Baris ronde lalu yang tak ikut lanjut: bukan bagian sesi ini, dan
+  // `urutan`-nya bisa bentrok (unique) dengan kursi bot di bawah.
+  await db
+    .from('room_pemain')
+    .delete()
+    .eq('room_code', code)
+    .eq('is_bot', false)
+    .eq('siap_lagi', false);
+
+  // Kursi: pemain tetap di `urutan`-nya bila muat; yang `urutan`-nya di luar
+  // target (mis. target diperkecil / gabung saat kursi bawah masih terpakai)
+  // diisikan ke kursi kosong — jangan sampai ada pemain tak kebagian meja.
+  const kursi = new Map<number, (typeof manusia)[number]>();
+  const meluap: typeof manusia = [];
+  for (const m of manusia) {
+    if (m.urutan < room.target_pemain && !kursi.has(m.urutan)) kursi.set(m.urutan, m);
+    else meluap.push(m);
+  }
+  for (let u = 0; u < room.target_pemain && meluap.length; u++) {
+    if (!kursi.has(u)) kursi.set(u, meluap.shift()!);
   }
 
   const namaTerpakai = new Set(manusia.map((m) => m.nama.toLowerCase()));
@@ -409,7 +469,7 @@ async function mulai(db: SupabaseClient, uid: string, code: string) {
   const barisBot: Record<string, unknown>[] = [];
   let bi = 0;
   for (let urutan = 0; urutan < room.target_pemain; urutan++) {
-    const m = manusia.find((x) => x.urutan === urutan);
+    const m = kursi.get(urutan);
     if (m) {
       opsi.push({ id: m.pemain, nama: m.nama, isBot: false });
     } else {
